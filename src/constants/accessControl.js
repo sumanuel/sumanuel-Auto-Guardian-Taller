@@ -20,10 +20,11 @@ export const INVITATION_STATUSES = {
 };
 
 export const REGISTRATION_POLICY = {
-  mode: "restricted",
-  allowPublicSignUp: false,
-  requiresInvitation: true,
-  requiresInternalApproval: true,
+  mode: "hybrid",
+  allowPublicSignUp: true,
+  requiresInvitation: false,
+  requiresInternalApproval: false,
+  defaultPublicRole: USER_ROLES.RECEPTION,
   authProvider: "firebase-auth",
 };
 

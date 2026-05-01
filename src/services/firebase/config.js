@@ -5,7 +5,7 @@ import {
   getReactNativePersistence,
   initializeAuth,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 import { Platform } from "react-native";
 
 const firebaseConfig = {
@@ -20,6 +20,7 @@ const firebaseConfig = {
 const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 let auth;
+let firestore;
 
 if (Platform.OS === "web") {
   auth = getAuth(firebaseApp);
@@ -33,6 +34,13 @@ if (Platform.OS === "web") {
   }
 }
 
-const firestore = getFirestore(firebaseApp);
+try {
+  firestore = initializeFirestore(firebaseApp, {
+    experimentalAutoDetectLongPolling: true,
+    ignoreUndefinedProperties: true,
+  });
+} catch (error) {
+  firestore = getFirestore(firebaseApp);
+}
 
 export { auth, firebaseApp, firestore };

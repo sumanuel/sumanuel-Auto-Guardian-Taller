@@ -7,6 +7,7 @@ import {
 } from "firebase/firestore";
 import {
   REGISTRATION_POLICY,
+  USER_ROLES,
   USER_STATUSES,
 } from "../../constants/accessControl";
 import { userProfileModel } from "../../constants/domainModels";
@@ -89,13 +90,19 @@ export async function createManualUserProfile({
   role,
   status,
 }) {
+  const resolvedStatus =
+    status ||
+    (REGISTRATION_POLICY.requiresInternalApproval
+      ? USER_STATUSES.PENDING_APPROVAL
+      : USER_STATUSES.ACTIVE);
+
   const profilePayload = {
     uid,
     email,
     fullName,
     phone: phone || "",
-    role,
-    status: status || userProfileModel.defaults.status,
+    role: role || REGISTRATION_POLICY.defaultPublicRole || USER_ROLES.RECEPTION,
+    status: resolvedStatus,
   };
 
   return createUserProfileFromInvitation({

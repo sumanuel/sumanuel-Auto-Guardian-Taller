@@ -5,6 +5,7 @@ import {
   registerUserFromInvitation,
   sendPasswordRecovery,
   signInWithCredentials,
+  signUpWithProfile,
   signOutUserSession,
 } from "../services/auth/authService";
 import {
@@ -66,6 +67,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const signUp = async (payload) => {
+    setAuthBusy(true);
+    try {
+      await signUpWithProfile(payload);
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
   const activateInvitation = async (payload) => {
     setAuthBusy(true);
     try {
@@ -92,6 +102,7 @@ export function AuthProvider({ children }) {
       authUser,
       recoverPassword,
       signIn,
+      signUp,
       signOutUser,
       userProfile,
     }),

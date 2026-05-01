@@ -1,0 +1,214 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUid() {
+      return request.auth.uid;
+    }
+
+    function userProfilePath(uid) {
+      return /databases/$(database)/documents/userProfiles/$(uid);
+    }
+
+    function invitationPath(invitationId) {
+      return /databases/$(database)/documents/staffInvitations/$(invitationId);
+    }
+
+    function workOrderPath(workOrderId) {
+      return /databases/$(database)/documents/workOrders/$(workOrderId);
+    }
+
+    function diagnosticPath(diagnosticId) {
+      return /databases/$(database)/documents/diagnostics/$(diagnosticId);
+    }
+
+    function hasProfile() {
+      return signedIn() && exists(userProfilePath(currentUid()));
+    }
+
+    function profileData() {
+      return get(userProfilePath(currentUid())).data;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && currentUid() == uid;
+    }
+
+    function isActiveProfile() {
+      return hasProfile() && profileData().status == 'active';
+    }
+
+    function hasRole(role) {
+      return isActiveProfile() && profileData().role == role;
+    }
+
+    function isAdmin() {
+      return hasRole('administrator');
+    }
+
+    function isReception() {
+      return hasRole('reception');
+    }
+
+    function isMechanic() {
+      return hasRole('mechanic');
+    }
+
+    function canManageOperations() {
+      return isAdmin() || isReception();
+    }
+
+    function isAssignedMechanicByUid(assignedUid) {
+      return isMechanic() && assignedUid is string && assignedUid == currentUid();
+    }
+
+    function isAssignedMechanicInList(assignedUids) {
+      return isMechanic() && assignedUids is list && assignedUids.hasAny([currentUid()]);
+    }
+
+    function isPublicSignupCreate(uid) {
+      return signedIn()
+        && isSelf(uid)
+        && !hasProfile()
+        && request.resource.data.uid == currentUid()
+        && request.resource.data.role == 'reception'
+        && request.resource.data.status == 'active'
+        && request.resource.data.invitationId == null;
+    }
+
+    function isInvitationProfileCreate(uid) {
+      return signedIn()
+        && isSelf(uid)
+        && !hasProfile()
+        && request.resource.data.uid == currentUid()
+        && request.resource.data.invitationId is string
+        && exists(invitationPath(request.resource.data.invitationId))
+        && get(invitationPath(request.resource.data.invitationId)).data.status == 'pending'
+        && get(invitationPath(request.resource.data.invitationId)).data.email == request.resource.data.email
+        && get(invitationPath(request.resource.data.invitationId)).data.role == request.resource.data.role;
+    }
+
+    function onlyProfileSelfEditableFieldsChanged() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        'fullName',
+        'phone',
+        'lastLoginAt',
+        'updatedAt'
+      ]);
+    }
+
+    function invitationAcceptanceUpdate(invitationId) {
+      return signedIn()
+        && !hasProfile()
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.acceptedByUid == currentUid()
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.invitedByUid == resource.data.invitedByUid
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status',
+          'acceptedByUid',
+          'acceptedAt',
+          'updatedAt'
+        ]);
+    }
+
+    function canWriteCounter(counterId) {
+      return signedIn()
+        && (
+          (counterId == 'userProfiles' && !hasProfile())
+          || (counterId == 'staffInvitations' && isAdmin())
+          || (counterId == 'clients' && canManageOperations())
+          || (counterId == 'vehicles' && canManageOperations())
+          || (counterId == 'diagnostics' && canManageOperations())
+          || (counterId == 'workOrders' && canManageOperations())
+          || (counterId == 'spareParts' && canManageOperations())
+          || (counterId == 'progressEntries' && (canManageOperations() || isMechanic()))
+        );
+    }
+
+    function canReadWorkOrder(workOrderData) {
+      return canManageOperations()
+        || isAssignedMechanicInList(workOrderData.assignedMechanicUids);
+    }
+
+    function canReadDiagnostic(diagnosticData) {
+      return canManageOperations()
+        || isAssignedMechanicByUid(diagnosticData.assignedMechanicUid);
+    }
+
+    match /userProfiles/{uid} {
+      allow get: if signedIn() && (isSelf(uid) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isPublicSignupCreate(uid) || isInvitationProfileCreate(uid) || isAdmin();
+      allow update: if isAdmin() || (isSelf(uid) && onlyProfileSelfEditableFieldsChanged());
+      allow delete: if isAdmin();
+    }
+
+    match /staffInvitations/{invitationId} {
+      allow get: if isAdmin() || resource.data.status == 'pending';
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || invitationAcceptanceUpdate(invitationId);
+      allow delete: if isAdmin();
+    }
+
+    match /clients/{clientId} {
+      allow read: if isActiveProfile();
+      allow create, update, delete: if canManageOperations();
+    }
+
+    match /vehicles/{vehicleId} {
+      allow read: if isActiveProfile();
+      allow create, update, delete: if canManageOperations();
+    }
+
+    match /diagnostics/{diagnosticId} {
+      allow get: if isActiveProfile() && canReadDiagnostic(resource.data);
+      allow list: if isActiveProfile();
+      allow create, update, delete: if canManageOperations();
+    }
+
+    match /workOrders/{workOrderId} {
+      allow get: if isActiveProfile() && canReadWorkOrder(resource.data);
+      allow list: if isActiveProfile();
+      allow create, update, delete: if canManageOperations();
+    }
+
+    match /progressEntries/{progressEntryId} {
+      allow get: if isActiveProfile();
+      allow list: if isActiveProfile();
+      allow create: if isActiveProfile() && (
+        canManageOperations()
+        || (isMechanic()
+          && request.resource.data.authorUid == currentUid()
+          && request.resource.data.workOrderId is string
+          && exists(workOrderPath(request.resource.data.workOrderId))
+          && isAssignedMechanicInList(get(workOrderPath(request.resource.data.workOrderId)).data.assignedMechanicUids))
+      );
+      allow update: if canManageOperations() || (isMechanic() && resource.data.authorUid == currentUid());
+      allow delete: if canManageOperations();
+    }
+
+    match /spareParts/{sparePartId} {
+      allow read: if isActiveProfile();
+      allow create, update, delete: if canManageOperations();
+    }
+
+    match /_counters/{counterId} {
+      allow get: if canWriteCounter(counterId) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update: if canWriteCounter(counterId);
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,6 +1,9 @@
-import { useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,24 +12,53 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { borderRadius, rf, spacing } from "../utils/responsive";
+import { borderRadius, hs, rf, s, spacing, vs } from "../utils/responsive";
 
 const modes = {
   login: "login",
-  recovery: "recovery",
+  register: "register",
   invitation: "invitation",
+  recovery: "recovery",
 };
 
 export default function AuthScreen() {
-  const { activateInvitation, authBusy, recoverPassword, signIn } = useAuth();
+  const { activateInvitation, authBusy, recoverPassword, signIn, signUp } =
+    useAuth();
   const { colors, isDarkMode } = useTheme();
+  const scrollRef = useRef(null);
+  const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
+  const registerNameInputRef = useRef(null);
+  const registerPhoneInputRef = useRef(null);
+  const registerEmailInputRef = useRef(null);
+  const registerPasswordInputRef = useRef(null);
+  const registerConfirmPasswordInputRef = useRef(null);
+  const invitationCodeInputRef = useRef(null);
+  const invitationNameInputRef = useRef(null);
+  const invitationPhoneInputRef = useRef(null);
+  const invitationEmailInputRef = useRef(null);
+  const invitationPasswordInputRef = useRef(null);
+  const invitationConfirmPasswordInputRef = useRef(null);
   const [mode, setMode] = useState(modes.login);
   const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] =
+    useState(false);
+  const [showInvitationPassword, setShowInvitationPassword] = useState(false);
+  const [showInvitationConfirmPassword, setShowInvitationConfirmPassword] =
+    useState(false);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [registerForm, setRegisterForm] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [invitationForm, setInvitationForm] = useState({
     invitationCode: "",
@@ -37,32 +69,78 @@ export default function AuthScreen() {
     confirmPassword: "",
   });
 
+  const isLogin = mode === modes.login;
+  const isRegister = mode === modes.register;
+  const isInvitation = mode === modes.invitation;
+
+  const palette = useMemo(
+    () => ({
+      page: colors.background,
+      surface: colors.cardBackground,
+      surfaceAlt: colors.cardMuted,
+      accent: colors.primary,
+      accentStrong: colors.primaryStrong,
+      accentSoft: isDarkMode
+        ? "rgba(255,255,255,0.12)"
+        : "rgba(255,255,255,0.16)",
+      text: colors.text,
+      muted: colors.textSecondary,
+      placeholder: colors.textTertiary,
+      border: colors.border,
+      borderStrong: colors.borderStrong,
+      danger: colors.danger,
+      info: colors.primaryStrong,
+      white: colors.white,
+      shadow: colors.shadow,
+    }),
+    [colors, isDarkMode],
+  );
+
   const headline = useMemo(() => {
     if (mode === modes.recovery) {
       return {
-        kicker: "Recuperacion",
-        title: "Restablecer acceso",
+        kicker: "Recuperacion segura",
+        title: "Recuperar acceso",
         subtitle:
-          "Enviaremos el correo de recuperacion al email operativo del usuario.",
+          "Enviaremos el enlace de recuperacion al correo operativo asociado al taller.",
+        pills: ["Correo seguro", "Acceso validado"],
+      };
+    }
+
+    if (mode === modes.register) {
+      return {
+        kicker: "Registro operativo",
+        title: "Crear cuenta",
+        subtitle:
+          "Registra tu acceso para entrar al panel del taller y sincronizar tu informacion desde el primer inicio.",
+        pills: ["Cuenta nueva", "Perfil", "Sincronizacion"],
       };
     }
 
     if (mode === modes.invitation) {
       return {
-        kicker: "Alta restringida",
+        kicker: "Alta autorizada",
         title: "Activar invitacion",
         subtitle:
-          "Completa la activacion con el codigo entregado por la administracion del taller.",
+          "Activa tu cuenta con el codigo entregado por la administracion y deja listo tu acceso operativo.",
+        pills: ["Invitacion", "Aprobacion", "Equipo tecnico"],
       };
     }
 
     return {
       kicker: "Acceso seguro",
-      title: "Ingresar al taller",
+      title: "Auto-Guardian Taller",
       subtitle:
-        "Controla operaciones, diagnosticos, avances y entregas con acceso validado.",
+        "Inicia sesion para cargar tu espacio de trabajo y sincronizar tus datos del taller.",
+      pills: ["Sincronizacion", "Seguridad", "Tu taller"],
     };
   }, [mode]);
+
+  const scrollToFocusedInput = (y) => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y, animated: true });
+    });
+  };
 
   const resetMessages = () => {
     setFeedback(null);
@@ -79,6 +157,31 @@ export default function AuthScreen() {
 
     try {
       await signIn(loginForm);
+    } catch (authError) {
+      setError(resolveFirebaseError(authError));
+    }
+  };
+
+  const handleSignUp = async () => {
+    resetMessages();
+
+    if (
+      !registerForm.fullName.trim() ||
+      !registerForm.email.trim() ||
+      !registerForm.password.trim() ||
+      !registerForm.confirmPassword.trim()
+    ) {
+      setError("Completa los datos obligatorios para crear la cuenta.");
+      return;
+    }
+
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setError("La confirmacion de contrasena no coincide.");
+      return;
+    }
+
+    try {
+      await signUp(registerForm);
     } catch (authError) {
       setError(resolveFirebaseError(authError));
     }
@@ -132,269 +235,791 @@ export default function AuthScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.page }]}>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? vs(24) : 0}
       >
-        <LinearGradient
-          colors={
-            isDarkMode
-              ? ["#18314b", "#0c1724", "#09111a"]
-              : ["#dce8f7", "#f2f6fb", "#eef2f6"]
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.heroCard, { borderColor: colors.borderStrong }]}
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={[styles.kicker, { color: colors.primary }]}>
-            {headline.kicker}
-          </Text>
-          <Text style={[styles.title, { color: colors.text }]}>
-            {headline.title}
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {headline.subtitle}
-          </Text>
-        </LinearGradient>
+          <View
+            style={[
+              styles.heroCard,
+              { backgroundColor: palette.accent, shadowColor: palette.shadow },
+            ]}
+          >
+            <Text style={styles.heroEyebrow}>{headline.kicker}</Text>
+            <Text style={styles.heroTitle}>{headline.title}</Text>
+            <Text style={styles.heroSubtitle}>{headline.subtitle}</Text>
 
-        <View
-          style={[
-            styles.formCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          {mode === modes.login && (
-            <>
-              <LabeledInput
-                label="Correo"
-                value={loginForm.email}
-                onChangeText={(value) =>
-                  setLoginForm((current) => ({ ...current, email: value }))
-                }
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <LabeledInput
-                label="Contrasena"
-                value={loginForm.password}
-                onChangeText={(value) =>
-                  setLoginForm((current) => ({ ...current, password: value }))
-                }
-                secureTextEntry
-                autoCapitalize="none"
-              />
-              <PrimaryButton
-                label="Ingresar"
-                loading={authBusy}
-                onPress={handleLogin}
-              />
-              <View style={styles.linkRow}>
-                <LinkButton
-                  label="Recuperar acceso"
+            <View style={styles.heroHighlights}>
+              {headline.pills.map((pill, index) => (
+                <View
+                  key={`${pill}-${index}`}
+                  style={[
+                    styles.heroHighlightPill,
+                    { backgroundColor: palette.accentSoft },
+                  ]}
+                >
+                  <Ionicons
+                    color={palette.white}
+                    name={resolveHeroIcon(mode, index)}
+                    size={rf(16)}
+                  />
+                  <Text style={styles.heroHighlightText}>{pill}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.formCard,
+              { backgroundColor: palette.surface, shadowColor: palette.shadow },
+            ]}
+          >
+            {mode !== modes.recovery && (
+              <View
+                style={[
+                  styles.modeSwitch,
+                  { backgroundColor: palette.surfaceAlt },
+                ]}
+              >
+                <Pressable
                   onPress={() => {
                     resetMessages();
+                    setMode(modes.login);
+                  }}
+                  style={({ pressed }) => [
+                    styles.modeButton,
+                    isLogin && [
+                      styles.modeButtonActive,
+                      { backgroundColor: palette.accent },
+                    ],
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.modeButtonText,
+                      { color: palette.muted },
+                      isLogin && [
+                        styles.modeButtonTextActive,
+                        { color: palette.white },
+                      ],
+                    ]}
+                  >
+                    Iniciar sesion
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    resetMessages();
+                    setMode(modes.register);
+                  }}
+                  style={({ pressed }) => [
+                    styles.modeButton,
+                    isRegister && [
+                      styles.modeButtonActive,
+                      { backgroundColor: palette.accent },
+                    ],
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.modeButtonText,
+                      { color: palette.muted },
+                      isRegister && [
+                        styles.modeButtonTextActive,
+                        { color: palette.white },
+                      ],
+                    ]}
+                  >
+                    Registrarme
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+
+            {isLogin && (
+              <>
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Correo
+                </Text>
+                <TextInput
+                  ref={emailInputRef}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={loginForm.email}
+                  onChangeText={(value) =>
+                    setLoginForm((current) => ({ ...current, email: value }))
+                  }
+                  placeholder="correo@dominio.com"
+                  placeholderTextColor={palette.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  onFocus={() => scrollToFocusedInput(vs(180))}
+                  onSubmitEditing={() => passwordInputRef.current?.focus()}
+                />
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Contrasena
+                </Text>
+                <View
+                  style={[
+                    styles.passwordField,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    ref={passwordInputRef}
+                    style={[styles.passwordInput, { color: palette.text }]}
+                    value={loginForm.password}
+                    onChangeText={(value) =>
+                      setLoginForm((current) => ({
+                        ...current,
+                        password: value,
+                      }))
+                    }
+                    placeholder="Minimo 6 caracteres"
+                    placeholderTextColor={palette.placeholder}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    returnKeyType="done"
+                    onFocus={() => scrollToFocusedInput(vs(240))}
+                    onSubmitEditing={handleLogin}
+                  />
+                  <Pressable
+                    onPress={() => setShowPassword((current) => !current)}
+                    style={({ pressed }) => [
+                      styles.passwordEyeButton,
+                      pressed && styles.linkButtonPressed,
+                    ]}
+                  >
+                    <Ionicons
+                      color={palette.muted}
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      size={rf(19)}
+                    />
+                  </Pressable>
+                </View>
+              </>
+            )}
+
+            {isRegister && (
+              <>
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Nombre
+                </Text>
+                <TextInput
+                  ref={registerNameInputRef}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={registerForm.fullName}
+                  onChangeText={(value) =>
+                    setRegisterForm((current) => ({
+                      ...current,
+                      fullName: value,
+                    }))
+                  }
+                  placeholder="Nombre del usuario"
+                  placeholderTextColor={palette.placeholder}
+                  returnKeyType="next"
+                  onFocus={() => scrollToFocusedInput(vs(150))}
+                  onSubmitEditing={() => registerPhoneInputRef.current?.focus()}
+                />
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Telefono
+                </Text>
+                <TextInput
+                  ref={registerPhoneInputRef}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={registerForm.phone}
+                  onChangeText={(value) =>
+                    setRegisterForm((current) => ({ ...current, phone: value }))
+                  }
+                  placeholder="Numero de contacto"
+                  placeholderTextColor={palette.placeholder}
+                  keyboardType="phone-pad"
+                  returnKeyType="next"
+                  onFocus={() => scrollToFocusedInput(vs(210))}
+                  onSubmitEditing={() => registerEmailInputRef.current?.focus()}
+                />
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Correo
+                </Text>
+                <TextInput
+                  ref={registerEmailInputRef}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={registerForm.email}
+                  onChangeText={(value) =>
+                    setRegisterForm((current) => ({ ...current, email: value }))
+                  }
+                  placeholder="correo@dominio.com"
+                  placeholderTextColor={palette.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  onFocus={() => scrollToFocusedInput(vs(270))}
+                  onSubmitEditing={() =>
+                    registerPasswordInputRef.current?.focus()
+                  }
+                />
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Contrasena
+                </Text>
+                <View
+                  style={[
+                    styles.passwordField,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    ref={registerPasswordInputRef}
+                    style={[styles.passwordInput, { color: palette.text }]}
+                    value={registerForm.password}
+                    onChangeText={(value) =>
+                      setRegisterForm((current) => ({
+                        ...current,
+                        password: value,
+                      }))
+                    }
+                    placeholder="Minimo 6 caracteres"
+                    placeholderTextColor={palette.placeholder}
+                    secureTextEntry={!showRegisterPassword}
+                    autoCapitalize="none"
+                    returnKeyType="next"
+                    onFocus={() => scrollToFocusedInput(vs(340))}
+                    onSubmitEditing={() =>
+                      registerConfirmPasswordInputRef.current?.focus()
+                    }
+                  />
+                  <Pressable
+                    onPress={() =>
+                      setShowRegisterPassword((current) => !current)
+                    }
+                    style={({ pressed }) => [
+                      styles.passwordEyeButton,
+                      pressed && styles.linkButtonPressed,
+                    ]}
+                  >
+                    <Ionicons
+                      color={palette.muted}
+                      name={
+                        showRegisterPassword ? "eye-off-outline" : "eye-outline"
+                      }
+                      size={rf(19)}
+                    />
+                  </Pressable>
+                </View>
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Confirmar contrasena
+                </Text>
+                <View
+                  style={[
+                    styles.passwordField,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    ref={registerConfirmPasswordInputRef}
+                    style={[styles.passwordInput, { color: palette.text }]}
+                    value={registerForm.confirmPassword}
+                    onChangeText={(value) =>
+                      setRegisterForm((current) => ({
+                        ...current,
+                        confirmPassword: value,
+                      }))
+                    }
+                    placeholder="Repite la contrasena"
+                    placeholderTextColor={palette.placeholder}
+                    secureTextEntry={!showRegisterConfirmPassword}
+                    autoCapitalize="none"
+                    returnKeyType="done"
+                    onFocus={() => scrollToFocusedInput(vs(410))}
+                    onSubmitEditing={handleSignUp}
+                  />
+                  <Pressable
+                    onPress={() =>
+                      setShowRegisterConfirmPassword((current) => !current)
+                    }
+                    style={({ pressed }) => [
+                      styles.passwordEyeButton,
+                      pressed && styles.linkButtonPressed,
+                    ]}
+                  >
+                    <Ionicons
+                      color={palette.muted}
+                      name={
+                        showRegisterConfirmPassword
+                          ? "eye-off-outline"
+                          : "eye-outline"
+                      }
+                      size={rf(19)}
+                    />
+                  </Pressable>
+                </View>
+              </>
+            )}
+
+            {mode === modes.recovery && (
+              <>
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Correo del usuario
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={recoveryEmail}
+                  onChangeText={setRecoveryEmail}
+                  placeholder="correo@dominio.com"
+                  placeholderTextColor={palette.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </>
+            )}
+
+            {isInvitation && (
+              <>
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Codigo de invitacion
+                </Text>
+                <TextInput
+                  ref={invitationCodeInputRef}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={invitationForm.invitationCode}
+                  onChangeText={(value) =>
+                    setInvitationForm((current) => ({
+                      ...current,
+                      invitationCode: value,
+                    }))
+                  }
+                  placeholder="INV-000001"
+                  placeholderTextColor={palette.placeholder}
+                  autoCapitalize="characters"
+                  returnKeyType="next"
+                  onFocus={() => scrollToFocusedInput(vs(130))}
+                  onSubmitEditing={() =>
+                    invitationNameInputRef.current?.focus()
+                  }
+                />
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Nombre completo
+                </Text>
+                <TextInput
+                  ref={invitationNameInputRef}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={invitationForm.fullName}
+                  onChangeText={(value) =>
+                    setInvitationForm((current) => ({
+                      ...current,
+                      fullName: value,
+                    }))
+                  }
+                  placeholder="Nombre del tecnico"
+                  placeholderTextColor={palette.placeholder}
+                  returnKeyType="next"
+                  onFocus={() => scrollToFocusedInput(vs(190))}
+                  onSubmitEditing={() =>
+                    invitationPhoneInputRef.current?.focus()
+                  }
+                />
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Telefono
+                </Text>
+                <TextInput
+                  ref={invitationPhoneInputRef}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={invitationForm.phone}
+                  onChangeText={(value) =>
+                    setInvitationForm((current) => ({
+                      ...current,
+                      phone: value,
+                    }))
+                  }
+                  placeholder="Numero de contacto"
+                  placeholderTextColor={palette.placeholder}
+                  keyboardType="phone-pad"
+                  returnKeyType="next"
+                  onFocus={() => scrollToFocusedInput(vs(250))}
+                  onSubmitEditing={() =>
+                    invitationEmailInputRef.current?.focus()
+                  }
+                />
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Correo
+                </Text>
+                <TextInput
+                  ref={invitationEmailInputRef}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                      color: palette.text,
+                    },
+                  ]}
+                  value={invitationForm.email}
+                  onChangeText={(value) =>
+                    setInvitationForm((current) => ({
+                      ...current,
+                      email: value,
+                    }))
+                  }
+                  placeholder="correo@dominio.com"
+                  placeholderTextColor={palette.placeholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  onFocus={() => scrollToFocusedInput(vs(310))}
+                  onSubmitEditing={() =>
+                    invitationPasswordInputRef.current?.focus()
+                  }
+                />
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Contrasena
+                </Text>
+                <View
+                  style={[
+                    styles.passwordField,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    ref={invitationPasswordInputRef}
+                    style={[styles.passwordInput, { color: palette.text }]}
+                    value={invitationForm.password}
+                    onChangeText={(value) =>
+                      setInvitationForm((current) => ({
+                        ...current,
+                        password: value,
+                      }))
+                    }
+                    placeholder="Minimo 6 caracteres"
+                    placeholderTextColor={palette.placeholder}
+                    secureTextEntry={!showInvitationPassword}
+                    autoCapitalize="none"
+                    returnKeyType="next"
+                    onFocus={() => scrollToFocusedInput(vs(380))}
+                    onSubmitEditing={() =>
+                      invitationConfirmPasswordInputRef.current?.focus()
+                    }
+                  />
+                  <Pressable
+                    onPress={() =>
+                      setShowInvitationPassword((current) => !current)
+                    }
+                    style={({ pressed }) => [
+                      styles.passwordEyeButton,
+                      pressed && styles.linkButtonPressed,
+                    ]}
+                  >
+                    <Ionicons
+                      color={palette.muted}
+                      name={
+                        showInvitationPassword
+                          ? "eye-off-outline"
+                          : "eye-outline"
+                      }
+                      size={rf(19)}
+                    />
+                  </Pressable>
+                </View>
+
+                <Text style={[styles.label, { color: palette.text }]}>
+                  Confirmar contrasena
+                </Text>
+                <View
+                  style={[
+                    styles.passwordField,
+                    {
+                      borderColor: palette.border,
+                      backgroundColor: palette.surfaceAlt,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    ref={invitationConfirmPasswordInputRef}
+                    style={[styles.passwordInput, { color: palette.text }]}
+                    value={invitationForm.confirmPassword}
+                    onChangeText={(value) =>
+                      setInvitationForm((current) => ({
+                        ...current,
+                        confirmPassword: value,
+                      }))
+                    }
+                    placeholder="Repite la contrasena"
+                    placeholderTextColor={palette.placeholder}
+                    secureTextEntry={!showInvitationConfirmPassword}
+                    autoCapitalize="none"
+                    returnKeyType="done"
+                    onFocus={() => scrollToFocusedInput(vs(450))}
+                    onSubmitEditing={handleInvitationActivation}
+                  />
+                  <Pressable
+                    onPress={() =>
+                      setShowInvitationConfirmPassword((current) => !current)
+                    }
+                    style={({ pressed }) => [
+                      styles.passwordEyeButton,
+                      pressed && styles.linkButtonPressed,
+                    ]}
+                  >
+                    <Ionicons
+                      color={palette.muted}
+                      name={
+                        showInvitationConfirmPassword
+                          ? "eye-off-outline"
+                          : "eye-outline"
+                      }
+                      size={rf(19)}
+                    />
+                  </Pressable>
+                </View>
+              </>
+            )}
+
+            {!!feedback && (
+              <Text style={[styles.infoText, { color: palette.accent }]}>
+                {feedback}
+              </Text>
+            )}
+            {!!error && (
+              <Text style={[styles.errorText, { color: palette.danger }]}>
+                {error}
+              </Text>
+            )}
+
+            <Pressable
+              onPress={
+                mode === modes.recovery
+                  ? handleRecovery
+                  : isInvitation
+                    ? handleInvitationActivation
+                    : isRegister
+                      ? handleSignUp
+                      : handleLogin
+              }
+              disabled={authBusy}
+              style={({ pressed }) => [
+                styles.submitButton,
+                { backgroundColor: palette.accent },
+                authBusy && styles.submitButtonDisabled,
+                pressed && styles.pressed,
+              ]}
+            >
+              {authBusy ? (
+                <ActivityIndicator color={palette.white} size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  {mode === modes.recovery
+                    ? "Enviar enlace"
+                    : isInvitation
+                      ? "Activar cuenta"
+                      : isRegister
+                        ? "Crear cuenta"
+                        : "Entrar"}
+                </Text>
+              )}
+            </Pressable>
+
+            {isLogin && (
+              <View style={styles.secondaryLinks}>
+                <Pressable
+                  onPress={() => {
+                    resetMessages();
+                    setRecoveryEmail(loginForm.email);
                     setMode(modes.recovery);
                   }}
-                />
-                <LinkButton
-                  label="Activar invitacion"
+                  style={({ pressed }) => [
+                    styles.linkButton,
+                    pressed && styles.linkButtonPressed,
+                  ]}
+                >
+                  <Text
+                    style={[styles.linkButtonText, { color: palette.info }]}
+                  >
+                    Recuperar contrasena
+                  </Text>
+                </Pressable>
+                <Pressable
                   onPress={() => {
                     resetMessages();
                     setMode(modes.invitation);
                   }}
-                />
+                  style={({ pressed }) => [
+                    styles.linkButton,
+                    pressed && styles.linkButtonPressed,
+                  ]}
+                >
+                  <Text
+                    style={[styles.linkButtonText, { color: palette.info }]}
+                  >
+                    Activar invitacion
+                  </Text>
+                </Pressable>
               </View>
-            </>
-          )}
+            )}
 
-          {mode === modes.recovery && (
-            <>
-              <LabeledInput
-                label="Correo del usuario"
-                value={recoveryEmail}
-                onChangeText={setRecoveryEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <PrimaryButton
-                label="Enviar correo"
-                loading={authBusy}
-                onPress={handleRecovery}
-              />
-              <LinkButton
-                label="Volver al login"
+            {isRegister && (
+              <Pressable
                 onPress={() => {
                   resetMessages();
-                  setMode(modes.login);
+                  setMode(modes.invitation);
                 }}
-              />
-            </>
-          )}
-
-          {mode === modes.invitation && (
-            <>
-              <LabeledInput
-                label="Codigo de invitacion"
-                value={invitationForm.invitationCode}
-                onChangeText={(value) =>
-                  setInvitationForm((current) => ({
-                    ...current,
-                    invitationCode: value,
-                  }))
-                }
-                autoCapitalize="characters"
-              />
-              <LabeledInput
-                label="Nombre completo"
-                value={invitationForm.fullName}
-                onChangeText={(value) =>
-                  setInvitationForm((current) => ({
-                    ...current,
-                    fullName: value,
-                  }))
-                }
-              />
-              <LabeledInput
-                label="Telefono"
-                value={invitationForm.phone}
-                onChangeText={(value) =>
-                  setInvitationForm((current) => ({ ...current, phone: value }))
-                }
-                keyboardType="phone-pad"
-              />
-              <LabeledInput
-                label="Correo"
-                value={invitationForm.email}
-                onChangeText={(value) =>
-                  setInvitationForm((current) => ({ ...current, email: value }))
-                }
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <LabeledInput
-                label="Contrasena"
-                value={invitationForm.password}
-                onChangeText={(value) =>
-                  setInvitationForm((current) => ({
-                    ...current,
-                    password: value,
-                  }))
-                }
-                secureTextEntry
-                autoCapitalize="none"
-              />
-              <LabeledInput
-                label="Confirmar contrasena"
-                value={invitationForm.confirmPassword}
-                onChangeText={(value) =>
-                  setInvitationForm((current) => ({
-                    ...current,
-                    confirmPassword: value,
-                  }))
-                }
-                secureTextEntry
-                autoCapitalize="none"
-              />
-              <PrimaryButton
-                label="Activar cuenta"
-                loading={authBusy}
-                onPress={handleInvitationActivation}
-              />
-              <LinkButton
-                label="Volver al login"
-                onPress={() => {
-                  resetMessages();
-                  setMode(modes.login);
-                }}
-              />
-            </>
-          )}
-
-          {(error || feedback) && (
-            <View
-              style={[
-                styles.messageBox,
-                {
-                  backgroundColor: error
-                    ? colors.cardMuted
-                    : colors.backgroundAccent,
-                  borderColor: error ? colors.danger : colors.borderStrong,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.messageText,
-                  { color: error ? colors.danger : colors.text },
+                style={({ pressed }) => [
+                  styles.linkButton,
+                  pressed && styles.linkButtonPressed,
                 ]}
               >
-                {error || feedback}
-              </Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+                <Text style={[styles.linkButtonText, { color: palette.info }]}>
+                  Tengo una invitacion
+                </Text>
+              </Pressable>
+            )}
+
+            {mode === modes.recovery && (
+              <Pressable
+                onPress={() => {
+                  resetMessages();
+                  setMode(modes.login);
+                }}
+                style={({ pressed }) => [
+                  styles.linkButton,
+                  pressed && styles.linkButtonPressed,
+                ]}
+              >
+                <Text style={[styles.linkButtonText, { color: palette.info }]}>
+                  Volver al login
+                </Text>
+              </Pressable>
+            )}
+
+            <Text style={[styles.securityHint, { color: palette.muted }]}>
+              {isInvitation
+                ? "La activacion genera tu perfil operativo y puede quedar pendiente de aprobacion interna."
+                : isRegister
+                  ? "Al crear tu cuenta se genera tu perfil operativo y queda lista para acceder al taller."
+                  : "Al continuar, tus datos locales se vinculan con tu espacio seguro en la nube."}
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-function LabeledInput({ label, ...props }) {
-  const { colors } = useTheme();
+function resolveHeroIcon(mode, index) {
+  if (mode === modes.invitation) {
+    return (
+      ["key-outline", "shield-checkmark-outline", "construct-outline"][index] ||
+      "ellipse-outline"
+    );
+  }
+
+  if (mode === modes.register) {
+    return (
+      ["person-add-outline", "document-text-outline", "cloud-upload-outline"][
+        index
+      ] || "ellipse-outline"
+    );
+  }
+
+  if (mode === modes.recovery) {
+    return (
+      ["mail-open-outline", "lock-closed-outline"][index] || "ellipse-outline"
+    );
+  }
 
   return (
-    <View style={styles.inputGroup}>
-      <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-        {label}
-      </Text>
-      <TextInput
-        placeholderTextColor={colors.textTertiary}
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.inputBackground,
-            borderColor: colors.border,
-            color: colors.text,
-          },
-        ]}
-        {...props}
-      />
-    </View>
-  );
-}
-
-function PrimaryButton({ label, loading, onPress }) {
-  const { colors } = useTheme();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={loading}
-      style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-    >
-      {loading ? (
-        <ActivityIndicator color={colors.white} />
-      ) : (
-        <Text style={[styles.primaryButtonText, { color: colors.white }]}>
-          {label}
-        </Text>
-      )}
-    </Pressable>
-  );
-}
-
-function LinkButton({ label, onPress }) {
-  const { colors } = useTheme();
-
-  return (
-    <Pressable onPress={onPress} style={styles.linkButton}>
-      <Text style={[styles.linkText, { color: colors.primary }]}>{label}</Text>
-    </Pressable>
+    ["cloud-done-outline", "shield-checkmark-outline", "car-sport-outline"][
+      index
+    ] || "ellipse-outline"
   );
 }
 
@@ -422,85 +1047,179 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  scrollContent: {
+  keyboardContainer: {
+    flex: 1,
     padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingBottom: vs(48),
+    gap: vs(18),
   },
   heroCard: {
-    borderWidth: 1,
     borderRadius: borderRadius.xl,
+    borderCurve: "continuous",
     padding: spacing.xl,
-    gap: spacing.sm,
+    gap: vs(10),
+    shadowOffset: { width: 0, height: s(8) },
+    shadowOpacity: 0.12,
+    shadowRadius: s(18),
+    elevation: 10,
   },
-  kicker: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-  },
-  title: {
-    fontSize: rf(30),
-    fontWeight: "900",
-    letterSpacing: -0.8,
-  },
-  subtitle: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  formCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-  inputGroup: {
-    gap: spacing.xs,
-  },
-  inputLabel: {
+  heroEyebrow: {
+    color: "rgba(255,255,255,0.74)",
     fontSize: rf(12),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
+  heroTitle: {
+    color: "#ffffff",
+    fontSize: rf(26),
+    fontWeight: "800",
+  },
+  heroSubtitle: {
+    color: "rgba(255,255,255,0.88)",
+    fontSize: rf(14),
+    lineHeight: vs(20),
+  },
+  heroHighlights: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: hs(10),
+    marginTop: vs(8),
+  },
+  heroHighlightPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: hs(6),
+    borderRadius: borderRadius.xl,
+    borderCurve: "continuous",
+    paddingHorizontal: hs(12),
+    paddingVertical: vs(8),
+  },
+  heroHighlightText: {
+    color: "#ffffff",
+    fontSize: rf(12),
+    fontWeight: "700",
+  },
+  formCard: {
+    borderRadius: borderRadius.xl,
+    borderCurve: "continuous",
+    padding: spacing.lg,
+    gap: vs(10),
+    shadowOffset: { width: 0, height: s(8) },
+    shadowOpacity: 0.08,
+    shadowRadius: s(18),
+    elevation: 8,
+  },
+  modeSwitch: {
+    flexDirection: "row",
+    borderRadius: borderRadius.lg,
+    borderCurve: "continuous",
+    padding: s(4),
+    marginBottom: vs(8),
+  },
+  modeButton: {
+    flex: 1,
+    borderRadius: borderRadius.md,
+    borderCurve: "continuous",
+    paddingVertical: vs(12),
+    alignItems: "center",
+  },
+  modeButtonActive: {
+    backgroundColor: "#000000",
+  },
+  modeButtonText: {
+    fontSize: rf(14),
+    fontWeight: "700",
+  },
+  modeButtonTextActive: {
+    color: "#ffffff",
+  },
+  label: {
+    fontSize: rf(13),
+    fontWeight: "700",
+    marginTop: vs(4),
+  },
   input: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    borderCurve: "continuous",
+    paddingHorizontal: hs(14),
+    paddingVertical: vs(14),
     fontSize: rf(15),
   },
-  primaryButton: {
+  passwordField: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+    borderCurve: "continuous",
+    paddingLeft: hs(14),
+    paddingRight: hs(6),
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: vs(14),
+    fontSize: rf(15),
+  },
+  passwordEyeButton: {
+    width: s(38),
+    height: s(38),
+    borderRadius: s(19),
     alignItems: "center",
     justifyContent: "center",
-    minHeight: spacing.xxl + spacing.md,
   },
-  primaryButtonText: {
-    fontSize: rf(14),
+  errorText: {
+    fontSize: rf(13),
+    fontWeight: "600",
+    marginTop: vs(4),
+  },
+  infoText: {
+    fontSize: rf(13),
+    fontWeight: "600",
+    marginTop: vs(4),
+  },
+  submitButton: {
+    marginTop: vs(12),
+    borderRadius: borderRadius.md,
+    borderCurve: "continuous",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: vs(15),
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
+  },
+  submitButtonText: {
+    color: "#ffffff",
+    fontSize: rf(15),
     fontWeight: "800",
   },
-  linkRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: spacing.md,
-  },
   linkButton: {
-    paddingVertical: spacing.xs,
+    alignItems: "center",
+    paddingTop: vs(8),
   },
-  linkText: {
+  linkButtonPressed: {
+    opacity: 0.75,
+  },
+  linkButtonText: {
     fontSize: rf(13),
     fontWeight: "700",
   },
-  messageBox: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+  secondaryLinks: {
+    gap: vs(4),
   },
-  messageText: {
-    fontSize: rf(13),
-    lineHeight: rf(19),
+  securityHint: {
+    marginTop: vs(4),
+    fontSize: rf(12),
+    lineHeight: vs(18),
+    textAlign: "center",
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
   },
 });

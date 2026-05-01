@@ -24,12 +24,13 @@ Ultima actualizacion: 30-04-2026
 - Completado: Firestore definido e integrado como base de datos inicial del proyecto.
 - Completado: estrategia base de IDs consecutivos definida por coleccion mediante contadores transaccionales.
 - Completado: Firebase Auth definido como proveedor de autenticacion.
-- Completado: registro definido como restringido por invitacion o aprobacion interna, no libre.
+- Completado: registro definido como mixto, con registro directo y activacion opcional por invitacion.
 - Completado: UID de Firebase Auth definido como identificador tecnico principal del usuario.
 - Completado: codigo consecutivo visible del usuario definido como campo de Firestore, no como clave tecnica.
 - Completado: login, recuperacion de contrasena y persistencia de sesion implementados con Firebase Auth.
 - Completado: lectura del perfil userProfiles vinculada al uid autenticado.
-- En progreso: activacion de altas nuevas por invitacion con espera de aprobacion interna.
+- Completado: reglas base de Firestore y Storage definidas para autenticacion, perfiles, invitaciones y modulos operativos.
+- En progreso: activacion de altas nuevas por invitacion y alta directa de usuarios con perfil en Firestore.
 - Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
 
 ## Fase 0. Fundacion tecnica
@@ -134,12 +135,13 @@ Ultima actualizacion: 30-04-2026
 - 30-04-2026: se cierra la definicion de roles, permisos, politica de registro, modelo de entidades y regla de identidad de usuarios con Firebase Auth.
 - 30-04-2026: se implementan login, recuperacion, persistencia de sesion y lectura del perfil userProfiles por uid autenticado.
 - 30-04-2026: se implementa la activacion de cuenta por invitacion con estado de aprobacion pendiente; falta el lado administrativo para emitir y aprobar altas.
+- 01-05-2026: se agregan archivos de seguridad de Firebase con reglas base para Firestore y Storage, mas la guia de despliegue y bootstrap del primer administrador.
 
 ## Decisiones base cerradas
 
 - Autenticacion: Firebase Auth.
 - Base de datos operativa: Firestore.
-- Registro: restringido por invitacion o aprobacion interna; no habra auto registro publico libre.
+- Registro: mixto; se permite alta directa y tambien activacion por invitacion.
 - Identidad tecnica de usuario: `uid` de Firebase Auth.
 - Identidad visible interna de usuario: `userCode` consecutivo almacenado en Firestore.
 - Perfil tecnico del mecanico: se modela como usuario con rol `mechanic`, no como identidad separada de autenticacion.

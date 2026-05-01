@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userProfilePath(uid) {
+      return /databases/(default)/documents/userProfiles/$(uid);
+    }
+
+    function hasProfile() {
+      return signedIn() && firestore.exists(userProfilePath(request.auth.uid));
+    }
+
+    function profileData() {
+      return firestore.get(userProfilePath(request.auth.uid)).data;
+    }
+
+    function isActiveProfile() {
+      return hasProfile() && profileData().status == 'active';
+    }
+
+    function isAdmin() {
+      return isActiveProfile() && profileData().role == 'administrator';
+    }
+
+    function isReception() {
+      return isActiveProfile() && profileData().role == 'reception';
+    }
+
+    function isMechanic() {
+      return isActiveProfile() && profileData().role == 'mechanic';
+    }
+
+    function canManageOperations() {
+      return isAdmin() || isReception();
+    }
+
+    match /userProfiles/{uid}/{allPaths=**} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if signedIn() && (request.auth.uid == uid || isAdmin());
+    }
+
+    match /vehicles/{vehicleId}/{allPaths=**} {
+      allow read: if isActiveProfile();
+      allow write: if canManageOperations();
+    }
+
+    match /diagnostics/{diagnosticId}/{allPaths=**} {
+      allow read: if isActiveProfile();
+      allow write: if canManageOperations() || isMechanic();
+    }
+
+    match /workOrders/{workOrderId}/{allPaths=**} {
+      allow read: if isActiveProfile();
+      allow write: if canManageOperations() || isMechanic();
+    }
+
+    match /progressEntries/{progressEntryId}/{allPaths=**} {
+      allow read: if isActiveProfile();
+      allow write: if canManageOperations() || isMechanic();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

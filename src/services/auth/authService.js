@@ -12,7 +12,10 @@ import {
   getInvitationByCode,
   markInvitationAccepted,
 } from "./invitations";
-import { createUserProfileFromInvitation } from "./userProfiles";
+import {
+  createManualUserProfile,
+  createUserProfileFromInvitation,
+} from "./userProfiles";
 
 export function normalizeEmail(email) {
   return email.trim().toLowerCase();
@@ -28,6 +31,41 @@ export async function sendPasswordRecovery(email) {
 
 export async function signOutUserSession() {
   return signOut(auth);
+}
+
+export async function signUpWithProfile({ fullName, email, password, phone }) {
+  if (!REGISTRATION_POLICY.allowPublicSignUp) {
+    throw new Error("El registro publico no esta habilitado.");
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+  const credential = await createUserWithEmailAndPassword(
+    auth,
+    normalizedEmail,
+    password,
+  );
+
+  try {
+    const profile = await createManualUserProfile({
+      uid: credential.user.uid,
+      email: normalizedEmail,
+      fullName: fullName.trim(),
+      phone: phone?.trim() || "",
+    });
+
+    return {
+      user: credential.user,
+      profile,
+    };
+  } catch (error) {
+    try {
+      await deleteUser(credential.user);
+    } catch (deleteError) {
+      console.error("No se pudo revertir el usuario de Auth:", deleteError);
+    }
+
+    throw error;
+  }
 }
 
 export async function registerUserFromInvitation({
