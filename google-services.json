@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "399899302875",
+    "project_id": "auto-guardian-t",
+    "storage_bucket": "auto-guardian-t.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:399899302875:android:d26fb3692b15c4591f25fe",
+        "android_client_info": {
+          "package_name": "com.trenkit.auto_guardian_taller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiiySJE_C3QZEYJH4b9cC5LzCHa_OYexY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

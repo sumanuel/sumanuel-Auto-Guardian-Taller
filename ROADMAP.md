@@ -21,17 +21,20 @@ Ultima actualizacion: 30-04-2026
 - Completado: base Expo creada y publicada en GitHub.
 - Completado: sistema inicial de tema y responsive alineado con Auto-Guardian.
 - Completado: skill e instrucciones de UI agregadas al repositorio.
+- Completado: Firestore definido e integrado como base de datos inicial del proyecto.
+- Completado: estrategia base de IDs consecutivos definida por coleccion mediante contadores transaccionales.
 - Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
 
 ## Fase 0. Fundacion tecnica
 
-| ID   | Aspecto                                                                                                 | Estado    | Prioridad | Dependencias | Completado |
-| ---- | ------------------------------------------------------------------------------------------------------- | --------- | --------- | ------------ | ---------- |
-| F0-1 | Definir arquitectura de datos y modulos principales de la app                                           | Pendiente | Alta      | Ninguna      | -          |
-| F0-2 | Definir backend o proveedor de servicios para auth, base de datos y correo                              | Pendiente | Alta      | F0-1         | -          |
-| F0-3 | Definir roles y permisos basicos: administrador, recepcion, mecanico                                    | Pendiente | Alta      | F0-1         | -          |
-| F0-4 | Modelar entidades principales: usuarios, clientes, vehiculos, diagnosticos, ordenes, avances, repuestos | Pendiente | Alta      | F0-1         | -          |
-| F0-5 | Definir flujo de invitacion de mecanicos por correo reutilizando la otra app                            | Pendiente | Alta      | F0-2, F0-3   | -          |
+| ID   | Aspecto                                                                                                 | Estado      | Prioridad | Dependencias | Completado |
+| ---- | ------------------------------------------------------------------------------------------------------- | ----------- | --------- | ------------ | ---------- |
+| F0-1 | Definir arquitectura de datos y modulos principales de la app                                           | Pendiente   | Alta      | Ninguna      | -          |
+| F0-2 | Definir backend o proveedor de servicios para auth, base de datos y correo                              | En progreso | Alta      | F0-1         | -          |
+| F0-3 | Definir roles y permisos basicos: administrador, recepcion, mecanico                                    | Pendiente   | Alta      | F0-1         | -          |
+| F0-4 | Modelar entidades principales: usuarios, clientes, vehiculos, diagnosticos, ordenes, avances, repuestos | Pendiente   | Alta      | F0-1         | -          |
+| F0-5 | Definir flujo de invitacion de mecanicos por correo reutilizando la otra app                            | Pendiente   | Alta      | F0-2, F0-3   | -          |
+| F0-6 | Integrar Firestore y helper reutilizable para IDs consecutivos por coleccion                            | Completado  | Alta      | F0-2         | 30-04-2026 |
 
 ## Fase 1. Acceso y cuentas
 
@@ -118,3 +121,4 @@ Ultima actualizacion: 30-04-2026
 
 - 30-04-2026: se crea el roadmap inicial del producto con fases, dependencias y estados base.
 - 30-04-2026: proyecto base Expo publicado en GitHub con lineamiento visual heredado de Auto-Guardian.
+- 30-04-2026: se adopta Firebase Firestore como base de datos inicial y se deja lista la estrategia de IDs consecutivos por coleccion.
