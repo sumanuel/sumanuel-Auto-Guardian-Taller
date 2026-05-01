@@ -23,7 +23,7 @@ export const userProfileModel = {
   ],
   defaults: {
     role: USER_ROLES.MECHANIC,
-    status: USER_STATUSES.INVITED,
+    status: USER_STATUSES.PENDING_APPROVAL,
   },
 };
 

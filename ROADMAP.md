@@ -27,6 +27,9 @@ Ultima actualizacion: 30-04-2026
 - Completado: registro definido como restringido por invitacion o aprobacion interna, no libre.
 - Completado: UID de Firebase Auth definido como identificador tecnico principal del usuario.
 - Completado: codigo consecutivo visible del usuario definido como campo de Firestore, no como clave tecnica.
+- Completado: login, recuperacion de contrasena y persistencia de sesion implementados con Firebase Auth.
+- Completado: lectura del perfil userProfiles vinculada al uid autenticado.
+- En progreso: activacion de altas nuevas por invitacion con espera de aprobacion interna.
 - Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
 
 ## Fase 0. Fundacion tecnica
@@ -44,13 +47,13 @@ Ultima actualizacion: 30-04-2026
 
 ## Fase 1. Acceso y cuentas
 
-| ID   | Aspecto                                                  | Estado    | Prioridad | Dependencias     | Completado |
-| ---- | -------------------------------------------------------- | --------- | --------- | ---------------- | ---------- |
-| F1-1 | Login de usuarios                                        | Pendiente | Alta      | F0-2, F0-3       | -          |
-| F1-2 | Registro de usuarios autorizados                         | Pendiente | Alta      | F0-2, F0-3       | -          |
-| F1-3 | Recuperacion de contrasena                               | Pendiente | Alta      | F0-2             | -          |
-| F1-4 | Persistencia de sesion y cierre de sesion                | Pendiente | Alta      | F1-1             | -          |
-| F1-5 | Validaciones, mensajes de error y estados vacios de auth | Pendiente | Media     | F1-1, F1-2, F1-3 | -          |
+| ID   | Aspecto                                                  | Estado      | Prioridad | Dependencias     | Completado |
+| ---- | -------------------------------------------------------- | ----------- | --------- | ---------------- | ---------- |
+| F1-1 | Login de usuarios                                        | Completado  | Alta      | F0-2, F0-3       | 30-04-2026 |
+| F1-2 | Registro de usuarios autorizados                         | En progreso | Alta      | F0-2, F0-3       | -          |
+| F1-3 | Recuperacion de contrasena                               | Completado  | Alta      | F0-2             | 30-04-2026 |
+| F1-4 | Persistencia de sesion y cierre de sesion                | Completado  | Alta      | F1-1             | 30-04-2026 |
+| F1-5 | Validaciones, mensajes de error y estados vacios de auth | Completado  | Media     | F1-1, F1-2, F1-3 | 30-04-2026 |
 
 ## Fase 2. Clientes y vehiculos
 
@@ -114,14 +117,14 @@ Ultima actualizacion: 30-04-2026
 
 ## Hitos sugeridos
 
-| Hito | Objetivo                                                        | Estado    |
-| ---- | --------------------------------------------------------------- | --------- |
-| H1   | Acceso completo con login, registro y recuperacion              | Pendiente |
-| H2   | Gestion completa de clientes y vehiculos                        | Pendiente |
-| H3   | Equipo tecnico con invitaciones por correo                      | Pendiente |
-| H4   | Diagnostico con partes, repuestos y aprobacion                  | Pendiente |
-| H5   | Seguimiento de trabajos y avances                               | Pendiente |
-| H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente |
+| Hito | Objetivo                                                        | Estado      |
+| ---- | --------------------------------------------------------------- | ----------- |
+| H1   | Acceso completo con login, registro y recuperacion              | En progreso |
+| H2   | Gestion completa de clientes y vehiculos                        | Pendiente   |
+| H3   | Equipo tecnico con invitaciones por correo                      | Pendiente   |
+| H4   | Diagnostico con partes, repuestos y aprobacion                  | Pendiente   |
+| H5   | Seguimiento de trabajos y avances                               | Pendiente   |
+| H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente   |
 
 ## Historial de avances
 
@@ -129,6 +132,8 @@ Ultima actualizacion: 30-04-2026
 - 30-04-2026: proyecto base Expo publicado en GitHub con lineamiento visual heredado de Auto-Guardian.
 - 30-04-2026: se adopta Firebase Firestore como base de datos inicial y se deja lista la estrategia de IDs consecutivos por coleccion.
 - 30-04-2026: se cierra la definicion de roles, permisos, politica de registro, modelo de entidades y regla de identidad de usuarios con Firebase Auth.
+- 30-04-2026: se implementan login, recuperacion, persistencia de sesion y lectura del perfil userProfiles por uid autenticado.
+- 30-04-2026: se implementa la activacion de cuenta por invitacion con estado de aprobacion pendiente; falta el lado administrativo para emitir y aprobar altas.
 
 ## Decisiones base cerradas
 

@@ -25,7 +25,13 @@ const agenda = [
 
 const shortcuts = ["Nueva orden", "Registrar gasto", "Inventario", "Clientes"];
 
-export default function WorkshopHomeScreen() {
+const roleLabels = {
+  administrator: "Administrador",
+  reception: "Recepcion",
+  mechanic: "Mecanico",
+};
+
+export default function WorkshopHomeScreen({ onSignOut, userProfile }) {
   const { colors, isDarkMode, toggleTheme } = useTheme();
 
   return (
@@ -46,6 +52,33 @@ export default function WorkshopHomeScreen() {
           end={{ x: 1, y: 1 }}
           style={[styles.heroCard, { borderColor: colors.borderStrong }]}
         >
+          <View style={styles.topBar}>
+            <View style={styles.userSummary}>
+              <Text style={[styles.userLabel, { color: colors.textSecondary }]}>
+                Sesion activa
+              </Text>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {userProfile?.fullName || "Usuario sin nombre"}
+              </Text>
+              <Text style={[styles.userRole, { color: colors.primary }]}>
+                {roleLabels[userProfile?.role] ||
+                  userProfile?.role ||
+                  "Sin rol"}
+              </Text>
+            </View>
+            <Pressable
+              onPress={onSignOut}
+              style={[
+                styles.signOutButton,
+                { borderColor: colors.borderStrong },
+              ]}
+            >
+              <Text style={[styles.signOutText, { color: colors.text }]}>
+                Cerrar sesion
+              </Text>
+            </Pressable>
+          </View>
+
           <View style={styles.heroHeader}>
             <View style={styles.heroCopy}>
               <Text style={[styles.kicker, { color: colors.primary }]}>
@@ -201,6 +234,42 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
     gap: spacing.xl,
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+  },
+  userSummary: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  userLabel: {
+    fontSize: rf(11),
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  userName: {
+    fontSize: rf(18),
+    fontWeight: "800",
+  },
+  userRole: {
+    fontSize: rf(12),
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  signOutButton: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  signOutText: {
+    fontSize: rf(12),
+    fontWeight: "700",
   },
   heroHeader: {
     gap: spacing.lg,

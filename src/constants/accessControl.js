@@ -6,6 +6,7 @@ export const USER_ROLES = {
 
 export const USER_STATUSES = {
   INVITED: "invited",
+  PENDING_APPROVAL: "pendingApproval",
   ACTIVE: "active",
   SUSPENDED: "suspended",
   DISABLED: "disabled",
