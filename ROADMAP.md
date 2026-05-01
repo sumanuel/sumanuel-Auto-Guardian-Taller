@@ -23,18 +23,24 @@ Ultima actualizacion: 30-04-2026
 - Completado: skill e instrucciones de UI agregadas al repositorio.
 - Completado: Firestore definido e integrado como base de datos inicial del proyecto.
 - Completado: estrategia base de IDs consecutivos definida por coleccion mediante contadores transaccionales.
+- Completado: Firebase Auth definido como proveedor de autenticacion.
+- Completado: registro definido como restringido por invitacion o aprobacion interna, no libre.
+- Completado: UID de Firebase Auth definido como identificador tecnico principal del usuario.
+- Completado: codigo consecutivo visible del usuario definido como campo de Firestore, no como clave tecnica.
 - Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
 
 ## Fase 0. Fundacion tecnica
 
-| ID   | Aspecto                                                                                                 | Estado      | Prioridad | Dependencias | Completado |
-| ---- | ------------------------------------------------------------------------------------------------------- | ----------- | --------- | ------------ | ---------- |
-| F0-1 | Definir arquitectura de datos y modulos principales de la app                                           | Pendiente   | Alta      | Ninguna      | -          |
-| F0-2 | Definir backend o proveedor de servicios para auth, base de datos y correo                              | En progreso | Alta      | F0-1         | -          |
-| F0-3 | Definir roles y permisos basicos: administrador, recepcion, mecanico                                    | Pendiente   | Alta      | F0-1         | -          |
-| F0-4 | Modelar entidades principales: usuarios, clientes, vehiculos, diagnosticos, ordenes, avances, repuestos | Pendiente   | Alta      | F0-1         | -          |
-| F0-5 | Definir flujo de invitacion de mecanicos por correo reutilizando la otra app                            | Pendiente   | Alta      | F0-2, F0-3   | -          |
-| F0-6 | Integrar Firestore y helper reutilizable para IDs consecutivos por coleccion                            | Completado  | Alta      | F0-2         | 30-04-2026 |
+| ID   | Aspecto                                                                                                 | Estado     | Prioridad | Dependencias | Completado |
+| ---- | ------------------------------------------------------------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
+| F0-1 | Definir arquitectura de datos y modulos principales de la app                                           | Completado | Alta      | Ninguna      | 30-04-2026 |
+| F0-2 | Definir backend o proveedor de servicios para auth, base de datos y correo                              | Completado | Alta      | F0-1         | 30-04-2026 |
+| F0-3 | Definir roles y permisos basicos: administrador, recepcion, mecanico                                    | Completado | Alta      | F0-1         | 30-04-2026 |
+| F0-4 | Modelar entidades principales: usuarios, clientes, vehiculos, diagnosticos, ordenes, avances, repuestos | Completado | Alta      | F0-1         | 30-04-2026 |
+| F0-5 | Definir flujo de invitacion de mecanicos por correo reutilizando la otra app                            | Pendiente  | Alta      | F0-2, F0-3   | -          |
+| F0-6 | Integrar Firestore y helper reutilizable para IDs consecutivos por coleccion                            | Completado | Alta      | F0-2         | 30-04-2026 |
+| F0-7 | Definir politica de registro y aprobacion de cuentas                                                    | Completado | Alta      | F0-2, F0-3   | 30-04-2026 |
+| F0-8 | Definir regla de identidad tecnica de usuarios y codigo consecutivo visible                             | Completado | Alta      | F0-2, F0-4   | 30-04-2026 |
 
 ## Fase 1. Acceso y cuentas
 
@@ -122,3 +128,13 @@ Ultima actualizacion: 30-04-2026
 - 30-04-2026: se crea el roadmap inicial del producto con fases, dependencias y estados base.
 - 30-04-2026: proyecto base Expo publicado en GitHub con lineamiento visual heredado de Auto-Guardian.
 - 30-04-2026: se adopta Firebase Firestore como base de datos inicial y se deja lista la estrategia de IDs consecutivos por coleccion.
+- 30-04-2026: se cierra la definicion de roles, permisos, politica de registro, modelo de entidades y regla de identidad de usuarios con Firebase Auth.
+
+## Decisiones base cerradas
+
+- Autenticacion: Firebase Auth.
+- Base de datos operativa: Firestore.
+- Registro: restringido por invitacion o aprobacion interna; no habra auto registro publico libre.
+- Identidad tecnica de usuario: `uid` de Firebase Auth.
+- Identidad visible interna de usuario: `userCode` consecutivo almacenado en Firestore.
+- Perfil tecnico del mecanico: se modela como usuario con rol `mechanic`, no como identidad separada de autenticacion.

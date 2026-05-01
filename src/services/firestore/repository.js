@@ -22,6 +22,12 @@ const resolveCollection = (entityKey) => {
 export async function createEntityRecord(entityKey, payload) {
   const collectionConfig = resolveCollection(entityKey);
 
+  if (collectionConfig.idStrategy === "auth-uid") {
+    throw new Error(
+      `La coleccion ${collectionConfig.name} requiere un documentId controlado por Firebase Auth.`,
+    );
+  }
+
   return createSequentialDocument(
     collectionConfig.name,
     payload,
@@ -67,4 +73,8 @@ export async function patchEntityRecord(entityKey, documentId, payload) {
     ...payload,
     updatedAt: serverTimestamp(),
   });
+}
+
+export function getEntityCollectionConfig(entityKey) {
+  return resolveCollection(entityKey);
 }
