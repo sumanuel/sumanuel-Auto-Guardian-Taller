@@ -49,6 +49,7 @@ export async function createWorkOrder({
   diagnosticId,
   vehicleId,
   clientId,
+  assignedMechanicUids,
   assignedMechanicIdsText,
   status,
 }) {
@@ -56,7 +57,9 @@ export async function createWorkOrder({
     diagnosticId: normalizeOptional(diagnosticId),
     vehicleId: normalizeOptional(vehicleId),
     clientId: normalizeOptional(clientId),
-    assignedMechanicUids: normalizeUidList(assignedMechanicIdsText),
+    assignedMechanicUids: normalizeUidList(
+      assignedMechanicUids || assignedMechanicIdsText,
+    ),
     status: normalizeOptional(status) || "open",
     approvedAt: null,
     startedAt: null,
@@ -70,7 +73,9 @@ export async function updateWorkOrder(workOrderId, payload) {
     diagnosticId: normalizeOptional(payload.diagnosticId),
     vehicleId: normalizeOptional(payload.vehicleId),
     clientId: normalizeOptional(payload.clientId),
-    assignedMechanicUids: normalizeUidList(payload.assignedMechanicIdsText),
+    assignedMechanicUids: normalizeUidList(
+      payload.assignedMechanicUids || payload.assignedMechanicIdsText,
+    ),
     status: normalizeOptional(payload.status) || "open",
   });
 }
@@ -84,6 +89,9 @@ export function createEmptyWorkOrderForm(initialValues = {}) {
     diagnosticId: initialValues.diagnosticId || "",
     vehicleId: initialValues.vehicleId || "",
     clientId: initialValues.clientId || "",
+    assignedMechanicUids: Array.isArray(initialValues.assignedMechanicUids)
+      ? initialValues.assignedMechanicUids.filter(Boolean)
+      : normalizeUidList(initialValues.assignedMechanicIdsText),
     assignedMechanicIdsText: Array.isArray(initialValues.assignedMechanicUids)
       ? initialValues.assignedMechanicUids.join(", ")
       : initialValues.assignedMechanicIdsText || "",

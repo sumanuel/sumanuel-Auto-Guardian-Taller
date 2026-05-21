@@ -79,7 +79,7 @@ Ultima actualizacion: 21-05-2026
 | F3-1 | CRUD de mecanicos y personal tecnico              | Completado | Alta      | F0-4         | 21-05-2026 |
 | F3-2 | Flujo de invitacion en app para mecanicos         | Completado | Alta      | F0-5         | 21-05-2026 |
 | F3-3 | Aceptacion de invitacion y activacion de cuenta   | Completado | Alta      | F3-2, F1-1   | 21-05-2026 |
-| F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Pendiente  | Alta      | F3-1, F4-1   | -          |
+| F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Completado | Alta      | F3-1, F4-1   | 21-05-2026 |
 
 ## Fase 4. Diagnostico y plan de trabajo
 
@@ -96,9 +96,9 @@ Ultima actualizacion: 21-05-2026
 | ID   | Aspecto                                                                                      | Estado     | Prioridad | Dependencias | Completado |
 | ---- | -------------------------------------------------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
 | F5-1 | Crear orden de trabajo basada en un diagnostico existente                                    | Completado | Alta      | F4-1         | 21-05-2026 |
-| F5-2 | Registrar avances de mantenimiento o reparacion                                              | Pendiente  | Alta      | F5-1         | -          |
+| F5-2 | Registrar avances de mantenimiento o reparacion                                              | Completado | Alta      | F5-1         | 21-05-2026 |
 | F5-3 | Manejar estados del trabajo: recibido, diagnosticado, aprobado, en proceso, listo, entregado | Pendiente  | Alta      | F5-1         | -          |
-| F5-4 | Historial cronologico de avances por vehiculo y por orden                                    | Pendiente  | Alta      | F5-2         | -          |
+| F5-4 | Historial cronologico de avances por vehiculo y por orden                                    | Completado | Alta      | F5-2         | 21-05-2026 |
 | F5-5 | Registro de observaciones finales y entrega                                                  | Pendiente  | Media     | F5-3         | -          |
 
 ## Fase 6. Operacion necesaria para completar la app
@@ -130,7 +130,7 @@ Ultima actualizacion: 21-05-2026
 | H2   | Gestion completa de clientes y vehiculos                        | Completado  |
 | H3   | Equipo tecnico con invitaciones operativas en app               | Completado  |
 | H4   | Diagnostico con partes, repuestos y aprobacion                  | En progreso |
-| H5   | Seguimiento de trabajos y avances                               | Pendiente   |
+| H5   | Seguimiento de trabajos y avances                               | En progreso |
 | H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente   |
 
 ## Historial de avances
@@ -148,6 +148,7 @@ Ultima actualizacion: 21-05-2026
 - 21-05-2026: el flujo de invitaciones pasa a resolverse por correo invitado con codigo consecutivo solo como referencia visible; la pantalla de auth acepta por correo y el modulo de clientes se divide en lista operativa mas detalle real por cliente.
 - 21-05-2026: el alta y edicion de clientes pasan a una pantalla dedicada; la lista principal gana busqueda y filtros rapidos, y los perfiles registrados directamente se promocionan como administradores para evitar bloqueos en accesos e invitaciones.
 - 21-05-2026: las colaboraciones se alinean al modelo de tienda-app, detectando invitaciones pendientes despues del login en estado de acceso; ademas se abren las secciones iniciales de diagnosticos, ordenes y repuestos con lista operativa, formulario dedicado y regreso a la lista.
+- 21-05-2026: diagnosticos y ordenes pasan a asignar mecanicos reales desde userProfiles, y las ordenes ganan detalle operativo con registro de avances y cronologia visible por orden.
 
 ## Decisiones base cerradas
 

@@ -17,6 +17,7 @@ import {
   diagnosticStatusOptions,
   updateDiagnostic,
 } from "../services/diagnostics/diagnosticService";
+import { listMechanicProfiles } from "../services/admin/staffAdmin";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
@@ -34,6 +35,7 @@ export default function DiagnosticFormScreen({
   const { colors } = useTheme();
   const [submitting, setSubmitting] = useState(false);
   const [clients, setClients] = useState([]);
+  const [mechanics, setMechanics] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [form, setForm] = useState(
     createEmptyDiagnosticForm({
@@ -56,16 +58,18 @@ export default function DiagnosticFormScreen({
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [nextClients, nextVehicles] = await Promise.all([
+        const [nextClients, nextMechanics, nextVehicles] = await Promise.all([
           listClients(),
+          listMechanicProfiles(),
           listVehicles(),
         ]);
         setClients(nextClients);
+        setMechanics(nextMechanics);
         setVehicles(nextVehicles);
       } catch (error) {
         Alert.alert(
           "Diagnosticos",
-          "No se pudieron cargar clientes y vehiculos de apoyo.",
+          "No se pudieron cargar clientes, vehiculos y mecanicos de apoyo.",
         );
       }
     };
@@ -252,6 +256,59 @@ export default function DiagnosticFormScreen({
                   </Pressable>
                 );
               })}
+            </View>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Mecanico asignado
+            </Text>
+            <View style={styles.optionWrap}>
+              {mechanics.length ? (
+                mechanics.map((mechanic) => {
+                  const selected = form.assignedMechanicUid === mechanic.uid;
+
+                  return (
+                    <Pressable
+                      key={mechanic.uid}
+                      onPress={() =>
+                        setForm((current) => ({
+                          ...current,
+                          assignedMechanicUid: selected ? "" : mechanic.uid,
+                        }))
+                      }
+                      style={[
+                        styles.optionChip,
+                        {
+                          backgroundColor: selected
+                            ? colors.primaryStrong
+                            : colors.cardMuted,
+                          borderColor: selected
+                            ? colors.primaryStrong
+                            : colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          { color: selected ? colors.white : colors.text },
+                        ]}
+                      >
+                        {mechanic.fullName ||
+                          mechanic.email ||
+                          mechanic.userCode}
+                      </Text>
+                    </Pressable>
+                  );
+                })
+              ) : (
+                <Text
+                  style={[styles.helperText, { color: colors.textSecondary }]}
+                >
+                  No hay mecanicos disponibles para asignar.
+                </Text>
+              )}
             </View>
           </View>
 
@@ -459,6 +516,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   optionText: { fontSize: rf(12), fontWeight: "700" },
+  helperText: { fontSize: rf(12), lineHeight: rf(18) },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,

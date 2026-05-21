@@ -17,6 +17,7 @@ import {
   USER_STATUSES,
 } from "../../constants/accessControl";
 import { firestore } from "../firebase/config";
+import { patchEntityRecord } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
 import { reserveSequentialId } from "../firestore/sequentialIds";
 
@@ -188,6 +189,18 @@ export async function listStaffProfiles() {
           USER_ROLES.RECEPTION,
           USER_ROLES.MECHANIC,
         ].includes(profile.role),
+      ),
+  );
+}
+
+export async function listMechanicProfiles() {
+  const profiles = await listStaffProfiles();
+
+  return profiles.filter(
+    (profile) =>
+      profile.role === USER_ROLES.MECHANIC &&
+      [USER_STATUSES.ACTIVE, USER_STATUSES.PENDING_APPROVAL].includes(
+        profile.status,
       ),
   );
 }

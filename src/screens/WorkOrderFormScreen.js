@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
+import { listMechanicProfiles } from "../services/admin/staffAdmin";
 import { listClients } from "../services/clients/clientService";
 import { listDiagnostics } from "../services/diagnostics/diagnosticService";
 import { listVehicles } from "../services/vehicles/vehicleService";
@@ -35,6 +36,7 @@ export default function WorkOrderFormScreen({
   const [submitting, setSubmitting] = useState(false);
   const [diagnostics, setDiagnostics] = useState([]);
   const [clients, setClients] = useState([]);
+  const [mechanics, setMechanics] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [form, setForm] = useState(
     createEmptyWorkOrderForm({
@@ -57,13 +59,16 @@ export default function WorkOrderFormScreen({
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [nextDiagnostics, nextClients, nextVehicles] = await Promise.all([
-          listDiagnostics(),
-          listClients(),
-          listVehicles(),
-        ]);
+        const [nextDiagnostics, nextClients, nextMechanics, nextVehicles] =
+          await Promise.all([
+            listDiagnostics(),
+            listClients(),
+            listMechanicProfiles(),
+            listVehicles(),
+          ]);
         setDiagnostics(nextDiagnostics);
         setClients(nextClients);
+        setMechanics(nextMechanics);
         setVehicles(nextVehicles);
       } catch (error) {
         Alert.alert("Ordenes", "No se pudieron cargar diagnosticos de apoyo.");
@@ -125,6 +130,19 @@ export default function WorkOrderFormScreen({
   const vehiclePlate = vehicles.find(
     (vehicle) => vehicle.id === form.vehicleId,
   )?.plate;
+
+  const toggleMechanic = (uid) => {
+    setForm((current) => {
+      const exists = current.assignedMechanicUids.includes(uid);
+
+      return {
+        ...current,
+        assignedMechanicUids: exists
+          ? current.assignedMechanicUids.filter((item) => item !== uid)
+          : [...current.assignedMechanicUids, uid],
+      };
+    });
+  };
 
   return (
     <SafeAreaView
@@ -272,28 +290,50 @@ export default function WorkOrderFormScreen({
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
               Mecanicos asignados
             </Text>
-            <TextInput
-              multiline
-              numberOfLines={3}
-              onChangeText={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  assignedMechanicIdsText: value,
-                }))
-              }
-              placeholder="UIDs separados por coma o salto de linea"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical="top"
-              value={form.assignedMechanicIdsText}
-            />
+            <View style={styles.optionWrap}>
+              {mechanics.length ? (
+                mechanics.map((mechanic) => {
+                  const selected = form.assignedMechanicUids.includes(
+                    mechanic.uid,
+                  );
+
+                  return (
+                    <Pressable
+                      key={mechanic.uid}
+                      onPress={() => toggleMechanic(mechanic.uid)}
+                      style={[
+                        styles.optionChip,
+                        {
+                          backgroundColor: selected
+                            ? colors.primaryStrong
+                            : colors.cardMuted,
+                          borderColor: selected
+                            ? colors.primaryStrong
+                            : colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          { color: selected ? colors.white : colors.text },
+                        ]}
+                      >
+                        {mechanic.fullName ||
+                          mechanic.email ||
+                          mechanic.userCode}
+                      </Text>
+                    </Pressable>
+                  );
+                })
+              ) : (
+                <Text
+                  style={[styles.helperText, { color: colors.textSecondary }]}
+                >
+                  No hay mecanicos disponibles para asignar.
+                </Text>
+              )}
+            </View>
           </View>
 
           <Pressable
@@ -359,6 +399,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   optionText: { fontSize: rf(12), fontWeight: "700" },
+  helperText: { fontSize: rf(12), lineHeight: rf(18) },
   summaryPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,

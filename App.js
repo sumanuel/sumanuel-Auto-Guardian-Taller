@@ -245,6 +245,7 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.WORK_ORDER_FORM);
           }}
+          userProfile={userProfile}
           viewState={workOrdersViewState}
         />
       </>
