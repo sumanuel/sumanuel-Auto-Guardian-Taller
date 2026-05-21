@@ -33,7 +33,9 @@ export async function listVehiclesByClientId(clientId) {
       refId: item.id,
       ...item.data(),
     }))
-    .sort((left, right) => (right.sequentialId || 0) - (left.sequentialId || 0));
+    .sort(
+      (left, right) => (right.sequentialId || 0) - (left.sequentialId || 0),
+    );
 }
 
 export async function createVehicle({

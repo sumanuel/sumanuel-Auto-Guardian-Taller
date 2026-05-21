@@ -148,7 +148,10 @@ export default function ClientsScreen({ onBack, userProfile }) {
       if (editingClientId === (client.refId || client.id)) {
         resetForm();
       }
-      if ((selectedClient?.refId || selectedClient?.id) === (client.refId || client.id)) {
+      if (
+        (selectedClient?.refId || selectedClient?.id) ===
+        (client.refId || client.id)
+      ) {
         setSelectedClient(null);
       }
       await refreshClients();
@@ -595,7 +598,9 @@ export default function ClientsScreen({ onBack, userProfile }) {
               <Text style={[styles.listTitle, { color: colors.text }]}>
                 Vehiculos por cliente
               </Text>
-              <Text style={[styles.formSubtitle, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.formSubtitle, { color: colors.textSecondary }]}
+              >
                 {selectedClient
                   ? `Cliente activo: ${selectedClient.fullName}`
                   : "Selecciona un cliente para asociar uno o varios vehiculos."}
@@ -605,9 +610,14 @@ export default function ClientsScreen({ onBack, userProfile }) {
             {selectedClient && editingVehicleId ? (
               <Pressable
                 onPress={resetVehicleForm}
-                style={[styles.cancelButton, { borderColor: colors.borderStrong }]}
+                style={[
+                  styles.cancelButton,
+                  { borderColor: colors.borderStrong },
+                ]}
               >
-                <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancelar vehiculo</Text>
+                <Text style={[styles.cancelButtonText, { color: colors.text }]}>
+                  Cancelar vehiculo
+                </Text>
               </Pressable>
             ) : null}
           </View>
@@ -616,11 +626,16 @@ export default function ClientsScreen({ onBack, userProfile }) {
             <>
               <View style={styles.formGrid}>
                 <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Placa</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Placa
+                  </Text>
                   <TextInput
                     autoCapitalize="characters"
                     onChangeText={(value) =>
-                      setVehicleForm((current) => ({ ...current, plate: value }))
+                      setVehicleForm((current) => ({
+                        ...current,
+                        plate: value,
+                      }))
                     }
                     placeholder="AB123CD"
                     placeholderTextColor={colors.textTertiary}
@@ -637,33 +652,59 @@ export default function ClientsScreen({ onBack, userProfile }) {
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Marca</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Marca
+                  </Text>
                   <TextInput
                     onChangeText={(value) =>
-                      setVehicleForm((current) => ({ ...current, brand: value }))
+                      setVehicleForm((current) => ({
+                        ...current,
+                        brand: value,
+                      }))
                     }
                     placeholder="Toyota"
                     placeholderTextColor={colors.textTertiary}
-                    style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={vehicleForm.brand}
                   />
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Modelo</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Modelo
+                  </Text>
                   <TextInput
                     onChangeText={(value) =>
-                      setVehicleForm((current) => ({ ...current, model: value }))
+                      setVehicleForm((current) => ({
+                        ...current,
+                        model: value,
+                      }))
                     }
                     placeholder="Hilux"
                     placeholderTextColor={colors.textTertiary}
-                    style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={vehicleForm.model}
                   />
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Ano</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Ano
+                  </Text>
                   <TextInput
                     keyboardType="number-pad"
                     onChangeText={(value) =>
@@ -671,26 +712,47 @@ export default function ClientsScreen({ onBack, userProfile }) {
                     }
                     placeholder="2019"
                     placeholderTextColor={colors.textTertiary}
-                    style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={vehicleForm.year}
                   />
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Color</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Color
+                  </Text>
                   <TextInput
                     onChangeText={(value) =>
-                      setVehicleForm((current) => ({ ...current, color: value }))
+                      setVehicleForm((current) => ({
+                        ...current,
+                        color: value,
+                      }))
                     }
                     placeholder="Blanco"
                     placeholderTextColor={colors.textTertiary}
-                    style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={vehicleForm.color}
                   />
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>VIN</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    VIN
+                  </Text>
                   <TextInput
                     autoCapitalize="characters"
                     onChangeText={(value) =>
@@ -698,28 +760,49 @@ export default function ClientsScreen({ onBack, userProfile }) {
                     }
                     placeholder="8X1ABC12345678901"
                     placeholderTextColor={colors.textTertiary}
-                    style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={vehicleForm.vin}
                   />
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Kilometraje</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Kilometraje
+                  </Text>
                   <TextInput
                     keyboardType="number-pad"
                     onChangeText={(value) =>
-                      setVehicleForm((current) => ({ ...current, mileage: value }))
+                      setVehicleForm((current) => ({
+                        ...current,
+                        mileage: value,
+                      }))
                     }
                     placeholder="120000"
                     placeholderTextColor={colors.textTertiary}
-                    style={[styles.input, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
                     value={vehicleForm.mileage}
                   />
                 </View>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>Notas del vehiculo</Text>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Notas del vehiculo
+                </Text>
                 <TextInput
                   multiline
                   numberOfLines={3}
@@ -728,7 +811,14 @@ export default function ClientsScreen({ onBack, userProfile }) {
                   }
                   placeholder="Observaciones, accesorios, condicion general"
                   placeholderTextColor={colors.textTertiary}
-                  style={[styles.textArea, { backgroundColor: colors.inputBackground, borderColor: colors.border, color: colors.text }]}
+                  style={[
+                    styles.textArea,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
                   textAlignVertical="top"
                   value={vehicleForm.notes}
                 />
@@ -736,9 +826,14 @@ export default function ClientsScreen({ onBack, userProfile }) {
 
               <Pressable
                 onPress={handleVehicleSubmit}
-                style={[styles.primaryAction, { backgroundColor: colors.accent }]}
+                style={[
+                  styles.primaryAction,
+                  { backgroundColor: colors.accent },
+                ]}
               >
-                <Text style={[styles.primaryActionText, { color: colors.white }]}> 
+                <Text
+                  style={[styles.primaryActionText, { color: colors.white }]}
+                >
                   {vehicleSubmitting
                     ? "Guardando vehiculo..."
                     : editingVehicleId
@@ -763,37 +858,87 @@ export default function ClientsScreen({ onBack, userProfile }) {
                       ]}
                     >
                       <View style={styles.clientCopy}>
-                        <Text style={[styles.clientTitle, { color: colors.text }]}>
+                        <Text
+                          style={[styles.clientTitle, { color: colors.text }]}
+                        >
                           {vehicle.plate}
                         </Text>
-                        <Text style={[styles.clientMeta, { color: colors.textSecondary }]}>
-                          {vehicle.brand || "Marca"} · {vehicle.model || "Modelo"} · {vehicle.year || "Ano"}
+                        <Text
+                          style={[
+                            styles.clientMeta,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {vehicle.brand || "Marca"} ·{" "}
+                          {vehicle.model || "Modelo"} · {vehicle.year || "Ano"}
                         </Text>
-                        <Text style={[styles.clientMeta, { color: colors.textSecondary }]}>
-                          {vehicle.id} · {vehicle.mileage ? `${vehicle.mileage} km` : "Sin kilometraje"}
+                        <Text
+                          style={[
+                            styles.clientMeta,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {vehicle.id} ·{" "}
+                          {vehicle.mileage
+                            ? `${vehicle.mileage} km`
+                            : "Sin kilometraje"}
                         </Text>
                       </View>
 
                       <View style={styles.rowActions}>
-                        <Pressable onPress={() => handleEditVehicle(vehicle)} style={[styles.rowButton, { borderColor: colors.primary }]}>
-                          <Text style={[styles.rowButtonText, { color: colors.primary }]}>Editar</Text>
+                        <Pressable
+                          onPress={() => handleEditVehicle(vehicle)}
+                          style={[
+                            styles.rowButton,
+                            { borderColor: colors.primary },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.rowButtonText,
+                              { color: colors.primary },
+                            ]}
+                          >
+                            Editar
+                          </Text>
                         </Pressable>
-                        <Pressable onPress={() => handleDeleteVehicle(vehicle)} style={[styles.rowButton, { borderColor: colors.danger }]}>
-                          <Text style={[styles.rowButtonText, { color: colors.danger }]}>Eliminar</Text>
+                        <Pressable
+                          onPress={() => handleDeleteVehicle(vehicle)}
+                          style={[
+                            styles.rowButton,
+                            { borderColor: colors.danger },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.rowButtonText,
+                              { color: colors.danger },
+                            ]}
+                          >
+                            Eliminar
+                          </Text>
                         </Pressable>
                       </View>
                     </View>
                   ))}
                 </View>
               ) : (
-                <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+                <Text
+                  style={[
+                    styles.emptyStateText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Este cliente aun no tiene vehiculos asociados.
                 </Text>
               )}
             </>
           ) : (
-            <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
-              Selecciona un cliente en la lista superior para asociar uno o varios vehiculos.
+            <Text
+              style={[styles.emptyStateText, { color: colors.textSecondary }]}
+            >
+              Selecciona un cliente en la lista superior para asociar uno o
+              varios vehiculos.
             </Text>
           )}
         </View>

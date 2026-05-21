@@ -64,11 +64,12 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     setAdminRefreshing(true);
 
     try {
-      const [nextInvitations, nextApprovals, nextStaffProfiles] = await Promise.all([
-        listPendingInvitations(),
-        listPendingApprovals(),
-        listStaffProfiles(),
-      ]);
+      const [nextInvitations, nextApprovals, nextStaffProfiles] =
+        await Promise.all([
+          listPendingInvitations(),
+          listPendingApprovals(),
+          listStaffProfiles(),
+        ]);
       setPendingInvitations(nextInvitations);
       setPendingApprovals(nextApprovals);
       setStaffProfiles(nextStaffProfiles);
@@ -163,10 +164,7 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
       await refreshAdminData();
       Alert.alert("Equipo", `Rol actualizado a ${roleLabels[role] || role}.`);
     } catch (error) {
-      Alert.alert(
-        "Equipo",
-        error?.message || "No se pudo actualizar el rol.",
-      );
+      Alert.alert("Equipo", error?.message || "No se pudo actualizar el rol.");
     }
   };
 
@@ -552,11 +550,19 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                       <Text style={[styles.rowTitle, { color: colors.text }]}>
                         {profile.fullName || "Usuario sin nombre"}
                       </Text>
-                      <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
                         {profile.userCode || "Sin codigo"} · {profile.email}
                       </Text>
-                      <Text style={[styles.rowMeta, { color: colors.textTertiary }]}>
-                        {roleLabels[profile.role] || profile.role} · Estado {profile.status || "sin estado"}
+                      <Text
+                        style={[styles.rowMeta, { color: colors.textTertiary }]}
+                      >
+                        {roleLabels[profile.role] || profile.role} · Estado{" "}
+                        {profile.status || "sin estado"}
                       </Text>
                     </View>
 
@@ -568,7 +574,9 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                           return (
                             <Pressable
                               key={`${profile.uid}-${role}`}
-                              onPress={() => handleQuickRoleChange(profile, role)}
+                              onPress={() =>
+                                handleQuickRoleChange(profile, role)
+                              }
                               style={[
                                 styles.roleOption,
                                 {
@@ -585,7 +593,9 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                                 style={[
                                   styles.roleOptionText,
                                   {
-                                    color: selected ? colors.white : colors.text,
+                                    color: selected
+                                      ? colors.white
+                                      : colors.text,
                                   },
                                 ]}
                               >
@@ -620,7 +630,9 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                             },
                           ]}
                         >
-                          {profile.status === "active" ? "Suspender" : "Reactivar"}
+                          {profile.status === "active"
+                            ? "Suspender"
+                            : "Reactivar"}
                         </Text>
                       </Pressable>
                     </View>
@@ -628,7 +640,9 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                 ))}
               </View>
             ) : (
-              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}> 
+              <Text
+                style={[styles.emptyStateText, { color: colors.textSecondary }]}
+              >
                 No hay personal tecnico registrado todavia.
               </Text>
             )}

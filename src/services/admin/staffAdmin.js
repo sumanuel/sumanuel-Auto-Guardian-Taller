@@ -167,9 +167,11 @@ export async function listStaffProfiles() {
         ...item.data(),
       }))
       .filter((profile) =>
-        [USER_ROLES.ADMINISTRATOR, USER_ROLES.RECEPTION, USER_ROLES.MECHANIC].includes(
-          profile.role,
-        ),
+        [
+          USER_ROLES.ADMINISTRATOR,
+          USER_ROLES.RECEPTION,
+          USER_ROLES.MECHANIC,
+        ].includes(profile.role),
       ),
   );
 }
