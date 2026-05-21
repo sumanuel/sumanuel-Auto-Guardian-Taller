@@ -1,6 +1,6 @@
 # Roadmap Auto-Guardian-Taller
 
-Ultima actualizacion: 30-04-2026
+Ultima actualizacion: 21-05-2026
 
 ## Como se actualiza este roadmap
 
@@ -30,7 +30,11 @@ Ultima actualizacion: 30-04-2026
 - Completado: login, recuperacion de contrasena y persistencia de sesion implementados con Firebase Auth.
 - Completado: lectura del perfil userProfiles vinculada al uid autenticado.
 - Completado: reglas base de Firestore y Storage definidas para autenticacion, perfiles, invitaciones y modulos operativos.
-- En progreso: activacion de altas nuevas por invitacion y alta directa de usuarios con perfil en Firestore.
+- Completado: alta directa y alta por invitacion operativas con perfil userProfiles en Firestore.
+- Bloqueado: emision administrativa de invitaciones por correo desde pantalla dedicada de equipo; el codigo ya encola correos, pero Firebase Trigger Email aun no esta instalado en el proyecto.
+- Completado: CRUD base de clientes disponible en pantalla dedicada para recepcion.
+- Completado: asociacion de uno o varios vehiculos por cliente y CRUD base de vehiculos desde la pantalla de clientes.
+- En progreso: directorio formal de personal tecnico con edicion de rol y estado desde la pantalla de equipo.
 - Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
 
 ## Fase 0. Fundacion tecnica
@@ -41,39 +45,39 @@ Ultima actualizacion: 30-04-2026
 | F0-2 | Definir backend o proveedor de servicios para auth, base de datos y correo                              | Completado | Alta      | F0-1         | 30-04-2026 |
 | F0-3 | Definir roles y permisos basicos: administrador, recepcion, mecanico                                    | Completado | Alta      | F0-1         | 30-04-2026 |
 | F0-4 | Modelar entidades principales: usuarios, clientes, vehiculos, diagnosticos, ordenes, avances, repuestos | Completado | Alta      | F0-1         | 30-04-2026 |
-| F0-5 | Definir flujo de invitacion de mecanicos por correo reutilizando la otra app                            | Pendiente  | Alta      | F0-2, F0-3   | -          |
+| F0-5 | Definir flujo de invitacion de mecanicos por correo reutilizando la otra app                            | Completado | Alta      | F0-2, F0-3   | 21-05-2026 |
 | F0-6 | Integrar Firestore y helper reutilizable para IDs consecutivos por coleccion                            | Completado | Alta      | F0-2         | 30-04-2026 |
 | F0-7 | Definir politica de registro y aprobacion de cuentas                                                    | Completado | Alta      | F0-2, F0-3   | 30-04-2026 |
 | F0-8 | Definir regla de identidad tecnica de usuarios y codigo consecutivo visible                             | Completado | Alta      | F0-2, F0-4   | 30-04-2026 |
 
 ## Fase 1. Acceso y cuentas
 
-| ID   | Aspecto                                                  | Estado      | Prioridad | Dependencias     | Completado |
-| ---- | -------------------------------------------------------- | ----------- | --------- | ---------------- | ---------- |
-| F1-1 | Login de usuarios                                        | Completado  | Alta      | F0-2, F0-3       | 30-04-2026 |
-| F1-2 | Registro de usuarios autorizados                         | En progreso | Alta      | F0-2, F0-3       | -          |
-| F1-3 | Recuperacion de contrasena                               | Completado  | Alta      | F0-2             | 30-04-2026 |
-| F1-4 | Persistencia de sesion y cierre de sesion                | Completado  | Alta      | F1-1             | 30-04-2026 |
-| F1-5 | Validaciones, mensajes de error y estados vacios de auth | Completado  | Media     | F1-1, F1-2, F1-3 | 30-04-2026 |
+| ID   | Aspecto                                                  | Estado     | Prioridad | Dependencias     | Completado |
+| ---- | -------------------------------------------------------- | ---------- | --------- | ---------------- | ---------- |
+| F1-1 | Login de usuarios                                        | Completado | Alta      | F0-2, F0-3       | 30-04-2026 |
+| F1-2 | Registro de usuarios autorizados                         | Completado | Alta      | F0-2, F0-3       | 21-05-2026 |
+| F1-3 | Recuperacion de contrasena                               | Completado | Alta      | F0-2             | 30-04-2026 |
+| F1-4 | Persistencia de sesion y cierre de sesion                | Completado | Alta      | F1-1             | 30-04-2026 |
+| F1-5 | Validaciones, mensajes de error y estados vacios de auth | Completado | Media     | F1-1, F1-2, F1-3 | 30-04-2026 |
 
 ## Fase 2. Clientes y vehiculos
 
-| ID   | Aspecto                                                   | Estado    | Prioridad | Dependencias     | Completado |
-| ---- | --------------------------------------------------------- | --------- | --------- | ---------------- | ---------- |
-| F2-1 | CRUD de clientes con nombre, direccion, telefono y correo | Pendiente | Alta      | F0-4             | -          |
-| F2-2 | Busqueda y filtrado de clientes                           | Pendiente | Media     | F2-1             | -          |
-| F2-3 | Asociar uno o varios vehiculos a cada cliente             | Pendiente | Alta      | F2-1, F0-4       | -          |
-| F2-4 | CRUD de vehiculos con datos operativos basicos            | Pendiente | Alta      | F2-3             | -          |
-| F2-5 | Vista de detalle del cliente con sus vehiculos            | Pendiente | Alta      | F2-1, F2-3, F2-4 | -          |
+| ID   | Aspecto                                                   | Estado     | Prioridad | Dependencias     | Completado |
+| ---- | --------------------------------------------------------- | ---------- | --------- | ---------------- | ---------- |
+| F2-1 | CRUD de clientes con nombre, direccion, telefono y correo | Completado | Alta      | F0-4             | 21-05-2026 |
+| F2-2 | Busqueda y filtrado de clientes                           | Pendiente  | Media     | F2-1             | -          |
+| F2-3 | Asociar uno o varios vehiculos a cada cliente             | Completado | Alta      | F2-1, F0-4       | 21-05-2026 |
+| F2-4 | CRUD de vehiculos con datos operativos basicos            | Completado | Alta      | F2-3             | 21-05-2026 |
+| F2-5 | Vista de detalle del cliente con sus vehiculos            | Pendiente  | Alta      | F2-1, F2-3, F2-4 | -          |
 
 ## Fase 3. Mecanicos y equipo
 
-| ID   | Aspecto                                           | Estado    | Prioridad | Dependencias | Completado |
-| ---- | ------------------------------------------------- | --------- | --------- | ------------ | ---------- |
-| F3-1 | CRUD de mecanicos y personal tecnico              | Pendiente | Alta      | F0-4         | -          |
-| F3-2 | Flujo de invitacion por correo para mecanicos     | Pendiente | Alta      | F0-5         | -          |
-| F3-3 | Aceptacion de invitacion y activacion de cuenta   | Pendiente | Alta      | F3-2, F1-1   | -          |
-| F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Pendiente | Alta      | F3-1, F4-1   | -          |
+| ID   | Aspecto                                           | Estado      | Prioridad | Dependencias | Completado |
+| ---- | ------------------------------------------------- | ----------- | --------- | ------------ | ---------- |
+| F3-1 | CRUD de mecanicos y personal tecnico              | En progreso | Alta      | F0-4         | -          |
+| F3-2 | Flujo de invitacion por correo para mecanicos     | Bloqueado   | Alta      | F0-5         | -          |
+| F3-3 | Aceptacion de invitacion y activacion de cuenta   | Completado  | Alta      | F3-2, F1-1   | 21-05-2026 |
+| F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Pendiente   | Alta      | F3-1, F4-1   | -          |
 
 ## Fase 4. Diagnostico y plan de trabajo
 
@@ -120,9 +124,9 @@ Ultima actualizacion: 30-04-2026
 
 | Hito | Objetivo                                                        | Estado      |
 | ---- | --------------------------------------------------------------- | ----------- |
-| H1   | Acceso completo con login, registro y recuperacion              | En progreso |
-| H2   | Gestion completa de clientes y vehiculos                        | Pendiente   |
-| H3   | Equipo tecnico con invitaciones por correo                      | Pendiente   |
+| H1   | Acceso completo con login, registro y recuperacion              | Completado  |
+| H2   | Gestion completa de clientes y vehiculos                        | En progreso |
+| H3   | Equipo tecnico con invitaciones por correo                      | Bloqueado   |
 | H4   | Diagnostico con partes, repuestos y aprobacion                  | Pendiente   |
 | H5   | Seguimiento de trabajos y avances                               | Pendiente   |
 | H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente   |
@@ -136,6 +140,9 @@ Ultima actualizacion: 30-04-2026
 - 30-04-2026: se implementan login, recuperacion, persistencia de sesion y lectura del perfil userProfiles por uid autenticado.
 - 30-04-2026: se implementa la activacion de cuenta por invitacion con estado de aprobacion pendiente; falta el lado administrativo para emitir y aprobar altas.
 - 01-05-2026: se agregan archivos de seguridad de Firebase con reglas base para Firestore y Storage, mas la guia de despliegue y bootstrap del primer administrador.
+- 21-05-2026: se completan la asociacion y CRUD base de vehiculos por cliente; ademas, el modulo de equipo gana directorio editable de personal tecnico con cambios de rol y estado.
+- 21-05-2026: se agrega un panel administrativo basico en la pantalla principal para emitir invitaciones, revisar invitaciones pendientes y aprobar perfiles en revision interna.
+- 21-05-2026: el panel de equipo se separa a una pantalla propia, las invitaciones ahora encolan correo en la coleccion mail para Firebase Trigger Email y se cierra el CRUD base de clientes.
 
 ## Decisiones base cerradas
 

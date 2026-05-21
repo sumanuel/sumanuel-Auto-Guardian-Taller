@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MetricCard from "../components/common/MetricCard";
+import { USER_ROLES } from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
@@ -23,7 +24,7 @@ const agenda = [
   },
 ];
 
-const shortcuts = ["Nueva orden", "Registrar gasto", "Inventario", "Clientes"];
+const shortcuts = ["Nueva orden", "Registrar gasto", "Clientes", "Equipo"];
 
 const roleLabels = {
   administrator: "Administrador",
@@ -31,8 +32,14 @@ const roleLabels = {
   mechanic: "Mecanico",
 };
 
-export default function WorkshopHomeScreen({ onSignOut, userProfile }) {
+export default function WorkshopHomeScreen({
+  onOpenClients,
+  onOpenTeamAccess,
+  onSignOut,
+  userProfile,
+}) {
   const { colors, isDarkMode, toggleTheme } = useTheme();
+  const isAdmin = userProfile?.role === USER_ROLES.ADMINISTRATOR;
 
   return (
     <SafeAreaView
@@ -155,6 +162,13 @@ export default function WorkshopHomeScreen({ onSignOut, userProfile }) {
           {shortcuts.map((item) => (
             <Pressable
               key={item}
+              onPress={
+                item === "Clientes"
+                  ? onOpenClients
+                  : item === "Equipo" && isAdmin
+                    ? onOpenTeamAccess
+                    : undefined
+              }
               style={[
                 styles.shortcutCard,
                 {
@@ -304,6 +318,81 @@ const styles = StyleSheet.create({
     fontSize: rf(12),
     fontWeight: "700",
   },
+  adminPanel: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    gap: spacing.lg,
+  },
+  adminPanelHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+  },
+  adminPanelCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  adminPanelTitle: {
+    fontSize: rf(18),
+    fontWeight: "800",
+  },
+  adminPanelText: {
+    fontSize: rf(14),
+    lineHeight: rf(20),
+  },
+  refreshButton: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  refreshButtonText: {
+    fontSize: rf(12),
+    fontWeight: "700",
+  },
+  formGroup: {
+    gap: spacing.sm,
+  },
+  fieldLabel: {
+    fontSize: rf(12),
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    fontSize: rf(15),
+  },
+  roleOptionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  roleOption: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  roleOptionText: {
+    fontSize: rf(13),
+    fontWeight: "700",
+  },
+  primaryAction: {
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    alignItems: "center",
+  },
+  primaryActionText: {
+    fontSize: rf(14),
+    fontWeight: "800",
+  },
   metricsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -380,6 +469,69 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.8,
+  },
+  adminListGrid: {
+    gap: spacing.md,
+  },
+  adminListCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  listSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  adminListWrap: {
+    gap: spacing.sm,
+  },
+  adminRow: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  adminRowCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  adminRowTitle: {
+    fontSize: rf(15),
+    fontWeight: "700",
+  },
+  adminRowMeta: {
+    fontSize: rf(12),
+    lineHeight: rf(18),
+  },
+  secondaryAction: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  secondaryActionText: {
+    fontSize: rf(12),
+    fontWeight: "700",
+  },
+  primaryOutlineAction: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  primaryOutlineActionText: {
+    fontSize: rf(12),
+    fontWeight: "800",
+  },
+  emptyStateText: {
+    fontSize: rf(14),
+    lineHeight: rf(20),
   },
   listWrap: {
     gap: spacing.md,

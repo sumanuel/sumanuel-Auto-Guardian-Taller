@@ -1,4 +1,5 @@
 import {
+  deleteDoc,
   doc,
   getDoc,
   serverTimestamp,
@@ -73,6 +74,13 @@ export async function patchEntityRecord(entityKey, documentId, payload) {
     ...payload,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function deleteEntityRecord(entityKey, documentId) {
+  const collectionConfig = resolveCollection(entityKey);
+  const documentRef = doc(firestore, collectionConfig.name, documentId);
+
+  await deleteDoc(documentRef);
 }
 
 export function getEntityCollectionConfig(entityKey) {
