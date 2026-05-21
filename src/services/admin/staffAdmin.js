@@ -2,10 +2,12 @@ import {
   Timestamp,
   collection,
   doc,
+  getDoc,
   getDocs,
   limit,
   query,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -15,8 +17,9 @@ import {
   USER_STATUSES,
 } from "../../constants/accessControl";
 import { firestore } from "../firebase/config";
-import { createEntityRecord, patchEntityRecord } from "../firestore/repository";
+import { patchEntityRecord } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
+import { reserveSequentialId } from "../firestore/sequentialIds";
 import { queueMailMessage } from "../firestore/mailQueue";
 
 const invitationCollection = firestoreCollections.staffInvitations;
@@ -59,22 +62,52 @@ export async function createStaffInvitation({
   invitedByUid,
   expiresInDays = 7,
 }) {
+  const normalizedEmail = normalizeEmail(email);
+  const invitationRef = doc(
+    firestore,
+    invitationCollection.name,
+    normalizedEmail,
+  );
+  const existingInvitation = await getDoc(invitationRef);
+
+  if (
+    existingInvitation.exists() &&
+    existingInvitation.data()?.status === INVITATION_STATUSES.PENDING
+  ) {
+    throw new Error("Ya existe una invitacion pendiente para ese correo.");
+  }
+
   const expirationDate = new Date();
   expirationDate.setDate(expirationDate.getDate() + expiresInDays);
+  const invitationReservation = await reserveSequentialId(
+    invitationCollection.counterKey,
+    {
+      prefix: invitationCollection.prefix,
+      padding: invitationCollection.padding,
+    },
+  );
+  const invitationCode = invitationReservation.id;
 
-  const normalizedEmail = normalizeEmail(email);
+  await setDoc(
+    invitationRef,
+    {
+      id: invitationCode,
+      invitationCode,
+      sequentialId: invitationReservation.sequence,
+      email: normalizedEmail,
+      emailNormalized: normalizedEmail,
+      role,
+      status: INVITATION_STATUSES.PENDING,
+      invitedByUid,
+      acceptedByUid: null,
+      expiresAt: Timestamp.fromDate(expirationDate),
+      deliveryStatus: "queued",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
 
-  const createdInvitation = await createEntityRecord("staffInvitations", {
-    email: normalizedEmail,
-    role,
-    status: INVITATION_STATUSES.PENDING,
-    invitedByUid,
-    acceptedByUid: null,
-    expiresAt: Timestamp.fromDate(expirationDate),
-    deliveryStatus: "queued",
-  });
-
-  const invitationCode = createdInvitation.id || createdInvitation.refId;
   const expirationLabel = expirationDate.toLocaleDateString("es-VE");
 
   try {
@@ -94,7 +127,7 @@ export async function createStaffInvitation({
         `<p>Abre la app, entra en <strong>Activar invitacion</strong> e ingresa ese codigo con este mismo correo.</p>`,
     });
   } catch (error) {
-    await patchEntityRecord("staffInvitations", invitationCode, {
+    await patchEntityRecord("staffInvitations", normalizedEmail, {
       deliveryStatus: "failed",
     });
 
@@ -103,7 +136,20 @@ export async function createStaffInvitation({
     );
   }
 
-  return createdInvitation;
+  return {
+    refId: normalizedEmail,
+    id: invitationCode,
+    invitationCode,
+    sequentialId: invitationReservation.sequence,
+    email: normalizedEmail,
+    emailNormalized: normalizedEmail,
+    role,
+    status: INVITATION_STATUSES.PENDING,
+    invitedByUid,
+    acceptedByUid: null,
+    expiresAt: Timestamp.fromDate(expirationDate),
+    deliveryStatus: "queued",
+  };
 }
 
 export async function listPendingInvitations(pageSize = 10) {

@@ -29,16 +29,19 @@ export const userProfileModel = {
 
 export const staffInvitationModel = {
   collection: "staffInvitations",
-  documentId: "sequential",
+  documentId: "normalized-email",
   fields: [
     "id",
+    "invitationCode",
     "sequentialId",
     "email",
+    "emailNormalized",
     "role",
     "status",
     "invitedByUid",
     "acceptedByUid",
     "expiresAt",
+    "deliveryStatus",
     "createdAt",
     "updatedAt",
   ],

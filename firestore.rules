@@ -75,9 +75,25 @@ service cloud.firestore {
         && isSelf(uid)
         && !hasProfile()
         && request.resource.data.uid == currentUid()
-        && request.resource.data.role == 'reception'
+        && request.resource.data.role == 'administrator'
         && request.resource.data.status == 'active'
         && request.resource.data.invitationId == null;
+    }
+
+    function isSelfBootstrapAdminUpdate(uid) {
+      return isSelf(uid)
+        && resource.data.invitationId == null
+        && resource.data.role != 'administrator'
+        && request.resource.data.role == 'administrator'
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.userCode == resource.data.userCode
+        && request.resource.data.invitationId == resource.data.invitationId
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'role',
+          'updatedAt'
+        ]);
     }
 
     function isInvitationProfileCreate(uid) {
@@ -103,7 +119,9 @@ service cloud.firestore {
 
     function invitationAcceptanceUpdate(invitationId) {
       return signedIn()
-        && !hasProfile()
+        && hasProfile()
+        && profileData().invitationId == invitationId
+        && profileData().email == resource.data.email
         && resource.data.status == 'pending'
         && request.resource.data.status == 'accepted'
         && request.resource.data.acceptedByUid == currentUid()
@@ -146,7 +164,7 @@ service cloud.firestore {
       allow get: if signedIn() && (isSelf(uid) || isAdmin());
       allow list: if isAdmin();
       allow create: if isPublicSignupCreate(uid) || isInvitationProfileCreate(uid) || isAdmin();
-      allow update: if isAdmin() || (isSelf(uid) && onlyProfileSelfEditableFieldsChanged());
+      allow update: if isAdmin() || isSelfBootstrapAdminUpdate(uid) || (isSelf(uid) && onlyProfileSelfEditableFieldsChanged());
       allow delete: if isAdmin();
     }
 

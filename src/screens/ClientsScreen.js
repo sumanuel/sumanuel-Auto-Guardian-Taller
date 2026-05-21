@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -11,13 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../context/ThemeContext";
-import {
-  createClient,
-  createEmptyClientForm,
-  deleteClient,
-  listClients,
-  updateClient,
-} from "../services/clients/clientService";
+import { deleteClient, listClients } from "../services/clients/clientService";
 import {
   createEmptyVehicleForm,
   createVehicle,
@@ -27,19 +22,100 @@ import {
 } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
-export default function ClientsScreen({ onBack, userProfile }) {
+const SCREEN_MODES = {
+  LIST: "list",
+  DETAIL: "detail",
+};
+
+const CLIENT_FILTERS = {
+  ALL: "all",
+  WITH_EMAIL: "with-email",
+  WITH_PHONE: "with-phone",
+};
+
+function getEntityId(entity) {
+  return entity?.refId || entity?.id || "";
+}
+
+function buildVehicleForm(vehicle, clientId = "") {
+  if (!vehicle) {
+    return createEmptyVehicleForm(clientId);
+  }
+
+  return {
+    clientId: vehicle.clientId || clientId,
+    plate: vehicle.plate || "",
+    brand: vehicle.brand || "",
+    model: vehicle.model || "",
+    year: vehicle.year || "",
+    color: vehicle.color || "",
+    vin: vehicle.vin || "",
+    mileage:
+      vehicle.mileage === null || vehicle.mileage === undefined
+        ? ""
+        : String(vehicle.mileage),
+    notes: vehicle.notes || "",
+  };
+}
+
+export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
   const { colors } = useTheme();
+  const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [editingClientId, setEditingClientId] = useState(null);
-  const [form, setForm] = useState(createEmptyClientForm());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState(CLIENT_FILTERS.ALL);
   const [selectedClient, setSelectedClient] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [vehicleLoading, setVehicleLoading] = useState(false);
   const [vehicleSubmitting, setVehicleSubmitting] = useState(false);
+  const [vehicleFormVisible, setVehicleFormVisible] = useState(false);
   const [editingVehicleId, setEditingVehicleId] = useState(null);
   const [vehicleForm, setVehicleForm] = useState(createEmptyVehicleForm());
+
+  const selectedClientId = getEntityId(selectedClient);
+
+  const filteredClients = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return clients.filter((client) => {
+      const matchesFilter =
+        activeFilter === CLIENT_FILTERS.ALL
+          ? true
+          : activeFilter === CLIENT_FILTERS.WITH_EMAIL
+            ? Boolean(client.email)
+            : Boolean(client.phone);
+
+      if (!matchesFilter) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      const searchableText = [
+        client.id,
+        client.fullName,
+        client.email,
+        client.phone,
+        client.address,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(normalizedQuery);
+    });
+  }, [activeFilter, clients, searchQuery]);
+
+  const clientStats = useMemo(
+    () => ({
+      totalClients: clients.length,
+      selectedLabel: selectedClient?.fullName || "Sin cliente activo",
+    }),
+    [clients.length, selectedClient?.fullName],
+  );
 
   const refreshClients = async () => {
     setLoading(true);
@@ -47,8 +123,25 @@ export default function ClientsScreen({ onBack, userProfile }) {
     try {
       const nextClients = await listClients();
       setClients(nextClients);
+
+      if (selectedClientId) {
+        const refreshedClient = nextClients.find(
+          (client) => getEntityId(client) === selectedClientId,
+        );
+
+        if (refreshedClient) {
+          setSelectedClient(refreshedClient);
+        } else {
+          setSelectedClient(null);
+          setScreenMode(SCREEN_MODES.LIST);
+          setVehicleFormVisible(false);
+        }
+      }
+
+      return nextClients;
     } catch (error) {
       Alert.alert("Clientes", "No se pudo cargar el listado de clientes.");
+      return [];
     } finally {
       setLoading(false);
     }
@@ -59,7 +152,27 @@ export default function ClientsScreen({ onBack, userProfile }) {
   }, []);
 
   useEffect(() => {
-    if (!selectedClient?.id) {
+    if (!viewState?.selectedClientId) {
+      if (viewState?.screenMode === SCREEN_MODES.LIST) {
+        setScreenMode(SCREEN_MODES.LIST);
+      }
+      return;
+    }
+
+    const matchedClient = clients.find(
+      (client) => getEntityId(client) === viewState.selectedClientId,
+    );
+
+    if (!matchedClient) {
+      return;
+    }
+
+    setSelectedClient(matchedClient);
+    setScreenMode(viewState.screenMode || SCREEN_MODES.DETAIL);
+  }, [clients, viewState?.screenMode, viewState?.selectedClientId]);
+
+  useEffect(() => {
+    if (!selectedClientId) {
       setVehicles([]);
       setVehicleForm(createEmptyVehicleForm());
       setEditingVehicleId(null);
@@ -70,7 +183,7 @@ export default function ClientsScreen({ onBack, userProfile }) {
       setVehicleLoading(true);
 
       try {
-        const nextVehicles = await listVehiclesByClientId(selectedClient.id);
+        const nextVehicles = await listVehiclesByClientId(selectedClientId);
         setVehicles(nextVehicles);
       } catch (error) {
         Alert.alert("Vehiculos", "No se pudo cargar la flota del cliente.");
@@ -80,96 +193,81 @@ export default function ClientsScreen({ onBack, userProfile }) {
     };
 
     refreshVehicles();
-    setVehicleForm(createEmptyVehicleForm(selectedClient.id));
+    setVehicleForm(createEmptyVehicleForm(selectedClientId));
     setEditingVehicleId(null);
-  }, [selectedClient?.id]);
-
-  const resetForm = () => {
-    setForm(createEmptyClientForm());
-    setEditingClientId(null);
-  };
+  }, [selectedClientId]);
 
   const resetVehicleForm = () => {
-    setVehicleForm(createEmptyVehicleForm(selectedClient?.id || ""));
+    setVehicleForm(createEmptyVehicleForm(selectedClientId));
     setEditingVehicleId(null);
   };
 
-  const handleSubmit = async () => {
-    if (!form.fullName.trim()) {
-      Alert.alert("Clientes", "Ingresa al menos el nombre del cliente.");
+  const closeVehicleForm = () => {
+    resetVehicleForm();
+    setVehicleFormVisible(false);
+  };
+
+  const openClientDetail = (client, options = {}) => {
+    setSelectedClient(client);
+    setScreenMode(SCREEN_MODES.DETAIL);
+    setVehicleFormVisible(Boolean(options.openVehicleForm));
+    setEditingVehicleId(null);
+    setVehicleForm(createEmptyVehicleForm(getEntityId(client)));
+  };
+
+  const handleBackToList = () => {
+    setScreenMode(SCREEN_MODES.LIST);
+    setVehicleFormVisible(false);
+    setEditingVehicleId(null);
+  };
+
+  const handleDelete = (client) => {
+    Alert.alert(
+      "Eliminar cliente",
+      `Se eliminara ${client.fullName || "este cliente"} del padron operativo.`,
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteClient(getEntityId(client));
+
+              if (selectedClientId === getEntityId(client)) {
+                setSelectedClient(null);
+                setScreenMode(SCREEN_MODES.LIST);
+                closeVehicleForm();
+              }
+
+              await refreshClients();
+              Alert.alert("Clientes", "El cliente fue eliminado.");
+            } catch (error) {
+              Alert.alert(
+                "Clientes",
+                error?.message || "No se pudo eliminar el cliente.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const openCreateVehicleForm = () => {
+    if (!selectedClientId) {
       return;
     }
 
-    setSubmitting(true);
-
-    try {
-      if (editingClientId) {
-        await updateClient(editingClientId, form);
-      } else {
-        await createClient({
-          ...form,
-          createdByUid: userProfile?.uid,
-        });
-      }
-
-      resetForm();
-      await refreshClients();
-      Alert.alert(
-        "Clientes",
-        editingClientId
-          ? "El cliente fue actualizado."
-          : "El cliente fue creado correctamente.",
-      );
-    } catch (error) {
-      Alert.alert(
-        "Clientes",
-        error?.message || "No se pudo guardar el cliente.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleEdit = (client) => {
-    setEditingClientId(client.refId || client.id);
-    setSelectedClient(client);
-    setForm({
-      fullName: client.fullName || "",
-      address: client.address || "",
-      phone: client.phone || "",
-      email: client.email || "",
-      notes: client.notes || "",
-    });
-  };
-
-  const handleDelete = async (client) => {
-    try {
-      await deleteClient(client.refId || client.id);
-      if (editingClientId === (client.refId || client.id)) {
-        resetForm();
-      }
-      if (
-        (selectedClient?.refId || selectedClient?.id) ===
-        (client.refId || client.id)
-      ) {
-        setSelectedClient(null);
-      }
-      await refreshClients();
-      Alert.alert("Clientes", "El cliente fue eliminado.");
-    } catch (error) {
-      Alert.alert(
-        "Clientes",
-        error?.message || "No se pudo eliminar el cliente.",
-      );
-    }
-  };
-
-  const handleSelectClient = (client) => {
-    setSelectedClient(client);
+    resetVehicleForm();
+    setVehicleFormVisible(true);
   };
 
   const handleVehicleSubmit = async () => {
-    if (!selectedClient?.id) {
+    if (!selectedClientId) {
       Alert.alert("Vehiculos", "Selecciona primero un cliente.");
       return;
     }
@@ -187,13 +285,13 @@ export default function ClientsScreen({ onBack, userProfile }) {
       } else {
         await createVehicle({
           ...vehicleForm,
-          clientId: selectedClient.id,
+          clientId: selectedClientId,
         });
       }
 
-      const nextVehicles = await listVehiclesByClientId(selectedClient.id);
+      const nextVehicles = await listVehiclesByClientId(selectedClientId);
       setVehicles(nextVehicles);
-      resetVehicleForm();
+      closeVehicleForm();
       Alert.alert(
         "Vehiculos",
         editingVehicleId
@@ -211,283 +309,438 @@ export default function ClientsScreen({ onBack, userProfile }) {
   };
 
   const handleEditVehicle = (vehicle) => {
-    setEditingVehicleId(vehicle.refId || vehicle.id);
-    setVehicleForm({
-      clientId: vehicle.clientId || selectedClient?.id || "",
-      plate: vehicle.plate || "",
-      brand: vehicle.brand || "",
-      model: vehicle.model || "",
-      year: vehicle.year || "",
-      color: vehicle.color || "",
-      vin: vehicle.vin || "",
-      mileage:
-        vehicle.mileage === null || vehicle.mileage === undefined
-          ? ""
-          : String(vehicle.mileage),
-      notes: vehicle.notes || "",
-    });
+    setEditingVehicleId(getEntityId(vehicle));
+    setVehicleForm(buildVehicleForm(vehicle, selectedClientId));
+    setVehicleFormVisible(true);
   };
 
-  const handleDeleteVehicle = async (vehicle) => {
-    try {
-      await deleteVehicle(vehicle.refId || vehicle.id);
-      const nextVehicles = await listVehiclesByClientId(selectedClient.id);
-      setVehicles(nextVehicles);
-      if (editingVehicleId === (vehicle.refId || vehicle.id)) {
-        resetVehicleForm();
-      }
-      Alert.alert("Vehiculos", "El vehiculo fue eliminado.");
-    } catch (error) {
-      Alert.alert(
-        "Vehiculos",
-        error?.message || "No se pudo eliminar el vehiculo.",
-      );
-    }
+  const handleDeleteVehicle = (vehicle) => {
+    Alert.alert(
+      "Eliminar vehiculo",
+      `Se eliminara ${vehicle.plate || "este vehiculo"} del cliente activo.`,
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteVehicle(getEntityId(vehicle));
+              const nextVehicles =
+                await listVehiclesByClientId(selectedClientId);
+              setVehicles(nextVehicles);
+
+              if (editingVehicleId === getEntityId(vehicle)) {
+                closeVehicleForm();
+              }
+
+              Alert.alert("Vehiculos", "El vehiculo fue eliminado.");
+            } catch (error) {
+              Alert.alert(
+                "Vehiculos",
+                error?.message || "No se pudo eliminar el vehiculo.",
+              );
+            }
+          },
+        },
+      ],
+    );
   };
 
-  return (
-    <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
+  const renderVehicleForm = () => (
+    <View
+      style={[
+        styles.formCard,
+        {
+          backgroundColor: colors.cardBackground,
+          borderColor: colors.border,
+        },
+      ]}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Clientes
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              Base operativa del taller
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Crea, actualiza y consulta clientes con sus datos de contacto para
-              recepcion y seguimiento.
-            </Text>
-          </View>
+      <View style={styles.formHeader}>
+        <View style={styles.formHeaderCopy}>
+          <Text style={[styles.formTitle, { color: colors.text }]}>
+            {editingVehicleId ? "Editar vehiculo" : "Asociar vehiculo"}
+          </Text>
+          <Text style={[styles.formSubtitle, { color: colors.textSecondary }]}>
+            Placa, datos operativos y contexto rapido del vehiculo.
+          </Text>
+        </View>
 
-          <Pressable
-            onPress={onBack}
+        <Pressable
+          onPress={closeVehicleForm}
+          style={[
+            styles.secondaryButton,
+            {
+              borderColor: colors.borderStrong,
+              backgroundColor: colors.cardBackground,
+            },
+          ]}
+        >
+          <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
+            Cerrar
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.formGrid}>
+        <View style={styles.formGroup}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Placa</Text>
+          <TextInput
+            autoCapitalize="characters"
+            onChangeText={(value) =>
+              setVehicleForm((current) => ({ ...current, plate: value }))
+            }
+            placeholder="AB123CD"
+            placeholderTextColor={colors.textTertiary}
             style={[
-              styles.backButton,
+              styles.input,
               {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
               },
             ]}
-          >
-            <Text style={[styles.backButtonText, { color: colors.text }]}>
-              Volver
-            </Text>
-          </Pressable>
+            value={vehicleForm.plate}
+          />
         </View>
 
-        <View
+        <View style={styles.formGroup}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Marca</Text>
+          <TextInput
+            onChangeText={(value) =>
+              setVehicleForm((current) => ({ ...current, brand: value }))
+            }
+            placeholder="Toyota"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={vehicleForm.brand}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>
+            Modelo
+          </Text>
+          <TextInput
+            onChangeText={(value) =>
+              setVehicleForm((current) => ({ ...current, model: value }))
+            }
+            placeholder="Hilux"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={vehicleForm.model}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Ano</Text>
+          <TextInput
+            keyboardType="number-pad"
+            onChangeText={(value) =>
+              setVehicleForm((current) => ({ ...current, year: value }))
+            }
+            placeholder="2019"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={vehicleForm.year}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>Color</Text>
+          <TextInput
+            onChangeText={(value) =>
+              setVehicleForm((current) => ({ ...current, color: value }))
+            }
+            placeholder="Blanco"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={vehicleForm.color}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>VIN</Text>
+          <TextInput
+            autoCapitalize="characters"
+            onChangeText={(value) =>
+              setVehicleForm((current) => ({ ...current, vin: value }))
+            }
+            placeholder="8X1ABC12345678901"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={vehicleForm.vin}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>
+            Kilometraje
+          </Text>
+          <TextInput
+            keyboardType="number-pad"
+            onChangeText={(value) =>
+              setVehicleForm((current) => ({ ...current, mileage: value }))
+            }
+            placeholder="120000"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={vehicleForm.mileage}
+          />
+        </View>
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={[styles.fieldLabel, { color: colors.text }]}>
+          Notas del vehiculo
+        </Text>
+        <TextInput
+          multiline
+          numberOfLines={3}
+          onChangeText={(value) =>
+            setVehicleForm((current) => ({ ...current, notes: value }))
+          }
+          placeholder="Observaciones, accesorios, condicion general"
+          placeholderTextColor={colors.textTertiary}
           style={[
-            styles.formCard,
+            styles.textArea,
             {
-              backgroundColor: colors.cardBackground,
+              backgroundColor: colors.inputBackground,
               borderColor: colors.border,
+              color: colors.text,
             },
           ]}
-        >
-          <View style={styles.formHeader}>
-            <View style={styles.formHeaderCopy}>
-              <Text style={[styles.formTitle, { color: colors.text }]}>
-                {editingClientId ? "Editar cliente" : "Nuevo cliente"}
-              </Text>
-              <Text
-                style={[styles.formSubtitle, { color: colors.textSecondary }]}
-              >
-                Captura el minimo necesario para empezar a operar: nombre,
-                contacto y notas.
-              </Text>
-            </View>
+          textAlignVertical="top"
+          value={vehicleForm.notes}
+        />
+      </View>
 
-            {editingClientId ? (
-              <Pressable
-                onPress={resetForm}
-                style={[
-                  styles.cancelButton,
-                  { borderColor: colors.borderStrong },
-                ]}
-              >
-                <Text style={[styles.cancelButtonText, { color: colors.text }]}>
-                  Cancelar edicion
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
+      <Pressable
+        onPress={handleVehicleSubmit}
+        style={[styles.primaryAction, { backgroundColor: colors.accent }]}
+      >
+        <Text style={[styles.primaryActionText, { color: colors.white }]}>
+          {vehicleSubmitting
+            ? "Guardando vehiculo..."
+            : editingVehicleId
+              ? "Guardar vehiculo"
+              : "Asociar vehiculo"}
+        </Text>
+      </Pressable>
+    </View>
+  );
 
-          <View style={styles.formGrid}>
-            <View style={styles.formGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Nombre completo
-              </Text>
-              <TextInput
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, fullName: value }))
-                }
-                placeholder="Cliente principal"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.fullName}
-              />
-            </View>
+  const renderListScreen = () => (
+    <>
+      <View
+        style={[
+          styles.summaryCard,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <Text style={[styles.summaryEyebrow, { color: colors.primary }]}>
+          Recepcion
+        </Text>
+        <Text style={[styles.summaryTitle, { color: colors.text }]}>
+          Clientes registrados
+        </Text>
+        <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
+          La lista prioriza la consulta rapida, con busqueda, filtros y accesos
+          directos a la ficha del cliente.
+        </Text>
 
-            <View style={styles.formGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Telefono
-              </Text>
-              <TextInput
-                keyboardType="phone-pad"
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, phone: value }))
-                }
-                placeholder="0412-0000000"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.phone}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Correo
-              </Text>
-              <TextInput
-                autoCapitalize="none"
-                keyboardType="email-address"
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, email: value }))
-                }
-                placeholder="cliente@correo.com"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.email}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Direccion
-              </Text>
-              <TextInput
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, address: value }))
-                }
-                placeholder="Sector, avenida, referencia"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.address}
-              />
-            </View>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Notas operativas
+        <View style={styles.summaryMetrics}>
+          <View
+            style={[
+              styles.summaryMetric,
+              { backgroundColor: colors.cardMuted, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.summaryMetricValue, { color: colors.text }]}>
+              {clientStats.totalClients}
             </Text>
-            <TextInput
-              multiline
-              numberOfLines={4}
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, notes: value }))
-              }
-              placeholder="Preferencias, observaciones o instrucciones de atencion"
-              placeholderTextColor={colors.textTertiary}
+            <Text
               style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
+                styles.summaryMetricLabel,
+                { color: colors.textSecondary },
               ]}
-              textAlignVertical="top"
-              value={form.notes}
-            />
+            >
+              Clientes
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.summaryMetricWide,
+              { backgroundColor: colors.cardMuted, borderColor: colors.border },
+            ]}
+          >
+            <Text
+              style={[
+                styles.summaryMetricLabel,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Cliente activo
+            </Text>
+            <Text
+              style={[styles.summaryMetricWideText, { color: colors.text }]}
+            >
+              {clientStats.selectedLabel}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.listCard,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <View style={styles.searchSection}>
+          <TextInput
+            autoCapitalize="none"
+            onChangeText={setSearchQuery}
+            placeholder="Buscar por nombre, codigo, telefono o correo"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={searchQuery}
+          />
+
+          <View style={styles.filterRow}>
+            {[
+              { key: CLIENT_FILTERS.ALL, label: "Todos" },
+              { key: CLIENT_FILTERS.WITH_EMAIL, label: "Con correo" },
+              { key: CLIENT_FILTERS.WITH_PHONE, label: "Con telefono" },
+            ].map((filter) => {
+              const selected = activeFilter === filter.key;
+
+              return (
+                <Pressable
+                  key={filter.key}
+                  onPress={() => setActiveFilter(filter.key)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: selected
+                        ? colors.primary
+                        : colors.cardMuted,
+                      borderColor: selected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      { color: selected ? colors.white : colors.text },
+                    ]}
+                  >
+                    {filter.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.listHeader}>
+          <View style={styles.sectionCopy}>
+            <Text style={[styles.listTitle, { color: colors.text }]}>
+              Lista de clientes
+            </Text>
+            <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
+              Usa los iconos para editar, eliminar o asociar vehiculos.
+            </Text>
           </View>
 
-          <Pressable
-            onPress={handleSubmit}
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              {submitting
-                ? "Guardando cliente..."
-                : editingClientId
-                  ? "Guardar cambios"
-                  : "Crear cliente"}
+          <Pressable onPress={refreshClients}>
+            <Text style={[styles.refreshText, { color: colors.primary }]}>
+              Actualizar
             </Text>
           </Pressable>
         </View>
 
-        <View
-          style={[
-            styles.listCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <View style={styles.listHeader}>
-            <Text style={[styles.listTitle, { color: colors.text }]}>
-              Clientes registrados
-            </Text>
-            <Pressable onPress={refreshClients}>
-              <Text style={[styles.refreshText, { color: colors.primary }]}>
-                Actualizar
-              </Text>
-            </Pressable>
-          </View>
+        {loading ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : filteredClients.length ? (
+          <View style={styles.listBody}>
+            {filteredClients.map((client) => {
+              const isSelected = getEntityId(client) === selectedClientId;
 
-          {loading ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : clients.length ? (
-            <View style={styles.listBody}>
-              {clients.map((client) => (
+              return (
                 <View
-                  key={client.refId || client.id}
+                  key={getEntityId(client)}
                   style={[
                     styles.clientRow,
                     {
                       backgroundColor: colors.cardMuted,
-                      borderColor: colors.border,
+                      borderColor: isSelected ? colors.accent : colors.border,
                     },
                   ]}
                 >
-                  <View style={styles.clientCopy}>
+                  <Pressable
+                    onPress={() => openClientDetail(client)}
+                    style={styles.clientCopy}
+                  >
                     <Text style={[styles.clientTitle, { color: colors.text }]}>
                       {client.fullName}
                     </Text>
@@ -515,434 +768,400 @@ export default function ClientsScreen({ onBack, userProfile }) {
                     >
                       {client.address || "Sin direccion"}
                     </Text>
-                  </View>
+                  </Pressable>
 
-                  <View style={styles.rowActions}>
+                  <View style={styles.iconActionRow}>
                     <Pressable
-                      onPress={() => handleSelectClient(client)}
+                      onPress={() =>
+                        openClientDetail(client, { openVehicleForm: true })
+                      }
                       style={[
-                        styles.rowButton,
+                        styles.iconAction,
                         {
-                          borderColor:
-                            selectedClient?.id === client.id
-                              ? colors.accent
-                              : colors.borderStrong,
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.accent,
                         },
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.rowButtonText,
-                          {
-                            color:
-                              selectedClient?.id === client.id
-                                ? colors.accent
-                                : colors.text,
-                          },
-                        ]}
-                      >
-                        Vehiculos
-                      </Text>
+                      <Ionicons
+                        color={colors.accent}
+                        name="car-sport-outline"
+                        size={rf(18)}
+                      />
                     </Pressable>
                     <Pressable
-                      onPress={() => handleEdit(client)}
+                      onPress={() =>
+                        onOpenClientForm?.(client, {
+                          returnTo:
+                            screenMode === SCREEN_MODES.DETAIL
+                              ? "detail"
+                              : "list",
+                        })
+                      }
                       style={[
-                        styles.rowButton,
-                        { borderColor: colors.primary },
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.primary,
+                        },
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.rowButtonText,
-                          { color: colors.primary },
-                        ]}
-                      >
-                        Editar
-                      </Text>
+                      <Ionicons
+                        color={colors.primary}
+                        name="create-outline"
+                        size={rf(18)}
+                      />
                     </Pressable>
                     <Pressable
                       onPress={() => handleDelete(client)}
-                      style={[styles.rowButton, { borderColor: colors.danger }]}
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.danger,
+                        },
+                      ]}
                     >
-                      <Text
-                        style={[styles.rowButtonText, { color: colors.danger }]}
-                      >
-                        Eliminar
-                      </Text>
+                      <Ionicons
+                        color={colors.danger}
+                        name="trash-outline"
+                        size={rf(18)}
+                      />
                     </Pressable>
                   </View>
                 </View>
-              ))}
-            </View>
-          ) : (
-            <Text
-              style={[styles.emptyStateText, { color: colors.textSecondary }]}
-            >
-              No hay clientes registrados. Crea el primero para abrir la
-              operacion de recepcion y vehiculos.
+              );
+            })}
+          </View>
+        ) : (
+          <Text
+            style={[styles.emptyStateText, { color: colors.textSecondary }]}
+          >
+            {clients.length
+              ? "No hay coincidencias con la busqueda o el filtro actual."
+              : "No hay clientes registrados. Usa el boton flotante para crear el primero y abrir la operacion de recepcion."}
+          </Text>
+        )}
+      </View>
+    </>
+  );
+
+  const renderDetailScreen = () => (
+    <>
+      <View
+        style={[
+          styles.detailHero,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <View style={styles.detailHeaderRow}>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.kicker, { color: colors.primary }]}>
+              Cliente activo
             </Text>
-          )}
+            <Text style={[styles.title, { color: colors.text }]}>
+              {selectedClient?.fullName || "Detalle del cliente"}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Ficha operativa con datos de contacto, contexto y vehiculos
+              asociados.
+            </Text>
+          </View>
+
+          <Pressable
+            onPress={handleBackToList}
+            style={[
+              styles.secondaryButton,
+              {
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.cardBackground,
+              },
+            ]}
+          >
+            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
+              Ver lista
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.detailMetaGrid}>
+          <View style={styles.detailMetaBlock}>
+            <Text
+              style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
+            >
+              Codigo
+            </Text>
+            <Text style={[styles.detailMetaValue, { color: colors.text }]}>
+              {selectedClient?.id || "Sin codigo"}
+            </Text>
+          </View>
+          <View style={styles.detailMetaBlock}>
+            <Text
+              style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
+            >
+              Telefono
+            </Text>
+            <Text style={[styles.detailMetaValue, { color: colors.text }]}>
+              {selectedClient?.phone || "Sin telefono"}
+            </Text>
+          </View>
+          <View style={styles.detailMetaBlock}>
+            <Text
+              style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
+            >
+              Correo
+            </Text>
+            <Text style={[styles.detailMetaValue, { color: colors.text }]}>
+              {selectedClient?.email || "Sin correo"}
+            </Text>
+          </View>
+          <View style={styles.detailMetaBlock}>
+            <Text
+              style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
+            >
+              Direccion
+            </Text>
+            <Text style={[styles.detailMetaValue, { color: colors.text }]}>
+              {selectedClient?.address || "Sin direccion"}
+            </Text>
+          </View>
         </View>
 
         <View
           style={[
-            styles.listCard,
+            styles.notesPanel,
+            { backgroundColor: colors.cardMuted, borderColor: colors.border },
+          ]}
+        >
+          <Text
+            style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
+          >
+            Notas operativas
+          </Text>
+          <Text style={[styles.notesText, { color: colors.text }]}>
+            {selectedClient?.notes || "Sin notas operativas registradas."}
+          </Text>
+        </View>
+
+        <View style={styles.detailActionRow}>
+          <Pressable
+            onPress={() =>
+              onOpenClientForm?.(selectedClient, {
+                returnTo: "detail",
+              })
+            }
+            style={[styles.actionPill, { backgroundColor: colors.primary }]}
+          >
+            <Ionicons
+              color={colors.white}
+              name="create-outline"
+              size={rf(16)}
+            />
+            <Text style={[styles.actionPillText, { color: colors.white }]}>
+              Editar ficha
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={openCreateVehicleForm}
+            style={[styles.actionPill, { backgroundColor: colors.accent }]}
+          >
+            <Ionicons
+              color={colors.white}
+              name="car-sport-outline"
+              size={rf(16)}
+            />
+            <Text style={[styles.actionPillText, { color: colors.white }]}>
+              Asociar vehiculo
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {vehicleFormVisible && renderVehicleForm()}
+
+      <View
+        style={[
+          styles.listCard,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <View style={styles.listHeader}>
+          <View style={styles.sectionCopy}>
+            <Text style={[styles.listTitle, { color: colors.text }]}>
+              Vehiculos asociados
+            </Text>
+            <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
+              Administra los vehiculos vinculados a este cliente.
+            </Text>
+          </View>
+
+          <Text style={[styles.counterText, { color: colors.accent }]}>
+            {vehicles.length}
+          </Text>
+        </View>
+
+        {vehicleLoading ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : vehicles.length ? (
+          <View style={styles.listBody}>
+            {vehicles.map((vehicle) => (
+              <View
+                key={getEntityId(vehicle)}
+                style={[
+                  styles.clientRow,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <View style={styles.clientCopy}>
+                  <Text style={[styles.clientTitle, { color: colors.text }]}>
+                    {vehicle.plate}
+                  </Text>
+                  <Text
+                    style={[styles.clientMeta, { color: colors.textSecondary }]}
+                  >
+                    {vehicle.brand || "Marca"} · {vehicle.model || "Modelo"} ·{" "}
+                    {vehicle.year || "Ano"}
+                  </Text>
+                  <Text
+                    style={[styles.clientMeta, { color: colors.textSecondary }]}
+                  >
+                    {vehicle.id} ·{" "}
+                    {vehicle.mileage
+                      ? `${vehicle.mileage} km`
+                      : "Sin kilometraje"}
+                  </Text>
+                  <Text
+                    style={[styles.clientMeta, { color: colors.textTertiary }]}
+                  >
+                    {vehicle.notes || "Sin notas del vehiculo"}
+                  </Text>
+                </View>
+
+                <View style={styles.iconActionRow}>
+                  <Pressable
+                    onPress={() => handleEditVehicle(vehicle)}
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.primary}
+                      name="create-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleDeleteVehicle(vehicle)}
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.danger,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.danger}
+                      name="trash-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text
+            style={[styles.emptyStateText, { color: colors.textSecondary }]}
+          >
+            Este cliente aun no tiene vehiculos asociados. Usa la accion de la
+            ficha para registrar el primero.
+          </Text>
+        )}
+      </View>
+    </>
+  );
+
+  return (
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          screenMode === SCREEN_MODES.LIST && styles.scrollContentWithFab,
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerRow}>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.kicker, { color: colors.primary }]}>
+              Clientes
+            </Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              {screenMode === SCREEN_MODES.DETAIL
+                ? "Detalle operativo"
+                : "Base operativa del taller"}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {screenMode === SCREEN_MODES.DETAIL
+                ? "Consulta la ficha del cliente y administra sus vehiculos desde un solo lugar."
+                : "Lista prioritaria de clientes con busqueda, filtros y accesos rapidos para recepcion."}
+            </Text>
+          </View>
+
+          <Pressable
+            onPress={onBack}
+            style={[
+              styles.backButton,
+              {
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.cardBackground,
+              },
+            ]}
+          >
+            <Text style={[styles.backButtonText, { color: colors.text }]}>
+              Volver
+            </Text>
+          </Pressable>
+        </View>
+
+        {screenMode === SCREEN_MODES.LIST
+          ? renderListScreen()
+          : renderDetailScreen()}
+      </ScrollView>
+
+      {screenMode === SCREEN_MODES.LIST && (
+        <Pressable
+          onPress={() =>
+            onOpenClientForm?.(null, {
+              returnTo: "detail",
+            })
+          }
+          style={[
+            styles.fab,
             {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              backgroundColor: colors.primary,
+              shadowColor: colors.shadow,
             },
           ]}
         >
-          <View style={styles.listHeader}>
-            <View style={styles.sectionCopy}>
-              <Text style={[styles.listTitle, { color: colors.text }]}>
-                Vehiculos por cliente
-              </Text>
-              <Text
-                style={[styles.formSubtitle, { color: colors.textSecondary }]}
-              >
-                {selectedClient
-                  ? `Cliente activo: ${selectedClient.fullName}`
-                  : "Selecciona un cliente para asociar uno o varios vehiculos."}
-              </Text>
-            </View>
-
-            {selectedClient && editingVehicleId ? (
-              <Pressable
-                onPress={resetVehicleForm}
-                style={[
-                  styles.cancelButton,
-                  { borderColor: colors.borderStrong },
-                ]}
-              >
-                <Text style={[styles.cancelButtonText, { color: colors.text }]}>
-                  Cancelar vehiculo
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-
-          {selectedClient ? (
-            <>
-              <View style={styles.formGrid}>
-                <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    Placa
-                  </Text>
-                  <TextInput
-                    autoCapitalize="characters"
-                    onChangeText={(value) =>
-                      setVehicleForm((current) => ({
-                        ...current,
-                        plate: value,
-                      }))
-                    }
-                    placeholder="AB123CD"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
-                    value={vehicleForm.plate}
-                  />
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    Marca
-                  </Text>
-                  <TextInput
-                    onChangeText={(value) =>
-                      setVehicleForm((current) => ({
-                        ...current,
-                        brand: value,
-                      }))
-                    }
-                    placeholder="Toyota"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
-                    value={vehicleForm.brand}
-                  />
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    Modelo
-                  </Text>
-                  <TextInput
-                    onChangeText={(value) =>
-                      setVehicleForm((current) => ({
-                        ...current,
-                        model: value,
-                      }))
-                    }
-                    placeholder="Hilux"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
-                    value={vehicleForm.model}
-                  />
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    Ano
-                  </Text>
-                  <TextInput
-                    keyboardType="number-pad"
-                    onChangeText={(value) =>
-                      setVehicleForm((current) => ({ ...current, year: value }))
-                    }
-                    placeholder="2019"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
-                    value={vehicleForm.year}
-                  />
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    Color
-                  </Text>
-                  <TextInput
-                    onChangeText={(value) =>
-                      setVehicleForm((current) => ({
-                        ...current,
-                        color: value,
-                      }))
-                    }
-                    placeholder="Blanco"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
-                    value={vehicleForm.color}
-                  />
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    VIN
-                  </Text>
-                  <TextInput
-                    autoCapitalize="characters"
-                    onChangeText={(value) =>
-                      setVehicleForm((current) => ({ ...current, vin: value }))
-                    }
-                    placeholder="8X1ABC12345678901"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
-                    value={vehicleForm.vin}
-                  />
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    Kilometraje
-                  </Text>
-                  <TextInput
-                    keyboardType="number-pad"
-                    onChangeText={(value) =>
-                      setVehicleForm((current) => ({
-                        ...current,
-                        mileage: value,
-                      }))
-                    }
-                    placeholder="120000"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
-                    value={vehicleForm.mileage}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Notas del vehiculo
-                </Text>
-                <TextInput
-                  multiline
-                  numberOfLines={3}
-                  onChangeText={(value) =>
-                    setVehicleForm((current) => ({ ...current, notes: value }))
-                  }
-                  placeholder="Observaciones, accesorios, condicion general"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.textArea,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  textAlignVertical="top"
-                  value={vehicleForm.notes}
-                />
-              </View>
-
-              <Pressable
-                onPress={handleVehicleSubmit}
-                style={[
-                  styles.primaryAction,
-                  { backgroundColor: colors.accent },
-                ]}
-              >
-                <Text
-                  style={[styles.primaryActionText, { color: colors.white }]}
-                >
-                  {vehicleSubmitting
-                    ? "Guardando vehiculo..."
-                    : editingVehicleId
-                      ? "Guardar vehiculo"
-                      : "Agregar vehiculo"}
-                </Text>
-              </Pressable>
-
-              {vehicleLoading ? (
-                <ActivityIndicator color={colors.primary} />
-              ) : vehicles.length ? (
-                <View style={styles.listBody}>
-                  {vehicles.map((vehicle) => (
-                    <View
-                      key={vehicle.refId || vehicle.id}
-                      style={[
-                        styles.clientRow,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <View style={styles.clientCopy}>
-                        <Text
-                          style={[styles.clientTitle, { color: colors.text }]}
-                        >
-                          {vehicle.plate}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.clientMeta,
-                            { color: colors.textSecondary },
-                          ]}
-                        >
-                          {vehicle.brand || "Marca"} ·{" "}
-                          {vehicle.model || "Modelo"} · {vehicle.year || "Ano"}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.clientMeta,
-                            { color: colors.textSecondary },
-                          ]}
-                        >
-                          {vehicle.id} ·{" "}
-                          {vehicle.mileage
-                            ? `${vehicle.mileage} km`
-                            : "Sin kilometraje"}
-                        </Text>
-                      </View>
-
-                      <View style={styles.rowActions}>
-                        <Pressable
-                          onPress={() => handleEditVehicle(vehicle)}
-                          style={[
-                            styles.rowButton,
-                            { borderColor: colors.primary },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.rowButtonText,
-                              { color: colors.primary },
-                            ]}
-                          >
-                            Editar
-                          </Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => handleDeleteVehicle(vehicle)}
-                          style={[
-                            styles.rowButton,
-                            { borderColor: colors.danger },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.rowButtonText,
-                              { color: colors.danger },
-                            ]}
-                          >
-                            Eliminar
-                          </Text>
-                        </Pressable>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <Text
-                  style={[
-                    styles.emptyStateText,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  Este cliente aun no tiene vehiculos asociados.
-                </Text>
-              )}
-            </>
-          ) : (
-            <Text
-              style={[styles.emptyStateText, { color: colors.textSecondary }]}
-            >
-              Selecciona un cliente en la lista superior para asociar uno o
-              varios vehiculos.
-            </Text>
-          )}
-        </View>
-      </ScrollView>
+          <Ionicons color={colors.white} name="add" size={rf(24)} />
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }
@@ -950,11 +1169,15 @@ export default function ClientsScreen({ onBack, userProfile }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    position: "relative",
   },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
+  },
+  scrollContentWithFab: {
+    paddingBottom: spacing.xxl * 2.6,
   },
   headerRow: {
     flexDirection: "row",
@@ -991,6 +1214,153 @@ const styles = StyleSheet.create({
     fontSize: rf(12),
     fontWeight: "700",
   },
+  summaryCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  summaryEyebrow: {
+    fontSize: rf(12),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  summaryTitle: {
+    fontSize: rf(22),
+    fontWeight: "900",
+  },
+  summaryText: {
+    fontSize: rf(14),
+    lineHeight: rf(20),
+  },
+  summaryMetrics: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  summaryMetric: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    minWidth: spacing.xxl * 2.1,
+    gap: spacing.xs,
+  },
+  summaryMetricWide: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  summaryMetricValue: {
+    fontSize: rf(24),
+    fontWeight: "900",
+  },
+  summaryMetricLabel: {
+    fontSize: rf(12),
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  summaryMetricWideText: {
+    fontSize: rf(14),
+    fontWeight: "700",
+  },
+  searchSection: {
+    gap: spacing.sm,
+  },
+  listCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  listHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  listTitle: {
+    fontSize: rf(18),
+    fontWeight: "800",
+  },
+  sectionCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  sectionText: {
+    fontSize: rf(13),
+    lineHeight: rf(19),
+  },
+  refreshText: {
+    fontSize: rf(12),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  filterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  filterChip: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  filterChipText: {
+    fontSize: rf(12),
+    fontWeight: "700",
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    fontSize: rf(15),
+  },
+  listBody: {
+    gap: spacing.sm,
+  },
+  clientRow: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  clientCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  clientTitle: {
+    fontSize: rf(15),
+    fontWeight: "700",
+  },
+  clientMeta: {
+    fontSize: rf(12),
+    lineHeight: rf(18),
+  },
+  iconActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  iconAction: {
+    width: rf(38),
+    height: rf(38),
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyStateText: {
+    fontSize: rf(14),
+    lineHeight: rf(20),
+  },
   formCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -1015,13 +1385,13 @@ const styles = StyleSheet.create({
     fontSize: rf(14),
     lineHeight: rf(20),
   },
-  cancelButton: {
+  secondaryButton: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  cancelButtonText: {
+  secondaryButtonText: {
     fontSize: rf(12),
     fontWeight: "700",
   },
@@ -1036,13 +1406,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    fontSize: rf(15),
   },
   textArea: {
     borderWidth: 1,
@@ -1062,68 +1425,81 @@ const styles = StyleSheet.create({
     fontSize: rf(14),
     fontWeight: "800",
   },
-  listCard: {
+  detailHero: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
-    gap: spacing.md,
+    gap: spacing.lg,
   },
-  listHeader: {
+  detailHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: spacing.md,
   },
-  listTitle: {
-    fontSize: rf(18),
-    fontWeight: "800",
+  detailMetaGrid: {
+    gap: spacing.md,
   },
-  sectionCopy: {
-    flex: 1,
+  detailMetaBlock: {
     gap: spacing.xs,
   },
-  refreshText: {
+  detailMetaLabel: {
     fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  listBody: {
-    gap: spacing.sm,
+  detailMetaValue: {
+    fontSize: rf(15),
+    fontWeight: "700",
+    lineHeight: rf(21),
   },
-  clientRow: {
+  notesPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    gap: spacing.md,
-  },
-  clientCopy: {
-    gap: spacing.xs,
-  },
-  clientTitle: {
-    fontSize: rf(15),
-    fontWeight: "700",
-  },
-  clientMeta: {
-    fontSize: rf(12),
-    lineHeight: rf(18),
-  },
-  rowActions: {
-    flexDirection: "row",
     gap: spacing.sm,
   },
-  rowButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  rowButtonText: {
-    fontSize: rf(12),
-    fontWeight: "700",
-  },
-  emptyStateText: {
+  notesText: {
     fontSize: rf(14),
     lineHeight: rf(20),
+  },
+  detailActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  actionPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  actionPillText: {
+    fontSize: rf(13),
+    fontWeight: "800",
+  },
+  counterText: {
+    fontSize: rf(18),
+    fontWeight: "900",
+  },
+  fab: {
+    position: "absolute",
+    right: spacing.lg,
+    bottom: spacing.xl,
+    width: rf(60),
+    height: rf(60),
+    borderRadius: rf(30),
+    alignItems: "center",
+    justifyContent: "center",
+    shadowOpacity: 0.28,
+    shadowRadius: 16,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    elevation: 8,
   },
 });

@@ -122,7 +122,7 @@ export default function AuthScreen() {
         kicker: "Alta autorizada",
         title: "Activar invitacion",
         subtitle:
-          "Activa tu cuenta con el codigo entregado por la administracion y deja listo tu acceso operativo.",
+          "Activa tu cuenta con el correo invitado; si administracion te compartio un codigo, puedes usarlo como referencia.",
         pills: ["Invitacion", "Aprobacion", "Equipo tecnico"],
       };
     }
@@ -209,7 +209,6 @@ export default function AuthScreen() {
     resetMessages();
 
     if (
-      !invitationForm.invitationCode.trim() ||
       !invitationForm.fullName.trim() ||
       !invitationForm.email.trim() ||
       !invitationForm.password.trim() ||
@@ -638,7 +637,7 @@ export default function AuthScreen() {
             {isInvitation && (
               <>
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Codigo de invitacion
+                  Codigo de invitacion opcional
                 </Text>
                 <TextInput
                   ref={invitationCodeInputRef}
@@ -982,7 +981,7 @@ export default function AuthScreen() {
 
             <Text style={[styles.securityHint, { color: palette.muted }]}>
               {isInvitation
-                ? "La activacion genera tu perfil operativo y puede quedar pendiente de aprobacion interna."
+                ? "La activacion valida el correo invitado y, si existe un codigo, lo toma como referencia adicional antes de crear tu perfil operativo."
                 : isRegister
                   ? "Al crear tu cuenta se genera tu perfil operativo y queda lista para acceder al taller."
                   : "Al continuar, tus datos locales se vinculan con tu espacio seguro en la nube."}

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
+import { USER_ROLES } from "../constants/accessControl";
 import { auth } from "../services/firebase/config";
 import {
   registerUserFromInvitation,
@@ -10,6 +11,7 @@ import {
 } from "../services/auth/authService";
 import {
   getUserProfileByUid,
+  promoteSelfProfileToAdministrator,
   touchUserProfileLogin,
 } from "../services/auth/userProfiles";
 
@@ -32,7 +34,20 @@ export function AuthProvider({ children }) {
       }
 
       try {
-        const profile = await getUserProfileByUid(nextUser.uid);
+        let profile = await getUserProfileByUid(nextUser.uid);
+
+        if (
+          profile &&
+          !profile.invitationId &&
+          profile.role !== USER_ROLES.ADMINISTRATOR
+        ) {
+          await promoteSelfProfileToAdministrator(nextUser.uid);
+          profile = {
+            ...profile,
+            role: USER_ROLES.ADMINISTRATOR,
+          };
+        }
+
         setUserProfile(profile);
 
         if (profile) {

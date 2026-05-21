@@ -2,7 +2,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MetricCard from "../components/common/MetricCard";
-import { USER_ROLES } from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
@@ -39,7 +38,6 @@ export default function WorkshopHomeScreen({
   userProfile,
 }) {
   const { colors, isDarkMode, toggleTheme } = useTheme();
-  const isAdmin = userProfile?.role === USER_ROLES.ADMINISTRATOR;
 
   return (
     <SafeAreaView
@@ -165,7 +163,7 @@ export default function WorkshopHomeScreen({
               onPress={
                 item === "Clientes"
                   ? onOpenClients
-                  : item === "Equipo" && isAdmin
+                  : item === "Equipo"
                     ? onOpenTeamAccess
                     : undefined
               }
@@ -186,7 +184,7 @@ export default function WorkshopHomeScreen({
                   { color: colors.textSecondary },
                 ]}
               >
-                Abrir
+                {item === "Equipo" ? "Gestionar" : "Abrir"}
               </Text>
             </Pressable>
           ))}

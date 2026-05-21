@@ -9,9 +9,22 @@ export function normalizeInvitationCode(invitationCode) {
   return invitationCode.trim().toUpperCase();
 }
 
-export async function getInvitationByCode(invitationCode) {
-  const normalizedCode = normalizeInvitationCode(invitationCode);
-  const documentRef = doc(firestore, invitationCollection.name, normalizedCode);
+export function normalizeInvitationEmail(email) {
+  return email.trim().toLowerCase();
+}
+
+export async function getInvitationByEmail(email) {
+  const normalizedEmail = normalizeInvitationEmail(email);
+
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const documentRef = doc(
+    firestore,
+    invitationCollection.name,
+    normalizedEmail,
+  );
   const snapshot = await getDoc(documentRef);
 
   if (!snapshot.exists()) {
@@ -24,7 +37,7 @@ export async function getInvitationByCode(invitationCode) {
   };
 }
 
-export function assertInvitationCanBeUsed(invitation, email) {
+export function assertInvitationCanBeUsed(invitation, email, invitationCode) {
   if (!invitation) {
     throw new Error("La invitacion no existe o ya no esta disponible.");
   }
@@ -40,8 +53,21 @@ export function assertInvitationCanBeUsed(invitation, email) {
     throw new Error("La invitacion ya vencio.");
   }
 
-  if (invitation.email?.trim().toLowerCase() !== email.trim().toLowerCase()) {
+  if (
+    invitation.emailNormalized?.trim().toLowerCase() !==
+    email.trim().toLowerCase()
+  ) {
     throw new Error("El correo no coincide con la invitacion registrada.");
+  }
+
+  if (
+    invitationCode?.trim() &&
+    invitation.id !== normalizeInvitationCode(invitationCode) &&
+    invitation.invitationCode !== normalizeInvitationCode(invitationCode)
+  ) {
+    throw new Error(
+      "El codigo de invitacion no coincide con el correo registrado.",
+    );
   }
 }
 

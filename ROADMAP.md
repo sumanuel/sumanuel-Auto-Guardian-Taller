@@ -24,17 +24,18 @@ Ultima actualizacion: 21-05-2026
 - Completado: Firestore definido e integrado como base de datos inicial del proyecto.
 - Completado: estrategia base de IDs consecutivos definida por coleccion mediante contadores transaccionales.
 - Completado: Firebase Auth definido como proveedor de autenticacion.
-- Completado: registro definido como mixto, con registro directo y activacion opcional por invitacion.
+- Completado: registro definido como mixto, con registro directo y activacion opcional por invitacion; temporalmente el alta publica eleva al usuario como administrador para destrabar la operacion.
 - Completado: UID de Firebase Auth definido como identificador tecnico principal del usuario.
 - Completado: codigo consecutivo visible del usuario definido como campo de Firestore, no como clave tecnica.
 - Completado: login, recuperacion de contrasena y persistencia de sesion implementados con Firebase Auth.
 - Completado: lectura del perfil userProfiles vinculada al uid autenticado.
 - Completado: reglas base de Firestore y Storage definidas para autenticacion, perfiles, invitaciones y modulos operativos.
 - Completado: alta directa y alta por invitacion operativas con perfil userProfiles en Firestore.
-- Bloqueado: emision administrativa de invitaciones por correo desde pantalla dedicada de equipo; el codigo ya encola correos, pero Firebase Trigger Email aun no esta instalado en el proyecto.
+- Bloqueado: emision administrativa de invitaciones por correo desde pantalla dedicada de equipo; el codigo ya encola correos, pero Firebase Trigger Email no puede instalarse hasta subir el proyecto a Blaze por dependencia de Secret Manager.
 - Completado: CRUD base de clientes disponible en pantalla dedicada para recepcion.
 - Completado: asociacion de uno o varios vehiculos por cliente y CRUD base de vehiculos desde la pantalla de clientes.
-- En progreso: directorio formal de personal tecnico con edicion de rol y estado desde la pantalla de equipo.
+- Completado: vista de detalle real por cliente con acciones rapidas, vehiculos asociados y boton flotante para alta.
+- Completado: directorio formal de personal tecnico con ficha editable de nombre, telefono, rol y estado desde la pantalla de equipo.
 - Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
 
 ## Fase 0. Fundacion tecnica
@@ -65,19 +66,19 @@ Ultima actualizacion: 21-05-2026
 | ID   | Aspecto                                                   | Estado     | Prioridad | Dependencias     | Completado |
 | ---- | --------------------------------------------------------- | ---------- | --------- | ---------------- | ---------- |
 | F2-1 | CRUD de clientes con nombre, direccion, telefono y correo | Completado | Alta      | F0-4             | 21-05-2026 |
-| F2-2 | Busqueda y filtrado de clientes                           | Pendiente  | Media     | F2-1             | -          |
+| F2-2 | Busqueda y filtrado de clientes                           | Completado | Media     | F2-1             | 21-05-2026 |
 | F2-3 | Asociar uno o varios vehiculos a cada cliente             | Completado | Alta      | F2-1, F0-4       | 21-05-2026 |
 | F2-4 | CRUD de vehiculos con datos operativos basicos            | Completado | Alta      | F2-3             | 21-05-2026 |
-| F2-5 | Vista de detalle del cliente con sus vehiculos            | Pendiente  | Alta      | F2-1, F2-3, F2-4 | -          |
+| F2-5 | Vista de detalle del cliente con sus vehiculos            | Completado | Alta      | F2-1, F2-3, F2-4 | 21-05-2026 |
 
 ## Fase 3. Mecanicos y equipo
 
-| ID   | Aspecto                                           | Estado      | Prioridad | Dependencias | Completado |
-| ---- | ------------------------------------------------- | ----------- | --------- | ------------ | ---------- |
-| F3-1 | CRUD de mecanicos y personal tecnico              | En progreso | Alta      | F0-4         | -          |
-| F3-2 | Flujo de invitacion por correo para mecanicos     | Bloqueado   | Alta      | F0-5         | -          |
-| F3-3 | Aceptacion de invitacion y activacion de cuenta   | Completado  | Alta      | F3-2, F1-1   | 21-05-2026 |
-| F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Pendiente   | Alta      | F3-1, F4-1   | -          |
+| ID   | Aspecto                                           | Estado     | Prioridad | Dependencias | Completado |
+| ---- | ------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
+| F3-1 | CRUD de mecanicos y personal tecnico              | Completado | Alta      | F0-4         | 21-05-2026 |
+| F3-2 | Flujo de invitacion por correo para mecanicos     | Bloqueado  | Alta      | F0-5         | -          |
+| F3-3 | Aceptacion de invitacion y activacion de cuenta   | Completado | Alta      | F3-2, F1-1   | 21-05-2026 |
+| F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Pendiente  | Alta      | F3-1, F4-1   | -          |
 
 ## Fase 4. Diagnostico y plan de trabajo
 
@@ -122,14 +123,14 @@ Ultima actualizacion: 21-05-2026
 
 ## Hitos sugeridos
 
-| Hito | Objetivo                                                        | Estado      |
-| ---- | --------------------------------------------------------------- | ----------- |
-| H1   | Acceso completo con login, registro y recuperacion              | Completado  |
-| H2   | Gestion completa de clientes y vehiculos                        | En progreso |
-| H3   | Equipo tecnico con invitaciones por correo                      | Bloqueado   |
-| H4   | Diagnostico con partes, repuestos y aprobacion                  | Pendiente   |
-| H5   | Seguimiento de trabajos y avances                               | Pendiente   |
-| H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente   |
+| Hito | Objetivo                                                        | Estado     |
+| ---- | --------------------------------------------------------------- | ---------- |
+| H1   | Acceso completo con login, registro y recuperacion              | Completado |
+| H2   | Gestion completa de clientes y vehiculos                        | Completado |
+| H3   | Equipo tecnico con invitaciones por correo                      | Bloqueado  |
+| H4   | Diagnostico con partes, repuestos y aprobacion                  | Pendiente  |
+| H5   | Seguimiento de trabajos y avances                               | Pendiente  |
+| H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente  |
 
 ## Historial de avances
 
@@ -143,6 +144,8 @@ Ultima actualizacion: 21-05-2026
 - 21-05-2026: se completan la asociacion y CRUD base de vehiculos por cliente; ademas, el modulo de equipo gana directorio editable de personal tecnico con cambios de rol y estado.
 - 21-05-2026: se agrega un panel administrativo basico en la pantalla principal para emitir invitaciones, revisar invitaciones pendientes y aprobar perfiles en revision interna.
 - 21-05-2026: el panel de equipo se separa a una pantalla propia, las invitaciones ahora encolan correo en la coleccion mail para Firebase Trigger Email y se cierra el CRUD base de clientes.
+- 21-05-2026: el flujo de invitaciones pasa a resolverse por correo invitado con codigo consecutivo solo como referencia visible; la pantalla de auth acepta por correo y el modulo de clientes se divide en lista operativa mas detalle real por cliente.
+- 21-05-2026: el alta y edicion de clientes pasan a una pantalla dedicada; la lista principal gana busqueda y filtros rapidos, y los perfiles registrados directamente se promocionan como administradores para evitar bloqueos en accesos e invitaciones.
 
 ## Decisiones base cerradas
 

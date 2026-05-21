@@ -24,7 +24,7 @@ export const REGISTRATION_POLICY = {
   allowPublicSignUp: true,
   requiresInvitation: false,
   requiresInternalApproval: false,
-  defaultPublicRole: USER_ROLES.RECEPTION,
+  defaultPublicRole: USER_ROLES.ADMINISTRATOR,
   authProvider: "firebase-auth",
 };
 

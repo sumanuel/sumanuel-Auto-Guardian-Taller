@@ -9,7 +9,7 @@ import { REGISTRATION_POLICY } from "../../constants/accessControl";
 import { auth } from "../firebase/config";
 import {
   assertInvitationCanBeUsed,
-  getInvitationByCode,
+  getInvitationByEmail,
   markInvitationAccepted,
 } from "./invitations";
 import {
@@ -76,9 +76,9 @@ export async function registerUserFromInvitation({
   password,
 }) {
   const normalizedEmail = normalizeEmail(email);
-  const invitation = await getInvitationByCode(invitationCode);
+  const invitation = await getInvitationByEmail(normalizedEmail);
 
-  assertInvitationCanBeUsed(invitation, normalizedEmail);
+  assertInvitationCanBeUsed(invitation, normalizedEmail, invitationCode);
 
   const credential = await createUserWithEmailAndPassword(
     auth,
@@ -91,7 +91,7 @@ export async function registerUserFromInvitation({
       uid: credential.user.uid,
       email: normalizedEmail,
       fullName: fullName.trim(),
-      phone: phone.trim(),
+      phone: phone?.trim() || "",
       role: invitation.role,
       invitationId: invitation.refId,
       requiresInternalApproval: REGISTRATION_POLICY.requiresInternalApproval,

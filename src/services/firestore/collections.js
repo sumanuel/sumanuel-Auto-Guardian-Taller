@@ -12,7 +12,7 @@ export const firestoreCollections = {
     counterKey: "staffInvitations",
     prefix: "INV-",
     padding: 6,
-    idStrategy: "sequential-doc-id",
+    idStrategy: "email-doc-id",
   },
   clients: {
     name: "clients",

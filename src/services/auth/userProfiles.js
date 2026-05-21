@@ -82,6 +82,14 @@ export async function touchUserProfileLogin(uid) {
   });
 }
 
+export async function promoteSelfProfileToAdministrator(uid) {
+  const documentRef = doc(firestore, userProfileCollection.name, uid);
+  await updateDoc(documentRef, {
+    role: USER_ROLES.ADMINISTRATOR,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export async function createManualUserProfile({
   uid,
   email,

@@ -10,7 +10,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { USER_ROLES } from "../constants/accessControl";
+import {
+  hasPermission,
+  USER_ROLES,
+  USER_STATUSES,
+} from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import {
   approveUserProfile,
@@ -29,11 +33,34 @@ const roleLabels = {
   mechanic: "Mecanico",
 };
 
+const statusLabels = {
+  active: "Activo",
+  pendingApproval: "Pendiente",
+  suspended: "Suspendido",
+  disabled: "Inhabilitado",
+};
+
 const invitationRoleOptions = [
   USER_ROLES.MECHANIC,
   USER_ROLES.RECEPTION,
   USER_ROLES.ADMINISTRATOR,
 ];
+
+const staffStatusOptions = [
+  USER_STATUSES.ACTIVE,
+  USER_STATUSES.PENDING_APPROVAL,
+  USER_STATUSES.SUSPENDED,
+  USER_STATUSES.DISABLED,
+];
+
+function buildStaffForm(profile) {
+  return {
+    fullName: profile?.fullName || "",
+    phone: profile?.phone || "",
+    role: profile?.role || USER_ROLES.MECHANIC,
+    status: profile?.status || USER_STATUSES.ACTIVE,
+  };
+}
 
 function formatShortDate(value) {
   const resolvedDate = value?.toDate ? value.toDate() : value;
@@ -50,17 +77,32 @@ function formatShortDate(value) {
 
 export default function TeamAccessScreen({ onBack, userProfile }) {
   const { colors } = useTheme();
+  const canManageCollaborators = hasPermission(
+    userProfile?.role,
+    "invitations.manage",
+  );
   const [adminRefreshing, setAdminRefreshing] = useState(false);
   const [adminSubmitting, setAdminSubmitting] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [staffProfiles, setStaffProfiles] = useState([]);
+  const [editingStaffId, setEditingStaffId] = useState(null);
+  const [staffForm, setStaffForm] = useState(buildStaffForm());
   const [invitationForm, setInvitationForm] = useState({
     email: "",
     role: USER_ROLES.MECHANIC,
   });
 
   const refreshAdminData = async () => {
+    if (!canManageCollaborators) {
+      setPendingInvitations([]);
+      setPendingApprovals([]);
+      setStaffProfiles([]);
+      setEditingStaffId(null);
+      setStaffForm(buildStaffForm());
+      return;
+    }
+
     setAdminRefreshing(true);
 
     try {
@@ -73,6 +115,19 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
       setPendingInvitations(nextInvitations);
       setPendingApprovals(nextApprovals);
       setStaffProfiles(nextStaffProfiles);
+
+      if (editingStaffId) {
+        const refreshedProfile = nextStaffProfiles.find(
+          (profile) => profile.uid === editingStaffId,
+        );
+
+        if (refreshedProfile) {
+          setStaffForm(buildStaffForm(refreshedProfile));
+        } else {
+          setEditingStaffId(null);
+          setStaffForm(buildStaffForm());
+        }
+      }
     } catch (error) {
       Alert.alert(
         "Equipo y accesos",
@@ -85,7 +140,7 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
 
   useEffect(() => {
     refreshAdminData();
-  }, []);
+  }, [canManageCollaborators]);
 
   const handleCreateInvitation = async () => {
     const trimmedEmail = invitationForm.email.trim().toLowerCase();
@@ -158,16 +213,6 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     }
   };
 
-  const handleQuickRoleChange = async (profile, role) => {
-    try {
-      await updateStaffProfile(profile.uid, { role });
-      await refreshAdminData();
-      Alert.alert("Equipo", `Rol actualizado a ${roleLabels[role] || role}.`);
-    } catch (error) {
-      Alert.alert("Equipo", error?.message || "No se pudo actualizar el rol.");
-    }
-  };
-
   const handleToggleStatus = async (profile) => {
     const nextStatus = profile.status === "active" ? "suspended" : "active";
 
@@ -188,6 +233,47 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     }
   };
 
+  const handleEditStaffProfile = (profile) => {
+    setEditingStaffId(profile.uid);
+    setStaffForm(buildStaffForm(profile));
+  };
+
+  const handleCloseStaffEditor = () => {
+    setEditingStaffId(null);
+    setStaffForm(buildStaffForm());
+  };
+
+  const handleSaveStaffProfile = async () => {
+    if (!editingStaffId) {
+      return;
+    }
+
+    if (!staffForm.fullName.trim()) {
+      Alert.alert("Equipo", "Ingresa el nombre del colaborador.");
+      return;
+    }
+
+    try {
+      setAdminSubmitting(true);
+      await updateStaffProfile(editingStaffId, {
+        fullName: staffForm.fullName.trim(),
+        phone: staffForm.phone.trim(),
+        role: staffForm.role,
+        status: staffForm.status,
+      });
+      await refreshAdminData();
+      Alert.alert("Equipo", "La ficha del colaborador fue actualizada.");
+      handleCloseStaffEditor();
+    } catch (error) {
+      Alert.alert(
+        "Equipo",
+        error?.message || "No se pudo guardar la ficha del colaborador.",
+      );
+    } finally {
+      setAdminSubmitting(false);
+    }
+  };
+
   return (
     <SafeAreaView
       style={[styles.safeArea, { backgroundColor: colors.background }]}
@@ -205,8 +291,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
               Accesos e invitaciones
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Control administrativo del equipo tecnico, aprobaciones internas y
-              envios de invitacion.
+              Gestion del equipo tecnico, aprobaciones internas y colaboracion
+              operativa del taller.
             </Text>
           </View>
 
@@ -226,428 +312,678 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
           </Pressable>
         </View>
 
-        <View
-          style={[
-            styles.panel,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <View style={styles.panelHeader}>
-            <View style={styles.panelCopy}>
-              <Text style={[styles.panelTitle, { color: colors.text }]}>
-                Nueva invitacion
-              </Text>
-              <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-                Cada invitacion genera un codigo consecutivo y encola un correo
-                en Firebase Trigger Email.
-              </Text>
-            </View>
-
-            <Pressable
-              onPress={refreshAdminData}
-              style={[
-                styles.refreshButton,
-                {
-                  borderColor: colors.borderStrong,
-                  backgroundColor: colors.overlay,
-                },
-              ]}
-            >
-              <Text style={[styles.refreshButtonText, { color: colors.white }]}>
-                Actualizar
-              </Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Correo del colaborador
+        {!canManageCollaborators && (
+          <View
+            style={[
+              styles.accessNotice,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.panelTitle, { color: colors.text }]}>
+              Acceso restringido
             </Text>
-            <TextInput
-              autoCapitalize="none"
-              keyboardType="email-address"
-              onChangeText={(value) =>
-                setInvitationForm((current) => ({
-                  ...current,
-                  email: value,
-                }))
-              }
-              placeholder="tecnico@taller.com"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={invitationForm.email}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Rol operativo
+            <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+              Esta pantalla abre para todo el equipo, pero la gestion de
+              invitaciones y colaboradores solo esta habilitada para perfiles
+              con permiso administrativo. Esto replica el patron de tienda-app:
+              se entra a la seccion y el control de permisos se resuelve
+              adentro, no con un boton muerto en el home.
             </Text>
-            <View style={styles.roleOptionRow}>
-              {invitationRoleOptions.map((role) => {
-                const selected = invitationForm.role === role;
+          </View>
+        )}
 
-                return (
+        {canManageCollaborators && (
+          <>
+            {editingStaffId ? (
+              <View
+                style={[
+                  styles.panel,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <View style={styles.panelHeader}>
+                  <View style={styles.panelCopy}>
+                    <Text style={[styles.panelTitle, { color: colors.text }]}>
+                      Editar ficha tecnica
+                    </Text>
+                    <Text
+                      style={[
+                        styles.panelText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      Completa nombre, telefono, rol y estado del colaborador
+                      desde una sola ficha operativa.
+                    </Text>
+                  </View>
+
                   <Pressable
-                    key={role}
-                    onPress={() =>
-                      setInvitationForm((current) => ({
-                        ...current,
-                        role,
-                      }))
-                    }
+                    onPress={handleCloseStaffEditor}
                     style={[
-                      styles.roleOption,
+                      styles.refreshButton,
                       {
-                        backgroundColor: selected
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.primary : colors.border,
+                        borderColor: colors.borderStrong,
+                        backgroundColor: colors.cardBackground,
                       },
                     ]}
                   >
                     <Text
-                      style={[
-                        styles.roleOptionText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
+                      style={[styles.refreshButtonText, { color: colors.text }]}
                     >
-                      {roleLabels[role] || role}
+                      Cerrar
                     </Text>
                   </Pressable>
-                );
-              })}
-            </View>
-          </View>
+                </View>
 
-          <Pressable
-            onPress={handleCreateInvitation}
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              {adminSubmitting
-                ? "Encolando correo..."
-                : "Emitir y enviar invitacion"}
-            </Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.listGrid}>
-          <View
-            style={[
-              styles.listCard,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <View style={styles.listHeader}>
-              <Text style={[styles.listTitle, { color: colors.text }]}>
-                Invitaciones pendientes
-              </Text>
-              <Text style={[styles.counterText, { color: colors.primary }]}>
-                {pendingInvitations.length}
-              </Text>
-            </View>
-
-            {adminRefreshing ? (
-              <ActivityIndicator color={colors.primary} />
-            ) : pendingInvitations.length ? (
-              <View style={styles.listBody}>
-                {pendingInvitations.map((invitation) => (
-                  <View
-                    key={invitation.refId || invitation.id}
+                <View style={styles.formGroup}>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Nombre completo
+                  </Text>
+                  <TextInput
+                    onChangeText={(value) =>
+                      setStaffForm((current) => ({
+                        ...current,
+                        fullName: value,
+                      }))
+                    }
+                    placeholder="Nombre del colaborador"
+                    placeholderTextColor={colors.textTertiary}
                     style={[
-                      styles.listRow,
+                      styles.input,
                       {
-                        backgroundColor: colors.cardMuted,
+                        backgroundColor: colors.inputBackground,
                         borderColor: colors.border,
+                        color: colors.text,
                       },
                     ]}
-                  >
-                    <View style={styles.listCopy}>
-                      <Text style={[styles.rowTitle, { color: colors.text }]}>
-                        {invitation.email}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {invitation.id || invitation.refId} ·{" "}
-                        {roleLabels[invitation.role] || invitation.role}
-                      </Text>
-                      <Text
-                        style={[styles.rowMeta, { color: colors.textTertiary }]}
-                      >
-                        Vence {formatShortDate(invitation.expiresAt)} · Entrega{" "}
-                        {invitation.deliveryStatus || "sin estado"}
-                      </Text>
-                    </View>
+                    value={staffForm.fullName}
+                  />
+                </View>
 
-                    <Pressable
-                      onPress={() => handleCancelInvitation(invitation)}
-                      style={[
-                        styles.secondaryAction,
-                        {
-                          borderColor: colors.borderStrong,
-                          backgroundColor: colors.overlay,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.secondaryActionText,
-                          { color: colors.white },
-                        ]}
-                      >
-                        Cancelar
-                      </Text>
-                    </Pressable>
+                <View style={styles.formGroup}>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Telefono
+                  </Text>
+                  <TextInput
+                    keyboardType="phone-pad"
+                    onChangeText={(value) =>
+                      setStaffForm((current) => ({
+                        ...current,
+                        phone: value,
+                      }))
+                    }
+                    placeholder="Numero de contacto"
+                    placeholderTextColor={colors.textTertiary}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    value={staffForm.phone}
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Rol operativo
+                  </Text>
+                  <View style={styles.roleOptionRow}>
+                    {invitationRoleOptions.map((role) => {
+                      const selected = staffForm.role === role;
+
+                      return (
+                        <Pressable
+                          key={`staff-role-${role}`}
+                          onPress={() =>
+                            setStaffForm((current) => ({
+                              ...current,
+                              role,
+                            }))
+                          }
+                          style={[
+                            styles.roleOption,
+                            {
+                              backgroundColor: selected
+                                ? colors.primary
+                                : colors.cardMuted,
+                              borderColor: selected
+                                ? colors.primary
+                                : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.roleOptionText,
+                              { color: selected ? colors.white : colors.text },
+                            ]}
+                          >
+                            {roleLabels[role] || role}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
-                ))}
-              </View>
-            ) : (
-              <Text
-                style={[styles.emptyStateText, { color: colors.textSecondary }]}
-              >
-                No hay invitaciones abiertas. Emite la primera para sumar
-                personal al taller.
-              </Text>
-            )}
-          </View>
+                </View>
 
-          <View
-            style={[
-              styles.listCard,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <View style={styles.listHeader}>
-              <Text style={[styles.listTitle, { color: colors.text }]}>
-                Aprobaciones internas
-              </Text>
-              <Text style={[styles.counterText, { color: colors.warning }]}>
-                {pendingApprovals.length}
-              </Text>
-            </View>
+                <View style={styles.formGroup}>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                    Estado de acceso
+                  </Text>
+                  <View style={styles.roleOptionRow}>
+                    {staffStatusOptions.map((status) => {
+                      const selected = staffForm.status === status;
 
-            {adminRefreshing ? (
-              <ActivityIndicator color={colors.primary} />
-            ) : pendingApprovals.length ? (
-              <View style={styles.listBody}>
-                {pendingApprovals.map((profile) => (
-                  <View
-                    key={profile.uid}
-                    style={[
-                      styles.listRow,
-                      {
-                        backgroundColor: colors.cardMuted,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <View style={styles.listCopy}>
-                      <Text style={[styles.rowTitle, { color: colors.text }]}>
-                        {profile.fullName || "Usuario sin nombre"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {profile.email} ·{" "}
-                        {roleLabels[profile.role] || profile.role}
-                      </Text>
-                      <Text
-                        style={[styles.rowMeta, { color: colors.textTertiary }]}
-                      >
-                        Codigo {profile.userCode || "Sin consecutivo"}
-                      </Text>
-                    </View>
-
-                    <Pressable
-                      onPress={() => handleApproveProfile(profile)}
-                      style={[
-                        styles.approveAction,
-                        {
-                          borderColor: colors.primary,
-                          backgroundColor: colors.cardBackground,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.approveActionText,
-                          { color: colors.primary },
-                        ]}
-                      >
-                        Aprobar
-                      </Text>
-                    </Pressable>
+                      return (
+                        <Pressable
+                          key={`staff-status-${status}`}
+                          onPress={() =>
+                            setStaffForm((current) => ({
+                              ...current,
+                              status,
+                            }))
+                          }
+                          style={[
+                            styles.roleOption,
+                            {
+                              backgroundColor: selected
+                                ? colors.accent
+                                : colors.cardMuted,
+                              borderColor: selected
+                                ? colors.accent
+                                : colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.roleOptionText,
+                              { color: selected ? colors.white : colors.text },
+                            ]}
+                          >
+                            {statusLabels[status] || status}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
-                ))}
-              </View>
-            ) : (
-              <Text
-                style={[styles.emptyStateText, { color: colors.textSecondary }]}
-              >
-                No hay usuarios pendientes de aprobacion interna.
-              </Text>
-            )}
-          </View>
+                </View>
 
-          <View
-            style={[
-              styles.listCard,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <View style={styles.listHeader}>
-              <Text style={[styles.listTitle, { color: colors.text }]}>
-                Personal tecnico
-              </Text>
-              <Text style={[styles.counterText, { color: colors.accent }]}>
-                {staffProfiles.length}
-              </Text>
-            </View>
-
-            {adminRefreshing ? (
-              <ActivityIndicator color={colors.primary} />
-            ) : staffProfiles.length ? (
-              <View style={styles.listBody}>
-                {staffProfiles.map((profile) => (
-                  <View
-                    key={profile.uid}
-                    style={[
-                      styles.listRow,
-                      {
-                        backgroundColor: colors.cardMuted,
-                        borderColor: colors.border,
-                      },
-                    ]}
+                <Pressable
+                  onPress={handleSaveStaffProfile}
+                  style={[
+                    styles.primaryAction,
+                    { backgroundColor: colors.primary },
+                  ]}
+                >
+                  <Text
+                    style={[styles.primaryActionText, { color: colors.white }]}
                   >
-                    <View style={styles.listCopy}>
-                      <Text style={[styles.rowTitle, { color: colors.text }]}>
-                        {profile.fullName || "Usuario sin nombre"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {profile.userCode || "Sin codigo"} · {profile.email}
-                      </Text>
-                      <Text
-                        style={[styles.rowMeta, { color: colors.textTertiary }]}
-                      >
-                        {roleLabels[profile.role] || profile.role} · Estado{" "}
-                        {profile.status || "sin estado"}
-                      </Text>
-                    </View>
+                    {adminSubmitting ? "Guardando ficha..." : "Guardar ficha"}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
 
-                    <View style={styles.staffActions}>
-                      <View style={styles.roleOptionRow}>
-                        {invitationRoleOptions.map((role) => {
-                          const selected = profile.role === role;
+            <View
+              style={[
+                styles.panel,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <View style={styles.panelHeader}>
+                <View style={styles.panelCopy}>
+                  <Text style={[styles.panelTitle, { color: colors.text }]}>
+                    Nueva invitacion
+                  </Text>
+                  <Text
+                    style={[styles.panelText, { color: colors.textSecondary }]}
+                  >
+                    Cada invitacion genera un codigo consecutivo y encola un
+                    correo en Firebase Trigger Email.
+                  </Text>
+                </View>
 
-                          return (
-                            <Pressable
-                              key={`${profile.uid}-${role}`}
-                              onPress={() =>
-                                handleQuickRoleChange(profile, role)
-                              }
-                              style={[
-                                styles.roleOption,
-                                {
-                                  backgroundColor: selected
-                                    ? colors.primary
-                                    : colors.cardBackground,
-                                  borderColor: selected
-                                    ? colors.primary
-                                    : colors.border,
-                                },
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.roleOptionText,
-                                  {
-                                    color: selected
-                                      ? colors.white
-                                      : colors.text,
-                                  },
-                                ]}
-                              >
-                                {roleLabels[role] || role}
-                              </Text>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
+                <Pressable
+                  onPress={refreshAdminData}
+                  style={[
+                    styles.refreshButton,
+                    {
+                      borderColor: colors.borderStrong,
+                      backgroundColor: colors.overlay,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.refreshButtonText, { color: colors.white }]}
+                  >
+                    Actualizar
+                  </Text>
+                </Pressable>
+              </View>
 
+              <View style={styles.formGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Correo del colaborador
+                </Text>
+                <TextInput
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  onChangeText={(value) =>
+                    setInvitationForm((current) => ({
+                      ...current,
+                      email: value,
+                    }))
+                  }
+                  placeholder="tecnico@taller.com"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={invitationForm.email}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Rol operativo
+                </Text>
+                <View style={styles.roleOptionRow}>
+                  {invitationRoleOptions.map((role) => {
+                    const selected = invitationForm.role === role;
+
+                    return (
                       <Pressable
-                        onPress={() => handleToggleStatus(profile)}
+                        key={role}
+                        onPress={() =>
+                          setInvitationForm((current) => ({
+                            ...current,
+                            role,
+                          }))
+                        }
                         style={[
-                          styles.approveAction,
+                          styles.roleOption,
                           {
-                            borderColor:
-                              profile.status === "active"
-                                ? colors.warning
-                                : colors.success,
-                            backgroundColor: colors.cardBackground,
+                            backgroundColor: selected
+                              ? colors.primary
+                              : colors.cardMuted,
+                            borderColor: selected
+                              ? colors.primary
+                              : colors.border,
                           },
                         ]}
                       >
                         <Text
                           style={[
-                            styles.approveActionText,
+                            styles.roleOptionText,
+                            { color: selected ? colors.white : colors.text },
+                          ]}
+                        >
+                          {roleLabels[role] || role}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <Pressable
+                onPress={handleCreateInvitation}
+                style={[
+                  styles.primaryAction,
+                  { backgroundColor: colors.primary },
+                ]}
+              >
+                <Text
+                  style={[styles.primaryActionText, { color: colors.white }]}
+                >
+                  {adminSubmitting
+                    ? "Encolando correo..."
+                    : "Emitir y enviar invitacion"}
+                </Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.listGrid}>
+              <View
+                style={[
+                  styles.listCard,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <View style={styles.listHeader}>
+                  <Text style={[styles.listTitle, { color: colors.text }]}>
+                    Invitaciones pendientes
+                  </Text>
+                  <Text style={[styles.counterText, { color: colors.primary }]}>
+                    {pendingInvitations.length}
+                  </Text>
+                </View>
+
+                {adminRefreshing ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : pendingInvitations.length ? (
+                  <View style={styles.listBody}>
+                    {pendingInvitations.map((invitation) => (
+                      <View
+                        key={invitation.refId || invitation.id}
+                        style={[
+                          styles.listRow,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                      >
+                        <View style={styles.listCopy}>
+                          <Text
+                            style={[styles.rowTitle, { color: colors.text }]}
+                          >
+                            {invitation.email}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.rowMeta,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
+                            {invitation.id || invitation.refId} ·{" "}
+                            {roleLabels[invitation.role] || invitation.role}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.rowMeta,
+                              { color: colors.textTertiary },
+                            ]}
+                          >
+                            Vence {formatShortDate(invitation.expiresAt)} ·
+                            Entrega {invitation.deliveryStatus || "sin estado"}
+                          </Text>
+                        </View>
+
+                        <Pressable
+                          onPress={() => handleCancelInvitation(invitation)}
+                          style={[
+                            styles.secondaryAction,
                             {
-                              color:
-                                profile.status === "active"
-                                  ? colors.warning
-                                  : colors.success,
+                              borderColor: colors.borderStrong,
+                              backgroundColor: colors.overlay,
                             },
                           ]}
                         >
-                          {profile.status === "active"
-                            ? "Suspender"
-                            : "Reactivar"}
-                        </Text>
-                      </Pressable>
-                    </View>
+                          <Text
+                            style={[
+                              styles.secondaryActionText,
+                              { color: colors.white },
+                            ]}
+                          >
+                            Cancelar
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ))}
                   </View>
-                ))}
+                ) : (
+                  <Text
+                    style={[
+                      styles.emptyStateText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    No hay invitaciones abiertas. Emite la primera para sumar
+                    personal al taller.
+                  </Text>
+                )}
               </View>
-            ) : (
-              <Text
-                style={[styles.emptyStateText, { color: colors.textSecondary }]}
+
+              <View
+                style={[
+                  styles.listCard,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
               >
-                No hay personal tecnico registrado todavia.
-              </Text>
-            )}
-          </View>
-        </View>
+                <View style={styles.listHeader}>
+                  <Text style={[styles.listTitle, { color: colors.text }]}>
+                    Aprobaciones internas
+                  </Text>
+                  <Text style={[styles.counterText, { color: colors.warning }]}>
+                    {pendingApprovals.length}
+                  </Text>
+                </View>
+
+                {adminRefreshing ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : pendingApprovals.length ? (
+                  <View style={styles.listBody}>
+                    {pendingApprovals.map((profile) => (
+                      <View
+                        key={profile.uid}
+                        style={[
+                          styles.listRow,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                      >
+                        <View style={styles.listCopy}>
+                          <Text
+                            style={[styles.rowTitle, { color: colors.text }]}
+                          >
+                            {profile.fullName || "Usuario sin nombre"}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.rowMeta,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
+                            {profile.email} ·{" "}
+                            {roleLabels[profile.role] || profile.role}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.rowMeta,
+                              { color: colors.textTertiary },
+                            ]}
+                          >
+                            Codigo {profile.userCode || "Sin consecutivo"}
+                          </Text>
+                        </View>
+
+                        <Pressable
+                          onPress={() => handleApproveProfile(profile)}
+                          style={[
+                            styles.approveAction,
+                            {
+                              borderColor: colors.primary,
+                              backgroundColor: colors.cardBackground,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.approveActionText,
+                              { color: colors.primary },
+                            ]}
+                          >
+                            Aprobar
+                          </Text>
+                        </Pressable>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text
+                    style={[
+                      styles.emptyStateText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    No hay usuarios pendientes de aprobacion interna.
+                  </Text>
+                )}
+              </View>
+
+              <View
+                style={[
+                  styles.listCard,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <View style={styles.listHeader}>
+                  <Text style={[styles.listTitle, { color: colors.text }]}>
+                    Personal tecnico
+                  </Text>
+                  <Text style={[styles.counterText, { color: colors.accent }]}>
+                    {staffProfiles.length}
+                  </Text>
+                </View>
+
+                {adminRefreshing ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : staffProfiles.length ? (
+                  <View style={styles.listBody}>
+                    {staffProfiles.map((profile) => (
+                      <View
+                        key={profile.uid}
+                        style={[
+                          styles.listRow,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                      >
+                        <View style={styles.listCopy}>
+                          <Text
+                            style={[styles.rowTitle, { color: colors.text }]}
+                          >
+                            {profile.fullName || "Usuario sin nombre"}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.rowMeta,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
+                            {profile.userCode || "Sin codigo"} · {profile.email}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.rowMeta,
+                              { color: colors.textTertiary },
+                            ]}
+                          >
+                            {roleLabels[profile.role] || profile.role} · Estado{" "}
+                            {statusLabels[profile.status] ||
+                              profile.status ||
+                              "sin estado"}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.rowMeta,
+                              { color: colors.textTertiary },
+                            ]}
+                          >
+                            {profile.phone || "Sin telefono operativo"}
+                          </Text>
+                        </View>
+
+                        <View style={styles.staffActions}>
+                          <Pressable
+                            onPress={() => handleEditStaffProfile(profile)}
+                            style={[
+                              styles.approveAction,
+                              {
+                                borderColor: colors.primary,
+                                backgroundColor: colors.cardBackground,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.approveActionText,
+                                { color: colors.primary },
+                              ]}
+                            >
+                              Editar ficha
+                            </Text>
+                          </Pressable>
+
+                          <Pressable
+                            onPress={() => handleToggleStatus(profile)}
+                            style={[
+                              styles.approveAction,
+                              {
+                                borderColor:
+                                  profile.status === "active"
+                                    ? colors.warning
+                                    : colors.success,
+                                backgroundColor: colors.cardBackground,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.approveActionText,
+                                {
+                                  color:
+                                    profile.status === "active"
+                                      ? colors.warning
+                                      : colors.success,
+                                },
+                              ]}
+                            >
+                              {profile.status === "active"
+                                ? "Suspender"
+                                : "Reactivar"}
+                            </Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text
+                    style={[
+                      styles.emptyStateText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    No hay personal tecnico registrado todavia.
+                  </Text>
+                )}
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -702,6 +1038,12 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
     gap: spacing.lg,
+  },
+  accessNotice: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    gap: spacing.sm,
   },
   panelHeader: {
     flexDirection: "row",
