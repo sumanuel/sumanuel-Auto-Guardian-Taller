@@ -84,7 +84,7 @@ export default function ClientFormScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
@@ -248,41 +248,41 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
   formCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   formGroup: {
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(12),
+    fontSize: rf(11),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   input: {
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    fontSize: rf(15),
+    fontSize: rf(14),
   },
   textArea: {
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    fontSize: rf(15),
-    minHeight: spacing.xxl * 3,
+    fontSize: rf(14),
+    minHeight: rf(96),
   },
   primaryAction: {
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     alignItems: "center",
   },

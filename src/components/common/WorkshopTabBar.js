@@ -14,7 +14,7 @@ const tabConfig = [
   },
   {
     key: "diagnostics",
-    label: "Diagnosticos",
+    label: "Diag.",
     icon: "pulse-outline",
     activeIcon: "pulse",
   },
@@ -43,7 +43,7 @@ export default function WorkshopTabBar({ activeTab, onChange }) {
         {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
-          paddingBottom: Math.max(insets.bottom, spacing.sm),
+          paddingBottom: Math.max(insets.bottom, spacing.xs),
         },
       ]}
     >
@@ -99,30 +99,30 @@ const styles = StyleSheet.create({
   shell: {
     borderTopWidth: 1,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
   },
   container: {
     flexDirection: "row",
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     justifyContent: "space-between",
   },
   tabButton: {
     flex: 1,
     alignItems: "center",
-    gap: spacing.xs,
+    gap: 2,
   },
   iconWrap: {
-    width: rf(38),
-    height: rf(38),
+    width: rf(34),
+    height: rf(34),
     borderRadius: borderRadius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
   tabLabel: {
-    fontSize: rf(11),
+    fontSize: rf(10),
     fontWeight: "800",
   },
 });

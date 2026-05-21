@@ -227,25 +227,27 @@ export default function ClientsScreen({
     <>
       <WorkshopScreenHeader
         section="Recepcion"
-        subtitle="La lista queda limpia y directa; el alta y la asociacion viven en pantallas separadas."
+        subtitle="Lista operativa mas limpia, con alta y asociacion resueltas en pantallas separadas."
         title="Clientes"
       />
 
-      <View
-        style={[
-          styles.summaryCard,
-          {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
-          },
-        ]}
-      >
-        <Text style={[styles.summaryValue, { color: colors.text }]}>
-          {clients.length}
-        </Text>
-        <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-          Clientes registrados
-        </Text>
+      <View style={styles.summaryRow}>
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.summaryValue, { color: colors.text }]}>
+            {clients.length}
+          </Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+            Clientes
+          </Text>
+        </View>
       </View>
 
       <View
@@ -540,7 +542,7 @@ export default function ClientsScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
@@ -569,33 +571,36 @@ export default function ClientsScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
-  scrollContent: { padding: spacing.lg, gap: spacing.lg },
+  scrollContent: { padding: spacing.lg, gap: spacing.xl },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
+  summaryRow: { flexDirection: "row" },
   summaryCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     gap: spacing.xs,
+    minWidth: rf(132),
   },
-  summaryValue: { fontSize: rf(30), fontWeight: "900" },
+  summaryValue: { fontSize: rf(28), fontWeight: "900" },
   summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
   controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    padding: spacing.md,
     gap: spacing.md,
   },
   input: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     fontSize: rf(14),
   },
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   filterChip: {
     borderWidth: 1,
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
@@ -622,31 +627,31 @@ const styles = StyleSheet.create({
   detailCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
-  detailGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
-  detailBlock: { width: "47%", gap: spacing.xs },
+  detailGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  detailBlock: { width: "48%", gap: spacing.xs },
   detailLabel: {
-    fontSize: rf(11),
+    fontSize: rf(10),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  detailValue: { fontSize: rf(15), fontWeight: "700" },
-  notesText: { fontSize: rf(13), lineHeight: rf(19) },
+  detailValue: { fontSize: rf(14), fontWeight: "700", lineHeight: rf(20) },
+  notesText: { fontSize: rf(13), lineHeight: rf(18) },
   actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   primaryAction: {
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
   },
   primaryActionText: { fontSize: rf(13), fontWeight: "800" },
   secondaryAction: {
     borderWidth: 1,
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
   },
   secondaryActionText: { fontSize: rf(13), fontWeight: "800" },
   sectionHeader: {
@@ -655,7 +660,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
   },
-  sectionTitle: { fontSize: rf(18), fontWeight: "900" },
+  sectionTitle: { fontSize: rf(16), fontWeight: "900" },
   sectionMeta: { fontSize: rf(12), fontWeight: "700" },
   emptyText: { fontSize: rf(13), lineHeight: rf(20) },
   fab: {

@@ -147,10 +147,13 @@ export default function WorkOrderFormScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <WorkshopScreenHeader
           onBack={onBack}
           section="Ordenes"
@@ -338,28 +341,33 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
   formCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   formGroup: { gap: spacing.sm },
-  fieldLabel: { fontSize: rf(12), fontWeight: "700" },
+  fieldLabel: {
+    fontSize: rf(11),
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   optionChip: {
     borderWidth: 1,
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   optionText: { fontSize: rf(12), fontWeight: "700" },
-  helperText: { fontSize: rf(12), lineHeight: rf(18) },
+  helperText: { fontSize: rf(13), lineHeight: rf(18) },
   summaryPanel: {
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     padding: spacing.md,
     gap: spacing.xs,
   },
@@ -374,7 +382,7 @@ const styles = StyleSheet.create({
   },
   primaryAction: {
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     alignItems: "center",
   },
   primaryActionText: { fontSize: rf(14), fontWeight: "800" },

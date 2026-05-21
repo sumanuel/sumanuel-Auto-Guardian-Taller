@@ -37,7 +37,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -152,20 +152,20 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: {
     padding: spacing.lg,
-    gap: spacing.lg,
+    gap: spacing.xl,
     paddingBottom: spacing.xl,
   },
   heroCard: {
     borderRadius: borderRadius.xxl,
     padding: spacing.xl,
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
   heroTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: spacing.md,
   },
-  heroCopy: { flex: 1, gap: spacing.xs },
+  heroCopy: { flex: 1, gap: spacing.sm },
   heroEyebrow: {
     color: "#d4e5ff",
     fontSize: rf(12),
@@ -173,8 +173,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: "uppercase",
   },
-  heroTitle: { color: "#ffffff", fontSize: rf(30), fontWeight: "900" },
-  heroSubtitle: { color: "#d8e7ff", fontSize: rf(14), lineHeight: rf(20) },
+  heroTitle: { color: "#ffffff", fontSize: rf(28), fontWeight: "900" },
+  heroSubtitle: { color: "#d8e7ff", fontSize: rf(15), lineHeight: rf(22) },
   alertPill: {
     alignSelf: "flex-start",
     backgroundColor: "rgba(255,255,255,0.16)",
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     width: "47%",
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   metricTilePrimary: { backgroundColor: "rgba(255,255,255,0.18)" },
   metricTileDark: { backgroundColor: "rgba(8,15,25,0.78)" },
@@ -197,8 +197,8 @@ const styles = StyleSheet.create({
   sectionPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.xs,
+    padding: spacing.xl,
+    gap: spacing.sm,
   },
   panelEyebrow: {
     fontSize: rf(12),
@@ -210,6 +210,7 @@ const styles = StyleSheet.create({
   panelText: { fontSize: rf(14), lineHeight: rf(20) },
   listWrap: {
     backgroundColor: "transparent",
+    paddingTop: spacing.xs,
   },
   queueRow: {
     flexDirection: "row",

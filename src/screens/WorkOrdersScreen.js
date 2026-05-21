@@ -299,7 +299,7 @@ export default function WorkOrdersScreen({
     <>
       <View
         style={[
-          styles.summaryCard,
+          styles.statCard,
           {
             backgroundColor: colors.cardBackground,
             borderColor: colors.border,
@@ -514,7 +514,7 @@ export default function WorkOrdersScreen({
       <>
         <View
           style={[
-            styles.summaryCard,
+            styles.detailCard,
             {
               backgroundColor: colors.cardBackground,
               borderColor: colors.border,
@@ -810,7 +810,7 @@ export default function WorkOrdersScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
@@ -858,33 +858,42 @@ export default function WorkOrdersScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
-  scrollContent: { padding: spacing.lg, gap: spacing.lg },
+  scrollContent: { padding: spacing.lg, gap: spacing.xl },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
-  summaryCard: {
+  statCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    gap: spacing.xs,
+    alignSelf: "flex-start",
+    minWidth: rf(132),
   },
-  summaryValue: { fontSize: rf(30), fontWeight: "900" },
+  summaryValue: { fontSize: rf(28), fontWeight: "900" },
   summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
-  controlsPanel: {
+  detailCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
+    gap: spacing.md,
+  },
+  controlsPanel: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
     gap: spacing.md,
   },
   input: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     fontSize: rf(14),
   },
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   filterChip: {
     borderWidth: 1,
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
@@ -907,22 +916,28 @@ const styles = StyleSheet.create({
   rowMeta: { fontSize: rf(12), lineHeight: rf(18) },
   formGroup: { gap: spacing.sm },
   fieldLabel: { fontSize: rf(12), fontWeight: "700" },
+  listCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
   detailGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   detailBlock: {
-    minWidth: "45%",
+    minWidth: "48%",
     gap: spacing.xs,
   },
   detailLabel: {
-    fontSize: rf(11),
+    fontSize: rf(10),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  detailValue: { fontSize: rf(15), fontWeight: "700" },
+  detailValue: { fontSize: rf(14), fontWeight: "700", lineHeight: rf(20) },
   detailActionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -932,9 +947,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   actionPillText: { fontSize: rf(12), fontWeight: "800" },
   iconActionRow: { gap: spacing.sm, justifyContent: "center" },
@@ -950,20 +965,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    minHeight: rf(92),
+    paddingVertical: spacing.sm,
+    minHeight: rf(88),
     fontSize: rf(14),
   },
   primaryButton: {
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     alignItems: "center",
   },
   primaryButtonText: { fontSize: rf(14), fontWeight: "800" },
   timelineList: { gap: spacing.md },
   timelineRow: {
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     padding: spacing.md,
     flexDirection: "row",
     gap: spacing.md,

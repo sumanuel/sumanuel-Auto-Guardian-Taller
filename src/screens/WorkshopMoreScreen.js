@@ -31,13 +31,16 @@ export default function WorkshopMoreScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <WorkshopScreenHeader
-          section="Operador"
-          subtitle="Accesos menos frecuentes fuera del tablero principal, siguiendo un flujo mas limpio."
+          section="Soporte"
+          subtitle="Accesos secundarios, preferencias y control administrativo fuera del flujo principal del taller."
           title="Mas opciones"
         />
 
@@ -136,28 +139,28 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.xl,
-    gap: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.xl,
   },
-  listWrap: { gap: spacing.md },
+  listWrap: { gap: spacing.sm },
   row: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    padding: spacing.md,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
   },
   iconBadge: {
-    width: rf(48),
-    height: rf(48),
-    borderRadius: borderRadius.lg,
+    width: rf(42),
+    height: rf(42),
+    borderRadius: borderRadius.md,
     alignItems: "center",
     justifyContent: "center",
   },
-  rowCopy: { flex: 1, gap: spacing.xs },
-  rowTitle: { fontSize: rf(16), fontWeight: "800" },
-  rowSubtitle: { fontSize: rf(13), lineHeight: rf(19) },
+  rowCopy: { flex: 1, gap: 2 },
+  rowTitle: { fontSize: rf(15), fontWeight: "800" },
+  rowSubtitle: { fontSize: rf(12), lineHeight: rf(18) },
   actionsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -167,9 +170,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
   },
-  actionLabel: { fontSize: rf(15), fontWeight: "700" },
+  actionLabel: { fontSize: rf(14), fontWeight: "700" },
 });

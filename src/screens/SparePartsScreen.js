@@ -133,7 +133,7 @@ export default function SparePartsScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
@@ -334,33 +334,36 @@ export default function SparePartsScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
-  scrollContent: { padding: spacing.lg, gap: spacing.lg },
+  scrollContent: { padding: spacing.lg, gap: spacing.xl },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
   summaryCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     gap: spacing.xs,
+    alignSelf: "flex-start",
+    minWidth: rf(132),
   },
-  summaryValue: { fontSize: rf(30), fontWeight: "900" },
+  summaryValue: { fontSize: rf(28), fontWeight: "900" },
   summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
   controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    padding: spacing.md,
     gap: spacing.md,
   },
   input: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     fontSize: rf(14),
   },
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   filterChip: {
     borderWidth: 1,
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },

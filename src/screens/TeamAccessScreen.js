@@ -293,7 +293,7 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
@@ -302,8 +302,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
       >
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Equipo"
-          subtitle="Gestion del equipo tecnico, aprobaciones internas y colaboracion operativa del taller."
+          section="Control administrativo"
+          subtitle="Invitaciones, aprobaciones y fichas internas con una lectura mas tecnica y compacta."
           title="Accesos e invitaciones"
         />
 
@@ -993,7 +993,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
   headerRow: {
     flexDirection: "row",
@@ -1033,13 +1033,13 @@ const styles = StyleSheet.create({
   panel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   accessNotice: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
+    padding: spacing.lg,
     gap: spacing.sm,
   },
   panelHeader: {
@@ -1050,20 +1050,20 @@ const styles = StyleSheet.create({
   },
   panelCopy: {
     flex: 1,
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   panelTitle: {
-    fontSize: rf(18),
+    fontSize: rf(16),
     fontWeight: "800",
   },
   panelText: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
+    fontSize: rf(13),
+    lineHeight: rf(19),
   },
   refreshButton: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
   },
   refreshButtonText: {
@@ -1081,10 +1081,10 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    fontSize: rf(15),
+    fontSize: rf(14),
   },
   roleOptionRow: {
     flexDirection: "row",
@@ -1094,16 +1094,16 @@ const styles = StyleSheet.create({
   roleOption: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
   },
   roleOptionText: {
-    fontSize: rf(13),
+    fontSize: rf(12),
     fontWeight: "700",
   },
   primaryAction: {
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     alignItems: "center",
   },
@@ -1117,7 +1117,7 @@ const styles = StyleSheet.create({
   listCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
+    padding: spacing.lg,
     gap: spacing.md,
   },
   listHeader: {
@@ -1127,11 +1127,11 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   listTitle: {
-    fontSize: rf(18),
+    fontSize: rf(16),
     fontWeight: "800",
   },
   counterText: {
-    fontSize: rf(18),
+    fontSize: rf(16),
     fontWeight: "900",
   },
   listBody: {
@@ -1139,7 +1139,7 @@ const styles = StyleSheet.create({
   },
   listRow: {
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     padding: spacing.md,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1155,17 +1155,17 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   rowTitle: {
-    fontSize: rf(15),
-    fontWeight: "700",
+    fontSize: rf(14),
+    fontWeight: "800",
   },
   rowMeta: {
     fontSize: rf(12),
-    lineHeight: rf(18),
+    lineHeight: rf(17),
   },
   secondaryAction: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
   },
   secondaryActionText: {
@@ -1175,7 +1175,7 @@ const styles = StyleSheet.create({
   approveAction: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
   },
   approveActionText: {
@@ -1183,7 +1183,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   emptyStateText: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
+    fontSize: rf(13),
+    lineHeight: rf(19),
   },
 });

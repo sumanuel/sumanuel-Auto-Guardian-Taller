@@ -128,10 +128,13 @@ export default function DiagnosticFormScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <WorkshopScreenHeader
           onBack={onBack}
           section="Diagnosticos"
@@ -455,36 +458,41 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
   formCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
   formGroup: { gap: spacing.sm },
-  fieldLabel: { fontSize: rf(12), fontWeight: "700" },
+  fieldLabel: {
+    fontSize: rf(11),
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   optionChip: {
     borderWidth: 1,
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   optionText: { fontSize: rf(12), fontWeight: "700" },
-  helperText: { fontSize: rf(12), lineHeight: rf(18) },
+  helperText: { fontSize: rf(13), lineHeight: rf(18) },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    minHeight: rf(92),
+    paddingVertical: spacing.sm,
+    minHeight: rf(88),
     fontSize: rf(14),
   },
   primaryAction: {
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     alignItems: "center",
   },
   primaryActionText: { fontSize: rf(14), fontWeight: "800" },

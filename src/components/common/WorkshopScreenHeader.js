@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../../utils/responsive";
 
@@ -11,9 +12,12 @@ export default function WorkshopScreenHeader({
   rightAction,
 }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.wrapper}>
+    <View
+      style={[styles.wrapper, { paddingTop: Math.max(insets.top, spacing.md) }]}
+    >
       <View style={styles.topRow}>
         <View style={styles.titleWrap}>
           {section ? (
@@ -67,7 +71,7 @@ export default function WorkshopScreenHeader({
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   topRow: {
     flexDirection: "row",
@@ -77,7 +81,7 @@ const styles = StyleSheet.create({
   },
   titleWrap: {
     flex: 1,
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   section: {
     fontSize: rf(12),
@@ -86,13 +90,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   title: {
-    fontSize: rf(28),
+    fontSize: rf(30),
     fontWeight: "900",
     letterSpacing: -0.8,
   },
   subtitle: {
     fontSize: rf(14),
-    lineHeight: rf(20),
+    lineHeight: rf(22),
   },
   iconButton: {
     width: rf(44),
