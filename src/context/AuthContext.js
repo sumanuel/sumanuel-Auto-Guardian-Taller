@@ -3,12 +3,14 @@ import { onAuthStateChanged } from "firebase/auth";
 import { USER_ROLES } from "../constants/accessControl";
 import { auth } from "../services/firebase/config";
 import {
+  acceptPendingInvitationForCurrentUser,
   registerUserFromInvitation,
   sendPasswordRecovery,
   signInWithCredentials,
   signUpWithProfile,
   signOutUserSession,
 } from "../services/auth/authService";
+import { getPendingInvitationByEmail } from "../services/auth/invitations";
 import {
   getUserProfileByUid,
   promoteSelfProfileToAdministrator,
@@ -21,6 +23,7 @@ export function AuthProvider({ children }) {
   const [authReady, setAuthReady] = useState(false);
   const [authUser, setAuthUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [pendingInvitation, setPendingInvitation] = useState(null);
   const [authBusy, setAuthBusy] = useState(false);
 
   useEffect(() => {
@@ -29,6 +32,7 @@ export function AuthProvider({ children }) {
 
       if (!nextUser) {
         setUserProfile(null);
+        setPendingInvitation(null);
         setAuthReady(true);
         return;
       }
@@ -49,6 +53,14 @@ export function AuthProvider({ children }) {
         }
 
         setUserProfile(profile);
+        if (!profile) {
+          const nextPendingInvitation = await getPendingInvitationByEmail(
+            nextUser.email || "",
+          );
+          setPendingInvitation(nextPendingInvitation);
+        } else {
+          setPendingInvitation(null);
+        }
 
         if (profile) {
           await touchUserProfileLogin(nextUser.uid);
@@ -56,6 +68,7 @@ export function AuthProvider({ children }) {
       } catch (error) {
         console.error("Error loading user profile:", error);
         setUserProfile(null);
+        setPendingInvitation(null);
       } finally {
         setAuthReady(true);
       }
@@ -100,6 +113,23 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const acceptPendingInvitation = async (payload) => {
+    setAuthBusy(true);
+    try {
+      const result = await acceptPendingInvitationForCurrentUser(payload);
+      setPendingInvitation(null);
+      setUserProfile(result.profile);
+
+      if (result.profile?.uid) {
+        await touchUserProfileLogin(result.profile.uid);
+      }
+
+      return result;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
   const signOutUser = async () => {
     setAuthBusy(true);
     try {
@@ -112,16 +142,18 @@ export function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       activateInvitation,
+      acceptPendingInvitation,
       authBusy,
       authReady,
       authUser,
+      pendingInvitation,
       recoverPassword,
       signIn,
       signUp,
       signOutUser,
       userProfile,
     }),
-    [authBusy, authReady, authUser, userProfile],
+    [authBusy, authReady, authUser, pendingInvitation, userProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

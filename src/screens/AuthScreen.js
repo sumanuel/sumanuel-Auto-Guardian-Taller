@@ -24,8 +24,7 @@ const modes = {
 };
 
 export default function AuthScreen() {
-  const { activateInvitation, authBusy, recoverPassword, signIn, signUp } =
-    useAuth();
+  const { authBusy, recoverPassword, signIn, signUp } = useAuth();
   const { colors, isDarkMode } = useTheme();
   const scrollRef = useRef(null);
   const emailInputRef = useRef(null);
@@ -122,7 +121,7 @@ export default function AuthScreen() {
         kicker: "Alta autorizada",
         title: "Activar invitacion",
         subtitle:
-          "Activa tu cuenta con el correo invitado; si administracion te compartio un codigo, puedes usarlo como referencia.",
+          "Activa tu cuenta con el correo invitado; si administracion te compartio un codigo, puedes usarlo como referencia dentro de la app.",
         pills: ["Invitacion", "Aprobacion", "Equipo tecnico"],
       };
     }
@@ -926,40 +925,7 @@ export default function AuthScreen() {
                     Recuperar contrasena
                   </Text>
                 </Pressable>
-                <Pressable
-                  onPress={() => {
-                    resetMessages();
-                    setMode(modes.invitation);
-                  }}
-                  style={({ pressed }) => [
-                    styles.linkButton,
-                    pressed && styles.linkButtonPressed,
-                  ]}
-                >
-                  <Text
-                    style={[styles.linkButtonText, { color: palette.info }]}
-                  >
-                    Activar invitacion
-                  </Text>
-                </Pressable>
               </View>
-            )}
-
-            {isRegister && (
-              <Pressable
-                onPress={() => {
-                  resetMessages();
-                  setMode(modes.invitation);
-                }}
-                style={({ pressed }) => [
-                  styles.linkButton,
-                  pressed && styles.linkButtonPressed,
-                ]}
-              >
-                <Text style={[styles.linkButtonText, { color: palette.info }]}>
-                  Tengo una invitacion
-                </Text>
-              </Pressable>
             )}
 
             {mode === modes.recovery && (
@@ -981,9 +947,9 @@ export default function AuthScreen() {
 
             <Text style={[styles.securityHint, { color: palette.muted }]}>
               {isInvitation
-                ? "La activacion valida el correo invitado y, si existe un codigo, lo toma como referencia adicional antes de crear tu perfil operativo."
+                ? "La activacion valida el correo invitado y, si existe un codigo, lo toma como referencia adicional antes de crear tu perfil operativo sin depender de un correo externo."
                 : isRegister
-                  ? "Al crear tu cuenta se genera tu perfil operativo y queda lista para acceder al taller."
+                  ? "Si tu correo tiene una invitacion pendiente, la app la detectara despues del login para que aceptes el acceso desde tu estado de cuenta."
                   : "Al continuar, tus datos locales se vinculan con tu espacio seguro en la nube."}
             </Text>
           </View>

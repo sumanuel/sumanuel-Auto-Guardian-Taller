@@ -1,0 +1,479 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "../context/ThemeContext";
+import { listClients } from "../services/clients/clientService";
+import {
+  deleteDiagnostic,
+  diagnosticStatusOptions,
+  listDiagnostics,
+} from "../services/diagnostics/diagnosticService";
+import { listVehicles } from "../services/vehicles/vehicleService";
+import { borderRadius, rf, spacing } from "../utils/responsive";
+
+function getEntityId(entity) {
+  return entity?.refId || entity?.id || "";
+}
+
+function buildLookup(items, field = "id") {
+  return items.reduce((accumulator, item) => {
+    accumulator[item[field]] = item;
+    return accumulator;
+  }, {});
+}
+
+export default function DiagnosticsScreen({
+  onBack,
+  onOpenDiagnosticForm,
+  onOpenWorkOrderForm,
+  viewState,
+}) {
+  const { colors } = useTheme();
+  const [loading, setLoading] = useState(false);
+  const [diagnostics, setDiagnostics] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  const clientLookup = useMemo(() => buildLookup(clients), [clients]);
+  const vehicleLookup = useMemo(() => buildLookup(vehicles), [vehicles]);
+
+  const refreshData = async () => {
+    setLoading(true);
+
+    try {
+      const [nextDiagnostics, nextClients, nextVehicles] = await Promise.all([
+        listDiagnostics(),
+        listClients(),
+        listVehicles(),
+      ]);
+      setDiagnostics(nextDiagnostics);
+      setClients(nextClients);
+      setVehicles(nextVehicles);
+    } catch (error) {
+      Alert.alert(
+        "Diagnosticos",
+        "No se pudo cargar el tablero operativo de diagnosticos.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshData();
+  }, []);
+
+  const filteredDiagnostics = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return diagnostics.filter((diagnostic) => {
+      if (activeFilter !== "all" && diagnostic.status !== activeFilter) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      const vehicle = vehicleLookup[diagnostic.vehicleId];
+      const client = clientLookup[diagnostic.clientId];
+      const searchableText = [
+        diagnostic.id,
+        diagnostic.clientId,
+        diagnostic.vehicleId,
+        client?.fullName,
+        vehicle?.plate,
+        diagnostic.concerns,
+        diagnostic.notes,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(normalizedQuery);
+    });
+  }, [activeFilter, clientLookup, diagnostics, searchQuery, vehicleLookup]);
+
+  const handleDelete = (diagnostic) => {
+    Alert.alert(
+      "Eliminar diagnostico",
+      `Se eliminara ${diagnostic.id || "este diagnostico"} del tablero operativo.`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteDiagnostic(getEntityId(diagnostic));
+              await refreshData();
+            } catch (error) {
+              Alert.alert(
+                "Diagnosticos",
+                error?.message || "No se pudo eliminar el diagnostico.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  return (
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerRow}>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.kicker, { color: colors.primary }]}>
+              Taller
+            </Text>
+            <Text style={[styles.title, { color: colors.text }]}>
+              Diagnosticos
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Registra hallazgos, consulta el padron y abre la siguiente accion
+              desde la lista, igual que en Auto-Guardian.
+            </Text>
+          </View>
+
+          <Pressable
+            onPress={onBack}
+            style={[
+              styles.backButton,
+              {
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.cardBackground,
+              },
+            ]}
+          >
+            <Text style={[styles.backButtonText, { color: colors.text }]}>
+              Volver
+            </Text>
+          </Pressable>
+        </View>
+
+        <View
+          style={[
+            styles.summaryCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.summaryValue, { color: colors.text }]}>
+            {diagnostics.length}
+          </Text>
+          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+            Diagnosticos registrados
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.listCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <TextInput
+            autoCapitalize="none"
+            onChangeText={setSearchQuery}
+            placeholder="Buscar por codigo, placa, cliente o hallazgo"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={searchQuery}
+          />
+
+          <View style={styles.filterRow}>
+            {[{ key: "all", label: "Todos" }, ...diagnosticStatusOptions].map(
+              (filter) => {
+                const filterKey = filter.key;
+                const selected = activeFilter === filterKey;
+
+                return (
+                  <Pressable
+                    key={filterKey}
+                    onPress={() => setActiveFilter(filterKey)}
+                    style={[
+                      styles.filterChip,
+                      {
+                        backgroundColor: selected
+                          ? colors.primary
+                          : colors.cardMuted,
+                        borderColor: selected ? colors.primary : colors.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        { color: selected ? colors.white : colors.text },
+                      ]}
+                    >
+                      {filter.label}
+                    </Text>
+                  </Pressable>
+                );
+              },
+            )}
+          </View>
+
+          {loading ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : filteredDiagnostics.length ? (
+            <View style={styles.listBody}>
+              {filteredDiagnostics.map((diagnostic) => {
+                const vehicle = vehicleLookup[diagnostic.vehicleId];
+                const client = clientLookup[diagnostic.clientId];
+                const isSelected =
+                  viewState?.selectedDiagnosticId === getEntityId(diagnostic);
+
+                return (
+                  <View
+                    key={getEntityId(diagnostic)}
+                    style={[
+                      styles.row,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: isSelected
+                          ? colors.primary
+                          : colors.border,
+                      },
+                    ]}
+                  >
+                    <View style={styles.rowCopy}>
+                      <Text style={[styles.rowTitle, { color: colors.text }]}>
+                        {diagnostic.id}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {client?.fullName ||
+                          diagnostic.clientId ||
+                          "Sin cliente"}{" "}
+                        ·{" "}
+                        {vehicle?.plate ||
+                          diagnostic.vehicleId ||
+                          "Sin vehiculo"}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {diagnosticStatusOptions.find(
+                          (item) => item.key === diagnostic.status,
+                        )?.label ||
+                          diagnostic.status ||
+                          "Sin estado"}
+                      </Text>
+                      <Text
+                        style={[styles.rowMeta, { color: colors.textTertiary }]}
+                      >
+                        {diagnostic.concerns || "Sin hallazgos registrados"}
+                      </Text>
+                    </View>
+
+                    <View style={styles.iconActionRow}>
+                      <Pressable
+                        onPress={() =>
+                          onOpenWorkOrderForm?.(null, {
+                            seedData: {
+                              diagnosticId: diagnostic.id,
+                              clientId: diagnostic.clientId,
+                              vehicleId: diagnostic.vehicleId,
+                            },
+                          })
+                        }
+                        style={[
+                          styles.iconAction,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.accent,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          color={colors.accent}
+                          name="clipboard-outline"
+                          size={rf(18)}
+                        />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => onOpenDiagnosticForm?.(diagnostic)}
+                        style={[
+                          styles.iconAction,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.primary,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          color={colors.primary}
+                          name="create-outline"
+                          size={rf(18)}
+                        />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => handleDelete(diagnostic)}
+                        style={[
+                          styles.iconAction,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.danger,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          color={colors.danger}
+                          name="trash-outline"
+                          size={rf(18)}
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No hay diagnosticos para el filtro actual. Usa el boton flotante
+              para registrar el primero.
+            </Text>
+          )}
+        </View>
+      </ScrollView>
+
+      <Pressable
+        onPress={() => onOpenDiagnosticForm?.(null)}
+        style={[
+          styles.fab,
+          { backgroundColor: colors.primary, shadowColor: colors.shadow },
+        ]}
+      >
+        <Ionicons color={colors.white} name="add" size={rf(24)} />
+      </Pressable>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, position: "relative" },
+  scrollContent: { padding: spacing.lg, gap: spacing.lg },
+  scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+  },
+  headerCopy: { flex: 1, gap: spacing.sm },
+  kicker: {
+    fontSize: rf(12),
+    fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  title: { fontSize: rf(28), fontWeight: "900", letterSpacing: -0.8 },
+  subtitle: { fontSize: rf(14), lineHeight: rf(20) },
+  backButton: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  backButtonText: { fontSize: rf(12), fontWeight: "700" },
+  summaryCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    gap: spacing.xs,
+  },
+  summaryValue: { fontSize: rf(30), fontWeight: "900" },
+  summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
+  listCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: rf(14),
+  },
+  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  filterChip: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  filterChipText: { fontSize: rf(12), fontWeight: "700" },
+  listBody: { gap: spacing.md },
+  row: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  rowCopy: { flex: 1, gap: spacing.xs },
+  rowTitle: { fontSize: rf(16), fontWeight: "800" },
+  rowMeta: { fontSize: rf(12), lineHeight: rf(18) },
+  iconActionRow: { gap: spacing.sm, justifyContent: "center" },
+  iconAction: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    width: rf(42),
+    height: rf(42),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: { fontSize: rf(13), lineHeight: rf(20) },
+  fab: {
+    position: "absolute",
+    right: spacing.lg,
+    bottom: spacing.xl,
+    width: rf(58),
+    height: rf(58),
+    borderRadius: borderRadius.pill,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+  },
+});

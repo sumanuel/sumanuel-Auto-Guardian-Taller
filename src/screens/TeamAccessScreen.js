@@ -75,6 +75,22 @@ function formatShortDate(value) {
   return `${day}/${month}/${year}`;
 }
 
+function formatDeliveryStatus(value) {
+  if (value === "in_app") {
+    return "en app";
+  }
+
+  if (value === "queued") {
+    return "por correo";
+  }
+
+  if (value === "failed") {
+    return "fallida";
+  }
+
+  return value || "sin estado";
+}
+
 export default function TeamAccessScreen({ onBack, userProfile }) {
   const { colors } = useTheme();
   const canManageCollaborators = hasPermission(
@@ -171,8 +187,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
       await refreshAdminData();
 
       Alert.alert(
-        "Invitacion enviada",
-        `El codigo ${createdInvitation.id} quedo emitido y el correo fue encolado en Firebase.`,
+        "Invitacion emitida",
+        `El codigo ${createdInvitation.id} quedo disponible en la app para el correo ${createdInvitation.email}.`,
       );
     } catch (error) {
       Alert.alert(
@@ -551,8 +567,9 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                   <Text
                     style={[styles.panelText, { color: colors.textSecondary }]}
                   >
-                    Cada invitacion genera un codigo consecutivo y encola un
-                    correo en Firebase Trigger Email.
+                    Cada invitacion genera un codigo consecutivo y queda
+                    disponible en la app para que el colaborador se active con
+                    ese mismo correo.
                   </Text>
                 </View>
 
@@ -655,8 +672,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                   style={[styles.primaryActionText, { color: colors.white }]}
                 >
                   {adminSubmitting
-                    ? "Encolando correo..."
-                    : "Emitir y enviar invitacion"}
+                    ? "Emitiendo invitacion..."
+                    : "Emitir invitacion"}
                 </Text>
               </Pressable>
             </View>
@@ -717,7 +734,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                             ]}
                           >
                             Vence {formatShortDate(invitation.expiresAt)} ·
-                            Entrega {invitation.deliveryStatus || "sin estado"}
+                            Entrega{" "}
+                            {formatDeliveryStatus(invitation.deliveryStatus)}
                           </Text>
                         </View>
 

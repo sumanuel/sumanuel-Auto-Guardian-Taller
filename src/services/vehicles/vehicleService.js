@@ -1,4 +1,4 @@
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { firestore } from "../firebase/config";
 import {
   createEntityRecord,
@@ -36,6 +36,18 @@ export async function listVehiclesByClientId(clientId) {
     .sort(
       (left, right) => (right.sequentialId || 0) - (left.sequentialId || 0),
     );
+}
+
+export async function listVehicles() {
+  const collectionRef = collection(firestore, vehiclesCollection.name);
+  const snapshot = await getDocs(
+    query(collectionRef, orderBy("sequentialId", "desc")),
+  );
+
+  return snapshot.docs.map((item) => ({
+    refId: item.id,
+    ...item.data(),
+  }));
 }
 
 export async function createVehicle({

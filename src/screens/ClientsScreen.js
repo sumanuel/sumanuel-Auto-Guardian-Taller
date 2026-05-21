@@ -1148,7 +1148,7 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
         <Pressable
           onPress={() =>
             onOpenClientForm?.(null, {
-              returnTo: "detail",
+              returnTo: "list",
             })
           }
           style={[

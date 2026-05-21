@@ -1,4 +1,13 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { USER_STATUSES } from "../constants/accessControl";
@@ -32,10 +41,62 @@ const statusContent = {
   },
 };
 
-export default function AccessStatusScreen({ onSignOut, userProfile }) {
+const roleLabels = {
+  administrator: "Administrador",
+  reception: "Recepcion",
+  mechanic: "Mecanico",
+};
+
+export default function AccessStatusScreen({
+  authUser,
+  onAcceptInvitation,
+  onSignOut,
+  pendingInvitation,
+  userProfile,
+}) {
   const { colors, isDarkMode } = useTheme();
   const currentStatus = userProfile?.status || "missing";
   const content = statusContent[currentStatus] || statusContent.missing;
+  const [acceptingInvitation, setAcceptingInvitation] = useState(false);
+  const [invitationForm, setInvitationForm] = useState({
+    fullName: authUser?.displayName || "",
+    phone: "",
+    invitationCode:
+      pendingInvitation?.id || pendingInvitation?.invitationCode || "",
+  });
+
+  useEffect(() => {
+    setInvitationForm({
+      fullName: authUser?.displayName || "",
+      phone: "",
+      invitationCode:
+        pendingInvitation?.id || pendingInvitation?.invitationCode || "",
+    });
+  }, [
+    authUser?.displayName,
+    pendingInvitation?.id,
+    pendingInvitation?.invitationCode,
+  ]);
+
+  const handleAcceptInvitation = async () => {
+    if (!pendingInvitation || !onAcceptInvitation) {
+      return;
+    }
+
+    if (!invitationForm.fullName.trim()) {
+      return;
+    }
+
+    setAcceptingInvitation(true);
+
+    try {
+      await onAcceptInvitation(invitationForm);
+    } catch (error) {
+      console.error("Error accepting pending invitation:", error);
+    } finally {
+      setAcceptingInvitation(false);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -81,6 +142,141 @@ export default function AccessStatusScreen({ onSignOut, userProfile }) {
               {content.label}
             </Text>
           </View>
+
+          {currentStatus === "missing" && pendingInvitation ? (
+            <View
+              style={[
+                styles.invitationCard,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={[styles.invitationKicker, { color: colors.primary }]}
+              >
+                Invitacion detectada
+              </Text>
+              <Text style={[styles.invitationTitle, { color: colors.text }]}>
+                Ya puedes unirte al taller
+              </Text>
+              <Text
+                style={[
+                  styles.invitationDescription,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Encontramos una invitacion pendiente para {authUser?.email}. Al
+                aceptarla se creara tu perfil operativo con el rol asignado.
+              </Text>
+
+              <View style={styles.statusBox}>
+                <Text
+                  style={[styles.statusLabel, { color: colors.textTertiary }]}
+                >
+                  Rol asignado
+                </Text>
+                <Text style={[styles.statusValue, { color: colors.text }]}>
+                  {roleLabels[pendingInvitation.role] || pendingInvitation.role}
+                </Text>
+                <Text style={[styles.statusMeta, { color: colors.primary }]}>
+                  Codigo{" "}
+                  {pendingInvitation.id || pendingInvitation.invitationCode}
+                </Text>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Nombre completo
+                </Text>
+                <TextInput
+                  onChangeText={(value) =>
+                    setInvitationForm((current) => ({
+                      ...current,
+                      fullName: value,
+                    }))
+                  }
+                  placeholder="Nombre del colaborador"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={invitationForm.fullName}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Telefono
+                </Text>
+                <TextInput
+                  keyboardType="phone-pad"
+                  onChangeText={(value) =>
+                    setInvitationForm((current) => ({
+                      ...current,
+                      phone: value,
+                    }))
+                  }
+                  placeholder="0412-0000000"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={invitationForm.phone}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Codigo visible
+                </Text>
+                <TextInput
+                  autoCapitalize="characters"
+                  onChangeText={(value) =>
+                    setInvitationForm((current) => ({
+                      ...current,
+                      invitationCode: value,
+                    }))
+                  }
+                  placeholder="INV-000001"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={invitationForm.invitationCode}
+                />
+              </View>
+
+              <Pressable
+                onPress={handleAcceptInvitation}
+                style={[styles.button, { backgroundColor: colors.primary }]}
+              >
+                {acceptingInvitation ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <Text style={[styles.buttonText, { color: colors.white }]}>
+                    Aceptar invitacion
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          ) : null}
 
           <Pressable
             onPress={onSignOut}
@@ -147,6 +343,40 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
+  },
+  invitationCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  invitationKicker: {
+    fontSize: rf(11),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  invitationTitle: {
+    fontSize: rf(20),
+    fontWeight: "800",
+  },
+  invitationDescription: {
+    fontSize: rf(13),
+    lineHeight: rf(20),
+  },
+  formGroup: {
+    gap: spacing.xs,
+  },
+  fieldLabel: {
+    fontSize: rf(12),
+    fontWeight: "700",
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: rf(14),
   },
   button: {
     borderRadius: borderRadius.md,

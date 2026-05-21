@@ -37,6 +37,27 @@ export async function getInvitationByEmail(email) {
   };
 }
 
+export async function getPendingInvitationByEmail(email) {
+  const invitation = await getInvitationByEmail(email);
+
+  if (!invitation) {
+    return null;
+  }
+
+  if (invitation.status !== INVITATION_STATUSES.PENDING) {
+    return null;
+  }
+
+  if (
+    invitation.expiresAt?.toDate &&
+    invitation.expiresAt.toDate() < new Date()
+  ) {
+    return null;
+  }
+
+  return invitation;
+}
+
 export function assertInvitationCanBeUsed(invitation, email, invitationCode) {
   if (!invitation) {
     throw new Error("La invitacion no existe o ya no esta disponible.");

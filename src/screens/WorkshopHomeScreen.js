@@ -23,7 +23,13 @@ const agenda = [
   },
 ];
 
-const shortcuts = ["Nueva orden", "Registrar gasto", "Clientes", "Equipo"];
+const shortcuts = [
+  { title: "Clientes", action: "clients", caption: "Abrir" },
+  { title: "Diagnosticos", action: "diagnostics", caption: "Abrir" },
+  { title: "Ordenes", action: "work-orders", caption: "Abrir" },
+  { title: "Repuestos", action: "spare-parts", caption: "Abrir" },
+  { title: "Equipo", action: "team", caption: "Gestionar" },
+];
 
 const roleLabels = {
   administrator: "Administrador",
@@ -33,7 +39,10 @@ const roleLabels = {
 
 export default function WorkshopHomeScreen({
   onOpenClients,
+  onOpenDiagnostics,
+  onOpenSpareParts,
   onOpenTeamAccess,
+  onOpenWorkOrders,
   onSignOut,
   userProfile,
 }) {
@@ -159,13 +168,19 @@ export default function WorkshopHomeScreen({
         <View style={styles.shortcutGrid}>
           {shortcuts.map((item) => (
             <Pressable
-              key={item}
+              key={item.action}
               onPress={
-                item === "Clientes"
+                item.action === "clients"
                   ? onOpenClients
-                  : item === "Equipo"
-                    ? onOpenTeamAccess
-                    : undefined
+                  : item.action === "diagnostics"
+                    ? onOpenDiagnostics
+                    : item.action === "work-orders"
+                      ? onOpenWorkOrders
+                      : item.action === "spare-parts"
+                        ? onOpenSpareParts
+                        : item.action === "team"
+                          ? onOpenTeamAccess
+                          : undefined
               }
               style={[
                 styles.shortcutCard,
@@ -176,7 +191,7 @@ export default function WorkshopHomeScreen({
               ]}
             >
               <Text style={[styles.shortcutTitle, { color: colors.text }]}>
-                {item}
+                {item.title}
               </Text>
               <Text
                 style={[
@@ -184,7 +199,7 @@ export default function WorkshopHomeScreen({
                   { color: colors.textSecondary },
                 ]}
               >
-                {item === "Equipo" ? "Gestionar" : "Abrir"}
+                {item.caption}
               </Text>
             </Pressable>
           ))}

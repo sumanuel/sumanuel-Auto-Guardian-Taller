@@ -31,7 +31,8 @@ Ultima actualizacion: 21-05-2026
 - Completado: lectura del perfil userProfiles vinculada al uid autenticado.
 - Completado: reglas base de Firestore y Storage definidas para autenticacion, perfiles, invitaciones y modulos operativos.
 - Completado: alta directa y alta por invitacion operativas con perfil userProfiles en Firestore.
-- Bloqueado: emision administrativa de invitaciones por correo desde pantalla dedicada de equipo; el codigo ya encola correos, pero Firebase Trigger Email no puede instalarse hasta subir el proyecto a Blaze por dependencia de Secret Manager.
+- Completado: emision administrativa de invitaciones operativas desde pantalla dedicada de equipo, con activacion en app por correo invitado y codigo visible opcional.
+- Bloqueado: notificacion automatica por correo para invitaciones; Firebase Trigger Email sigue pendiente hasta subir el proyecto a Blaze por dependencia de Secret Manager.
 - Completado: CRUD base de clientes disponible en pantalla dedicada para recepcion.
 - Completado: asociacion de uno o varios vehiculos por cliente y CRUD base de vehiculos desde la pantalla de clientes.
 - Completado: vista de detalle real por cliente con acciones rapidas, vehiculos asociados y boton flotante para alta.
@@ -76,29 +77,29 @@ Ultima actualizacion: 21-05-2026
 | ID   | Aspecto                                           | Estado     | Prioridad | Dependencias | Completado |
 | ---- | ------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
 | F3-1 | CRUD de mecanicos y personal tecnico              | Completado | Alta      | F0-4         | 21-05-2026 |
-| F3-2 | Flujo de invitacion por correo para mecanicos     | Bloqueado  | Alta      | F0-5         | -          |
+| F3-2 | Flujo de invitacion en app para mecanicos         | Completado | Alta      | F0-5         | 21-05-2026 |
 | F3-3 | Aceptacion de invitacion y activacion de cuenta   | Completado | Alta      | F3-2, F1-1   | 21-05-2026 |
 | F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Pendiente  | Alta      | F3-1, F4-1   | -          |
 
 ## Fase 4. Diagnostico y plan de trabajo
 
-| ID   | Aspecto                                                   | Estado    | Prioridad | Dependencias | Completado |
-| ---- | --------------------------------------------------------- | --------- | --------- | ------------ | ---------- |
-| F4-1 | Crear diagnosticos por vehiculo                           | Pendiente | Alta      | F2-4         | -          |
-| F4-2 | Registrar lista de partes para reparacion o mantenimiento | Pendiente | Alta      | F4-1         | -          |
-| F4-3 | Registrar lista de repuestos requeridos                   | Pendiente | Alta      | F4-1         | -          |
-| F4-4 | Asociar fotos, notas y observaciones al diagnostico       | Pendiente | Media     | F4-1         | -          |
-| F4-5 | Definir aprobacion del cliente sobre trabajos y repuestos | Pendiente | Media     | F4-2, F4-3   | -          |
+| ID   | Aspecto                                                   | Estado     | Prioridad | Dependencias | Completado |
+| ---- | --------------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
+| F4-1 | Crear diagnosticos por vehiculo                           | Completado | Alta      | F2-4         | 21-05-2026 |
+| F4-2 | Registrar lista de partes para reparacion o mantenimiento | Completado | Alta      | F4-1         | 21-05-2026 |
+| F4-3 | Registrar lista de repuestos requeridos                   | Completado | Alta      | F4-1         | 21-05-2026 |
+| F4-4 | Asociar fotos, notas y observaciones al diagnostico       | Pendiente  | Media     | F4-1         | -          |
+| F4-5 | Definir aprobacion del cliente sobre trabajos y repuestos | Pendiente  | Media     | F4-2, F4-3   | -          |
 
 ## Fase 5. Ejecucion y seguimiento
 
-| ID   | Aspecto                                                                                      | Estado    | Prioridad | Dependencias | Completado |
-| ---- | -------------------------------------------------------------------------------------------- | --------- | --------- | ------------ | ---------- |
-| F5-1 | Crear orden de trabajo basada en un diagnostico existente                                    | Pendiente | Alta      | F4-1         | -          |
-| F5-2 | Registrar avances de mantenimiento o reparacion                                              | Pendiente | Alta      | F5-1         | -          |
-| F5-3 | Manejar estados del trabajo: recibido, diagnosticado, aprobado, en proceso, listo, entregado | Pendiente | Alta      | F5-1         | -          |
-| F5-4 | Historial cronologico de avances por vehiculo y por orden                                    | Pendiente | Alta      | F5-2         | -          |
-| F5-5 | Registro de observaciones finales y entrega                                                  | Pendiente | Media     | F5-3         | -          |
+| ID   | Aspecto                                                                                      | Estado     | Prioridad | Dependencias | Completado |
+| ---- | -------------------------------------------------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
+| F5-1 | Crear orden de trabajo basada en un diagnostico existente                                    | Completado | Alta      | F4-1         | 21-05-2026 |
+| F5-2 | Registrar avances de mantenimiento o reparacion                                              | Pendiente  | Alta      | F5-1         | -          |
+| F5-3 | Manejar estados del trabajo: recibido, diagnosticado, aprobado, en proceso, listo, entregado | Pendiente  | Alta      | F5-1         | -          |
+| F5-4 | Historial cronologico de avances por vehiculo y por orden                                    | Pendiente  | Alta      | F5-2         | -          |
+| F5-5 | Registro de observaciones finales y entrega                                                  | Pendiente  | Media     | F5-3         | -          |
 
 ## Fase 6. Operacion necesaria para completar la app
 
@@ -123,14 +124,14 @@ Ultima actualizacion: 21-05-2026
 
 ## Hitos sugeridos
 
-| Hito | Objetivo                                                        | Estado     |
-| ---- | --------------------------------------------------------------- | ---------- |
-| H1   | Acceso completo con login, registro y recuperacion              | Completado |
-| H2   | Gestion completa de clientes y vehiculos                        | Completado |
-| H3   | Equipo tecnico con invitaciones por correo                      | Bloqueado  |
-| H4   | Diagnostico con partes, repuestos y aprobacion                  | Pendiente  |
-| H5   | Seguimiento de trabajos y avances                               | Pendiente  |
-| H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente  |
+| Hito | Objetivo                                                        | Estado      |
+| ---- | --------------------------------------------------------------- | ----------- |
+| H1   | Acceso completo con login, registro y recuperacion              | Completado  |
+| H2   | Gestion completa de clientes y vehiculos                        | Completado  |
+| H3   | Equipo tecnico con invitaciones operativas en app               | Completado  |
+| H4   | Diagnostico con partes, repuestos y aprobacion                  | En progreso |
+| H5   | Seguimiento de trabajos y avances                               | Pendiente   |
+| H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente   |
 
 ## Historial de avances
 
@@ -143,9 +144,10 @@ Ultima actualizacion: 21-05-2026
 - 01-05-2026: se agregan archivos de seguridad de Firebase con reglas base para Firestore y Storage, mas la guia de despliegue y bootstrap del primer administrador.
 - 21-05-2026: se completan la asociacion y CRUD base de vehiculos por cliente; ademas, el modulo de equipo gana directorio editable de personal tecnico con cambios de rol y estado.
 - 21-05-2026: se agrega un panel administrativo basico en la pantalla principal para emitir invitaciones, revisar invitaciones pendientes y aprobar perfiles en revision interna.
-- 21-05-2026: el panel de equipo se separa a una pantalla propia, las invitaciones ahora encolan correo en la coleccion mail para Firebase Trigger Email y se cierra el CRUD base de clientes.
+- 21-05-2026: el panel de equipo se separa a una pantalla propia, las invitaciones pasan a emitirse y activarse dentro de la app por correo invitado, y Trigger Email queda como canal opcional bloqueado por Blaze.
 - 21-05-2026: el flujo de invitaciones pasa a resolverse por correo invitado con codigo consecutivo solo como referencia visible; la pantalla de auth acepta por correo y el modulo de clientes se divide en lista operativa mas detalle real por cliente.
 - 21-05-2026: el alta y edicion de clientes pasan a una pantalla dedicada; la lista principal gana busqueda y filtros rapidos, y los perfiles registrados directamente se promocionan como administradores para evitar bloqueos en accesos e invitaciones.
+- 21-05-2026: las colaboraciones se alinean al modelo de tienda-app, detectando invitaciones pendientes despues del login en estado de acceso; ademas se abren las secciones iniciales de diagnosticos, ordenes y repuestos con lista operativa, formulario dedicado y regreso a la lista.
 
 ## Decisiones base cerradas
 

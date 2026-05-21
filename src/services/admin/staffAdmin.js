@@ -17,10 +17,8 @@ import {
   USER_STATUSES,
 } from "../../constants/accessControl";
 import { firestore } from "../firebase/config";
-import { patchEntityRecord } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
 import { reserveSequentialId } from "../firestore/sequentialIds";
-import { queueMailMessage } from "../firestore/mailQueue";
 
 const invitationCollection = firestoreCollections.staffInvitations;
 const userProfileCollection = firestoreCollections.userProfiles;
@@ -101,40 +99,12 @@ export async function createStaffInvitation({
       invitedByUid,
       acceptedByUid: null,
       expiresAt: Timestamp.fromDate(expirationDate),
-      deliveryStatus: "queued",
+      deliveryStatus: "in_app",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     },
     { merge: true },
   );
-
-  const expirationLabel = expirationDate.toLocaleDateString("es-VE");
-
-  try {
-    await queueMailMessage({
-      to: [normalizedEmail],
-      subject: `Invitacion a Auto-Guardian Taller · ${invitationCode}`,
-      text:
-        `Hola.\n\n` +
-        `Tu codigo de invitacion para Auto-Guardian Taller es ${invitationCode}.\n` +
-        `Rol asignado: ${role}.\n` +
-        `Vencimiento: ${expirationLabel}.\n\n` +
-        `Abre la app, entra en Activar invitacion e ingresa ese codigo con este mismo correo.`,
-      html:
-        `<p>Hola.</p>` +
-        `<p>Tu codigo de invitacion para <strong>Auto-Guardian Taller</strong> es <strong>${invitationCode}</strong>.</p>` +
-        `<p>Rol asignado: <strong>${role}</strong><br/>Vencimiento: <strong>${expirationLabel}</strong></p>` +
-        `<p>Abre la app, entra en <strong>Activar invitacion</strong> e ingresa ese codigo con este mismo correo.</p>`,
-    });
-  } catch (error) {
-    await patchEntityRecord("staffInvitations", normalizedEmail, {
-      deliveryStatus: "failed",
-    });
-
-    throw new Error(
-      "La invitacion se creo, pero no se pudo encolar el correo. Verifica la extension Trigger Email de Firebase.",
-    );
-  }
 
   return {
     refId: normalizedEmail,
@@ -148,7 +118,7 @@ export async function createStaffInvitation({
     invitedByUid,
     acceptedByUid: null,
     expiresAt: Timestamp.fromDate(expirationDate),
-    deliveryStatus: "queued",
+    deliveryStatus: "in_app",
   };
 }
 
