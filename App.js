@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
@@ -16,11 +17,15 @@ import LoadingScreen from "./src/screens/LoadingScreen";
 import WorkOrderFormScreen from "./src/screens/WorkOrderFormScreen";
 import WorkOrdersScreen from "./src/screens/WorkOrdersScreen";
 import WorkshopHomeScreen from "./src/screens/WorkshopHomeScreen";
+import WorkshopMoreScreen from "./src/screens/WorkshopMoreScreen";
+import VehicleFormScreen from "./src/screens/VehicleFormScreen";
+import WorkshopTabBar from "./src/components/common/WorkshopTabBar";
 
 const APP_SCREENS = {
   HOME: "home",
   CLIENTS: "clients",
   CLIENT_FORM: "client-form",
+  VEHICLE_FORM: "vehicle-form",
   DIAGNOSTICS: "diagnostics",
   DIAGNOSTIC_FORM: "diagnostic-form",
   WORK_ORDERS: "work-orders",
@@ -28,10 +33,19 @@ const APP_SCREENS = {
   SPARE_PARTS: "spare-parts",
   SPARE_PART_FORM: "spare-part-form",
   TEAM_ACCESS: "team-access",
+  MORE: "more",
 };
 
+const ROOT_TABS = new Set([
+  APP_SCREENS.HOME,
+  APP_SCREENS.CLIENTS,
+  APP_SCREENS.DIAGNOSTICS,
+  APP_SCREENS.WORK_ORDERS,
+  APP_SCREENS.MORE,
+]);
+
 function AppContent() {
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, toggleTheme } = useTheme();
   const {
     acceptPendingInvitation,
     authUser,
@@ -44,6 +58,10 @@ function AppContent() {
   const [clientFormContext, setClientFormContext] = useState({
     client: null,
     returnTo: "list",
+  });
+  const [vehicleFormContext, setVehicleFormContext] = useState({
+    client: null,
+    vehicle: null,
   });
   const [clientsViewState, setClientsViewState] = useState({
     selectedClientId: null,
@@ -71,6 +89,29 @@ function AppContent() {
     selectedSparePartId: null,
   });
 
+  const activeTab = useMemo(() => {
+    if (ROOT_TABS.has(activeScreen)) {
+      return activeScreen;
+    }
+
+    if (
+      activeScreen === APP_SCREENS.CLIENT_FORM ||
+      activeScreen === APP_SCREENS.VEHICLE_FORM
+    ) {
+      return APP_SCREENS.CLIENTS;
+    }
+
+    if (activeScreen === APP_SCREENS.DIAGNOSTIC_FORM) {
+      return APP_SCREENS.DIAGNOSTICS;
+    }
+
+    if (activeScreen === APP_SCREENS.WORK_ORDER_FORM) {
+      return APP_SCREENS.WORK_ORDERS;
+    }
+
+    return APP_SCREENS.MORE;
+  }, [activeScreen]);
+
   const profileStatus = userProfile?.status;
 
   useEffect(() => {
@@ -78,6 +119,10 @@ function AppContent() {
     setClientFormContext({
       client: null,
       returnTo: "list",
+    });
+    setVehicleFormContext({
+      client: null,
+      vehicle: null,
     });
     setClientsViewState({
       selectedClientId: null,
@@ -139,10 +184,33 @@ function AppContent() {
     );
   }
 
-  if (activeScreen === APP_SCREENS.CLIENTS) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+  const handleTabChange = (nextTab) => {
+    if (nextTab === APP_SCREENS.HOME) {
+      setActiveScreen(APP_SCREENS.HOME);
+      return;
+    }
+
+    if (nextTab === APP_SCREENS.CLIENTS) {
+      setActiveScreen(APP_SCREENS.CLIENTS);
+      return;
+    }
+
+    if (nextTab === APP_SCREENS.DIAGNOSTICS) {
+      setActiveScreen(APP_SCREENS.DIAGNOSTICS);
+      return;
+    }
+
+    if (nextTab === APP_SCREENS.WORK_ORDERS) {
+      setActiveScreen(APP_SCREENS.WORK_ORDERS);
+      return;
+    }
+
+    setActiveScreen(APP_SCREENS.MORE);
+  };
+
+  const renderAuthenticatedScreen = () => {
+    if (activeScreen === APP_SCREENS.CLIENTS) {
+      return (
         <ClientsScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
           onOpenClientForm={(client, options = {}) => {
@@ -152,17 +220,21 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.CLIENT_FORM);
           }}
+          onOpenVehicleForm={(client, vehicle) => {
+            setVehicleFormContext({
+              client: client || null,
+              vehicle: vehicle || null,
+            });
+            setActiveScreen(APP_SCREENS.VEHICLE_FORM);
+          }}
           userProfile={userProfile}
           viewState={clientsViewState}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  if (activeScreen === APP_SCREENS.CLIENT_FORM) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.CLIENT_FORM) {
+      return (
         <ClientFormScreen
           initialClient={clientFormContext.client}
           onBack={() => setActiveScreen(APP_SCREENS.CLIENTS)}
@@ -175,14 +247,29 @@ function AppContent() {
           }}
           userProfile={userProfile}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  if (activeScreen === APP_SCREENS.DIAGNOSTICS) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.VEHICLE_FORM) {
+      return (
+        <VehicleFormScreen
+          initialClient={vehicleFormContext.client}
+          initialVehicle={vehicleFormContext.vehicle}
+          onSaved={() => {
+            setClientsViewState({
+              selectedClientId:
+                vehicleFormContext.client?.id ||
+                vehicleFormContext.client?.refId,
+              screenMode: "detail",
+            });
+            setActiveScreen(APP_SCREENS.CLIENTS);
+          }}
+        />
+      );
+    }
+
+    if (activeScreen === APP_SCREENS.DIAGNOSTICS) {
+      return (
         <DiagnosticsScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
           onOpenDiagnosticForm={(diagnostic, options = {}) => {
@@ -201,14 +288,11 @@ function AppContent() {
           }}
           viewState={diagnosticsViewState}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  if (activeScreen === APP_SCREENS.DIAGNOSTIC_FORM) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.DIAGNOSTIC_FORM) {
+      return (
         <DiagnosticFormScreen
           initialDiagnostic={diagnosticFormContext.diagnostic}
           initialDraft={diagnosticFormContext.draft}
@@ -221,14 +305,11 @@ function AppContent() {
           }}
           userProfile={userProfile}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  if (activeScreen === APP_SCREENS.WORK_ORDERS) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.WORK_ORDERS) {
+      return (
         <WorkOrdersScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
           onOpenSparePartForm={(sparePart, options = {}) => {
@@ -248,14 +329,11 @@ function AppContent() {
           userProfile={userProfile}
           viewState={workOrdersViewState}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  if (activeScreen === APP_SCREENS.WORK_ORDER_FORM) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.WORK_ORDER_FORM) {
+      return (
         <WorkOrderFormScreen
           initialDraft={workOrderFormContext.draft}
           initialWorkOrder={workOrderFormContext.workOrder}
@@ -267,16 +345,13 @@ function AppContent() {
             setActiveScreen(APP_SCREENS.WORK_ORDERS);
           }}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  if (activeScreen === APP_SCREENS.SPARE_PARTS) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.SPARE_PARTS) {
+      return (
         <SparePartsScreen
-          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onBack={() => setActiveScreen(APP_SCREENS.MORE)}
           onOpenSparePartForm={(sparePart, options = {}) => {
             setSparePartFormContext({
               sparePart: sparePart || null,
@@ -286,14 +361,11 @@ function AppContent() {
           }}
           viewState={sparePartsViewState}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  if (activeScreen === APP_SCREENS.SPARE_PART_FORM) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.SPARE_PART_FORM) {
+      return (
         <SparePartFormScreen
           initialDraft={sparePartFormContext.draft}
           initialSparePart={sparePartFormContext.sparePart}
@@ -305,25 +377,33 @@ function AppContent() {
             setActiveScreen(APP_SCREENS.SPARE_PARTS);
           }}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  if (activeScreen === APP_SCREENS.TEAM_ACCESS) {
-    return (
-      <>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.TEAM_ACCESS) {
+      return (
         <TeamAccessScreen
-          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onBack={() => setActiveScreen(APP_SCREENS.MORE)}
           userProfile={userProfile}
         />
-      </>
-    );
-  }
+      );
+    }
 
-  return (
-    <>
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
+    if (activeScreen === APP_SCREENS.MORE) {
+      return (
+        <WorkshopMoreScreen
+          onOpenSpareParts={() => setActiveScreen(APP_SCREENS.SPARE_PARTS)}
+          onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.TEAM_ACCESS)}
+          onSignOut={signOutUser}
+          onToggleTheme={toggleTheme}
+          themeLabel={
+            isDarkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+          }
+        />
+      );
+    }
+
+    return (
       <WorkshopHomeScreen
         onOpenClients={() => setActiveScreen(APP_SCREENS.CLIENTS)}
         onOpenDiagnostics={() => setActiveScreen(APP_SCREENS.DIAGNOSTICS)}
@@ -333,6 +413,16 @@ function AppContent() {
         onSignOut={signOutUser}
         userProfile={userProfile}
       />
+    );
+  };
+
+  return (
+    <>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
+      <View style={styles.shell}>
+        <View style={styles.content}>{renderAuthenticatedScreen()}</View>
+        <WorkshopTabBar activeTab={activeTab} onChange={handleTabChange} />
+      </View>
     </>
   );
 }
@@ -348,3 +438,12 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  shell: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

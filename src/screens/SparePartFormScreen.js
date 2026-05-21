@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listDiagnostics } from "../services/diagnostics/diagnosticService";
 import {
@@ -120,38 +121,16 @@ export default function SparePartFormScreen({
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Repuestos
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {editingSparePartId ? "Editar repuesto" : "Registrar repuesto"}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Registra costo y estado en una pantalla dedicada, y vuelve a la
-              lista para decidir el siguiente movimiento.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={onBack}
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.backButtonText, { color: colors.text }]}>
-              Volver
-            </Text>
-          </Pressable>
-        </View>
+        <WorkshopScreenHeader
+          onBack={onBack}
+          section="Repuestos"
+          subtitle="Registra costo y estado en una pantalla dedicada, y vuelve a la lista para decidir el siguiente movimiento."
+          title={editingSparePartId ? "Editar repuesto" : "Registrar repuesto"}
+        />
 
         <View
           style={[

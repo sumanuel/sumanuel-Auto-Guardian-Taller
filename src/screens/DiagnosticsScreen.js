@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
 import {
@@ -133,41 +134,18 @@ export default function DiagnosticsScreen({
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
         contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Taller
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              Diagnosticos
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Registra hallazgos, consulta el padron y abre la siguiente accion
-              desde la lista, igual que en Auto-Guardian.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={onBack}
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.backButtonText, { color: colors.text }]}>
-              Volver
-            </Text>
-          </Pressable>
-        </View>
+        <WorkshopScreenHeader
+          section="Taller"
+          subtitle="Registra hallazgos, consulta el padron y abre la siguiente accion desde la lista, igual que en Auto-Guardian."
+          title="Diagnosticos"
+        />
 
         <View
           style={[
@@ -188,7 +166,7 @@ export default function DiagnosticsScreen({
 
         <View
           style={[
-            styles.listCard,
+            styles.controlsPanel,
             {
               backgroundColor: colors.cardBackground,
               borderColor: colors.border,
@@ -244,136 +222,125 @@ export default function DiagnosticsScreen({
               },
             )}
           </View>
-
-          {loading ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : filteredDiagnostics.length ? (
-            <View style={styles.listBody}>
-              {filteredDiagnostics.map((diagnostic) => {
-                const vehicle = vehicleLookup[diagnostic.vehicleId];
-                const client = clientLookup[diagnostic.clientId];
-                const isSelected =
-                  viewState?.selectedDiagnosticId === getEntityId(diagnostic);
-
-                return (
-                  <View
-                    key={getEntityId(diagnostic)}
-                    style={[
-                      styles.row,
-                      {
-                        backgroundColor: colors.cardMuted,
-                        borderColor: isSelected
-                          ? colors.primary
-                          : colors.border,
-                      },
-                    ]}
-                  >
-                    <View style={styles.rowCopy}>
-                      <Text style={[styles.rowTitle, { color: colors.text }]}>
-                        {diagnostic.id}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {client?.fullName ||
-                          diagnostic.clientId ||
-                          "Sin cliente"}{" "}
-                        ·{" "}
-                        {vehicle?.plate ||
-                          diagnostic.vehicleId ||
-                          "Sin vehiculo"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {diagnosticStatusOptions.find(
-                          (item) => item.key === diagnostic.status,
-                        )?.label ||
-                          diagnostic.status ||
-                          "Sin estado"}
-                      </Text>
-                      <Text
-                        style={[styles.rowMeta, { color: colors.textTertiary }]}
-                      >
-                        {diagnostic.concerns || "Sin hallazgos registrados"}
-                      </Text>
-                    </View>
-
-                    <View style={styles.iconActionRow}>
-                      <Pressable
-                        onPress={() =>
-                          onOpenWorkOrderForm?.(null, {
-                            seedData: {
-                              diagnosticId: diagnostic.id,
-                              clientId: diagnostic.clientId,
-                              vehicleId: diagnostic.vehicleId,
-                            },
-                          })
-                        }
-                        style={[
-                          styles.iconAction,
-                          {
-                            backgroundColor: colors.cardBackground,
-                            borderColor: colors.accent,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          color={colors.accent}
-                          name="clipboard-outline"
-                          size={rf(18)}
-                        />
-                      </Pressable>
-                      <Pressable
-                        onPress={() => onOpenDiagnosticForm?.(diagnostic)}
-                        style={[
-                          styles.iconAction,
-                          {
-                            backgroundColor: colors.cardBackground,
-                            borderColor: colors.primary,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          color={colors.primary}
-                          name="create-outline"
-                          size={rf(18)}
-                        />
-                      </Pressable>
-                      <Pressable
-                        onPress={() => handleDelete(diagnostic)}
-                        style={[
-                          styles.iconAction,
-                          {
-                            backgroundColor: colors.cardBackground,
-                            borderColor: colors.danger,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          color={colors.danger}
-                          name="trash-outline"
-                          size={rf(18)}
-                        />
-                      </Pressable>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          ) : (
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No hay diagnosticos para el filtro actual. Usa el boton flotante
-              para registrar el primero.
-            </Text>
-          )}
         </View>
+
+        {loading ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : filteredDiagnostics.length ? (
+          <View style={styles.listBody}>
+            {filteredDiagnostics.map((diagnostic) => {
+              const vehicle = vehicleLookup[diagnostic.vehicleId];
+              const client = clientLookup[diagnostic.clientId];
+              const isSelected =
+                viewState?.selectedDiagnosticId === getEntityId(diagnostic);
+
+              return (
+                <View
+                  key={getEntityId(diagnostic)}
+                  style={[
+                    styles.row,
+                    {
+                      borderBottomColor: isSelected
+                        ? colors.primary
+                        : colors.border,
+                    },
+                  ]}
+                >
+                  <View style={styles.rowCopy}>
+                    <Text style={[styles.rowTitle, { color: colors.text }]}>
+                      {diagnostic.id}
+                    </Text>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    >
+                      {client?.fullName || diagnostic.clientId || "Sin cliente"}{" "}
+                      ·{" "}
+                      {vehicle?.plate || diagnostic.vehicleId || "Sin vehiculo"}
+                    </Text>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    >
+                      {diagnosticStatusOptions.find(
+                        (item) => item.key === diagnostic.status,
+                      )?.label ||
+                        diagnostic.status ||
+                        "Sin estado"}
+                    </Text>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textTertiary }]}
+                    >
+                      {diagnostic.concerns || "Sin hallazgos registrados"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.iconActionRow}>
+                    <Pressable
+                      onPress={() =>
+                        onOpenWorkOrderForm?.(null, {
+                          seedData: {
+                            diagnosticId: diagnostic.id,
+                            clientId: diagnostic.clientId,
+                            vehicleId: diagnostic.vehicleId,
+                          },
+                        })
+                      }
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.accent,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.accent}
+                        name="clipboard-outline"
+                        size={rf(18)}
+                      />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => onOpenDiagnosticForm?.(diagnostic)}
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.primary,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.primary}
+                        name="create-outline"
+                        size={rf(18)}
+                      />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleDelete(diagnostic)}
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.danger,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.danger}
+                        name="trash-outline"
+                        size={rf(18)}
+                      />
+                    </Pressable>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            No hay diagnosticos para el filtro actual. Usa el boton flotante
+            para registrar el primero.
+          </Text>
+        )}
       </ScrollView>
 
       <Pressable
@@ -393,28 +360,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
   scrollContent: { padding: spacing.lg, gap: spacing.lg },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  headerCopy: { flex: 1, gap: spacing.sm },
-  kicker: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  title: { fontSize: rf(28), fontWeight: "900", letterSpacing: -0.8 },
-  subtitle: { fontSize: rf(14), lineHeight: rf(20) },
-  backButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  backButtonText: { fontSize: rf(12), fontWeight: "700" },
   summaryCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -423,7 +368,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: { fontSize: rf(30), fontWeight: "900" },
   summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
-  listCard: {
+  controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
@@ -444,11 +389,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   filterChipText: { fontSize: rf(12), fontWeight: "700" },
-  listBody: { gap: spacing.md },
+  listBody: { gap: spacing.sm },
   row: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+    borderBottomWidth: 1,
+    paddingVertical: spacing.md,
     flexDirection: "row",
     gap: spacing.md,
   },

@@ -1,34 +1,29 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MetricCard from "../components/common/MetricCard";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
-const agenda = [
+const queue = [
   {
-    title: "Toyota Hilux 2019",
-    detail: "Cambio de aceite y filtro - 09:00 AM",
-    status: "Confirmado",
-  },
-  {
+    key: "1",
     title: "Ford Fiesta 2014",
-    detail: "Revision de frenos delanteros - 11:30 AM",
-    status: "En espera de repuesto",
-  },
-  {
-    title: "Chevrolet Cruze 2017",
-    detail: "Diagnostico electrico - 03:15 PM",
+    detail: "Revision de frenos delanteros",
     status: "Prioridad alta",
   },
-];
-
-const shortcuts = [
-  { title: "Clientes", action: "clients", caption: "Abrir" },
-  { title: "Diagnosticos", action: "diagnostics", caption: "Abrir" },
-  { title: "Ordenes", action: "work-orders", caption: "Abrir" },
-  { title: "Repuestos", action: "spare-parts", caption: "Abrir" },
-  { title: "Equipo", action: "team", caption: "Gestionar" },
+  {
+    key: "2",
+    title: "Toyota Hilux 2019",
+    detail: "Cambio de aceite y filtro",
+    status: "Recepcion 09:00 AM",
+  },
+  {
+    key: "3",
+    title: "Chevrolet Cruze 2017",
+    detail: "Diagnostico electrico",
+    status: "En espera de validacion",
+  },
 ];
 
 const roleLabels = {
@@ -37,207 +32,113 @@ const roleLabels = {
   mechanic: "Mecanico",
 };
 
-export default function WorkshopHomeScreen({
-  onOpenClients,
-  onOpenDiagnostics,
-  onOpenSpareParts,
-  onOpenTeamAccess,
-  onOpenWorkOrders,
-  onSignOut,
-  userProfile,
-}) {
-  const { colors, isDarkMode, toggleTheme } = useTheme();
+export default function WorkshopHomeScreen({ userProfile }) {
+  const { colors, isDarkMode } = useTheme();
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <WorkshopScreenHeader
+          section="Centro de control"
+          subtitle="Supervisa recepcion, diagnosticos, ordenes y alertas desde una sola vista operativa."
+          title="Auto-Guardian"
+        />
+
         <LinearGradient
           colors={
             isDarkMode
-              ? ["#18314b", "#0c1724", "#09111a"]
-              : ["#dce8f7", "#f2f6fb", "#eef2f6"]
+              ? ["#1350a7", "#0d3570", "#09111a"]
+              : ["#1e7af1", "#0f5fd2", "#0d3f8a"]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.heroCard, { borderColor: colors.borderStrong }]}
+          style={styles.heroCard}
         >
-          <View style={styles.topBar}>
-            <View style={styles.userSummary}>
-              <Text style={[styles.userLabel, { color: colors.textSecondary }]}>
-                Sesion activa
+          <View style={styles.heroTopRow}>
+            <View style={styles.heroCopy}>
+              <Text style={styles.heroEyebrow}>Estado operativo</Text>
+              <Text style={styles.heroTitle}>
+                {userProfile?.fullName || "Usuario activo"}
               </Text>
-              <Text style={[styles.userName, { color: colors.text }]}>
-                {userProfile?.fullName || "Usuario sin nombre"}
-              </Text>
-              <Text style={[styles.userRole, { color: colors.primary }]}>
+              <Text style={styles.heroSubtitle}>
                 {roleLabels[userProfile?.role] ||
                   userProfile?.role ||
                   "Sin rol"}
               </Text>
             </View>
-            <Pressable
-              onPress={onSignOut}
-              style={[
-                styles.signOutButton,
-                { borderColor: colors.borderStrong },
-              ]}
-            >
-              <Text style={[styles.signOutText, { color: colors.text }]}>
-                Cerrar sesion
-              </Text>
-            </Pressable>
-          </View>
 
-          <View style={styles.heroHeader}>
-            <View style={styles.heroCopy}>
-              <Text style={[styles.kicker, { color: colors.primary }]}>
-                Panel del taller
-              </Text>
-              <Text style={[styles.title, { color: colors.text }]}>
-                Auto-Guardian Taller
-              </Text>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Control operativo para recepcion, servicio, costos y entregas.
-              </Text>
+            <View style={styles.alertPill}>
+              <Text style={styles.alertPillText}>3 alertas</Text>
             </View>
-            <Pressable
-              onPress={toggleTheme}
-              style={[
-                styles.themeButton,
-                {
-                  backgroundColor: colors.overlay,
-                  borderColor: colors.borderStrong,
-                },
-              ]}
-            >
-              <Text style={[styles.themeButtonText, { color: colors.white }]}>
-                {isDarkMode ? "Modo claro" : "Modo oscuro"}
-              </Text>
-            </Pressable>
           </View>
 
-          <View style={styles.metricsRow}>
-            <MetricCard value="18" label="Vehiculos hoy" />
-            <MetricCard value="5" label="Urgentes" tone="danger" />
-            <MetricCard value="92%" label="Entrega a tiempo" tone="accent" />
+          <View style={styles.metricsGrid}>
+            <View style={[styles.metricTile, styles.metricTilePrimary]}>
+              <Text style={styles.metricValue}>18</Text>
+              <Text style={styles.metricLabel}>Vehiculos</Text>
+            </View>
+            <View style={[styles.metricTile, styles.metricTileDark]}>
+              <Text style={styles.metricValue}>5</Text>
+              <Text style={styles.metricLabel}>Urgentes</Text>
+            </View>
+            <View style={[styles.metricTile, styles.metricTileDark]}>
+              <Text style={styles.metricValue}>7</Text>
+              <Text style={styles.metricLabel}>Diagnosticos</Text>
+            </View>
+            <View style={[styles.metricTile, styles.metricTileDark]}>
+              <Text style={styles.metricValue}>11</Text>
+              <Text style={styles.metricLabel}>Ordenes</Text>
+            </View>
           </View>
         </LinearGradient>
 
         <View
           style={[
-            styles.alertCard,
+            styles.sectionPanel,
             {
               backgroundColor: colors.cardBackground,
               borderColor: colors.border,
             },
           ]}
         >
-          <View style={styles.alertHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              Atencion inmediata
-            </Text>
-            <View style={[styles.badge, { backgroundColor: colors.cardMuted }]}>
-              <Text style={[styles.badgeText, { color: colors.warning }]}>
-                3 pendientes
-              </Text>
-            </View>
-          </View>
-          <Text style={[styles.alertTitle, { color: colors.text }]}>
-            2 vehiculos superaron el tiempo estimado
+          <Text style={[styles.panelEyebrow, { color: colors.primary }]}>
+            Agenda
           </Text>
-          <Text style={[styles.alertText, { color: colors.textSecondary }]}>
-            Revisa aprobaciones de repuestos y actualiza promesa de entrega
-            antes del mediodia.
+          <Text style={[styles.panelTitle, { color: colors.text }]}>
+            Cola de hoy
           </Text>
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Accesos rapidos
-          </Text>
-          <Text style={[styles.sectionMeta, { color: colors.textTertiary }]}>
-            Flujos de alta frecuencia
-          </Text>
-        </View>
-
-        <View style={styles.shortcutGrid}>
-          {shortcuts.map((item) => (
-            <Pressable
-              key={item.action}
-              onPress={
-                item.action === "clients"
-                  ? onOpenClients
-                  : item.action === "diagnostics"
-                    ? onOpenDiagnostics
-                    : item.action === "work-orders"
-                      ? onOpenWorkOrders
-                      : item.action === "spare-parts"
-                        ? onOpenSpareParts
-                        : item.action === "team"
-                          ? onOpenTeamAccess
-                          : undefined
-              }
-              style={[
-                styles.shortcutCard,
-                {
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.shortcutTitle, { color: colors.text }]}>
-                {item.title}
-              </Text>
-              <Text
-                style={[
-                  styles.shortcutCaption,
-                  { color: colors.textSecondary },
-                ]}
-              >
-                {item.caption}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Agenda del dia
-          </Text>
-          <Text style={[styles.sectionMeta, { color: colors.textTertiary }]}>
-            Recepcion y servicio
+          <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+            Los accesos frecuentes ahora viven en el menu inferior. Aqui quedan
+            solo las prioridades operativas.
           </Text>
         </View>
 
         <View style={styles.listWrap}>
-          {agenda.map((item) => (
+          {queue.map((item) => (
             <View
-              key={item.title}
+              key={item.key}
               style={[
-                styles.listCard,
+                styles.queueRow,
                 {
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
+                  borderBottomColor: colors.border,
                 },
               ]}
             >
-              <View style={styles.listTopRow}>
-                <Text style={[styles.listTitle, { color: colors.text }]}>
+              <View style={styles.queueCopy}>
+                <Text style={[styles.queueTitle, { color: colors.text }]}>
                   {item.title}
                 </Text>
-                <Text style={[styles.listStatus, { color: colors.primary }]}>
-                  {item.status}
+                <Text
+                  style={[styles.queueDetail, { color: colors.textSecondary }]}
+                >
+                  {item.detail}
                 </Text>
               </View>
-              <Text
-                style={[styles.listDetail, { color: colors.textSecondary }]}
-              >
-                {item.detail}
+              <Text style={[styles.queueStatus, { color: colors.primary }]}>
+                {item.status}
               </Text>
             </View>
           ))}
@@ -248,332 +149,78 @@ export default function WorkshopHomeScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
+  safeArea: { flex: 1 },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxl,
     gap: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   heroCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xxl,
     padding: spacing.xl,
-    gap: spacing.xl,
-  },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  userSummary: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  userLabel: {
-    fontSize: rf(11),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  userName: {
-    fontSize: rf(18),
-    fontWeight: "800",
-  },
-  userRole: {
-    fontSize: rf(12),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  signOutButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  signOutText: {
-    fontSize: rf(12),
-    fontWeight: "700",
-  },
-  heroHeader: {
     gap: spacing.lg,
   },
-  heroCopy: {
-    gap: spacing.sm,
+  heroTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: spacing.md,
   },
-  kicker: {
+  heroCopy: { flex: 1, gap: spacing.xs },
+  heroEyebrow: {
+    color: "#d4e5ff",
     fontSize: rf(12),
     fontWeight: "800",
+    letterSpacing: 1,
     textTransform: "uppercase",
-    letterSpacing: 1.2,
   },
-  title: {
-    fontSize: rf(30),
-    fontWeight: "900",
-    letterSpacing: -0.8,
-  },
-  subtitle: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-    maxWidth: 420,
-  },
-  themeButton: {
+  heroTitle: { color: "#ffffff", fontSize: rf(30), fontWeight: "900" },
+  heroSubtitle: { color: "#d8e7ff", fontSize: rf(14), lineHeight: rf(20) },
+  alertPill: {
     alignSelf: "flex-start",
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
-  themeButtonText: {
-    fontSize: rf(12),
-    fontWeight: "700",
-  },
-  adminPanel: {
-    borderWidth: 1,
+  alertPillText: { color: "#ffffff", fontSize: rf(12), fontWeight: "800" },
+  metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
+  metricTile: {
+    width: "47%",
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  adminPanelHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  adminPanelCopy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  adminPanelTitle: {
-    fontSize: rf(18),
-    fontWeight: "800",
-  },
-  adminPanelText: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  refreshButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  refreshButtonText: {
-    fontSize: rf(12),
-    fontWeight: "700",
-  },
-  formGroup: {
-    gap: spacing.sm,
-  },
-  fieldLabel: {
-    fontSize: rf(12),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    fontSize: rf(15),
-  },
-  roleOptionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  roleOption: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  roleOptionText: {
-    fontSize: rf(13),
-    fontWeight: "700",
-  },
-  primaryAction: {
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    alignItems: "center",
-  },
-  primaryActionText: {
-    fontSize: rf(14),
-    fontWeight: "800",
-  },
-  metricsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.md,
-  },
-  alertCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.sm,
-  },
-  alertHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  badge: {
-    borderRadius: 999,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  badgeText: {
-    fontSize: rf(11),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  alertTitle: {
-    fontSize: rf(19),
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-  alertText: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    gap: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: rf(19),
-    fontWeight: "800",
-    letterSpacing: -0.3,
-  },
-  sectionMeta: {
-    fontSize: rf(12),
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  shortcutGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.md,
-  },
-  shortcutCard: {
-    minWidth: "47%",
-    flexGrow: 1,
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
     padding: spacing.lg,
     gap: spacing.xs,
   },
-  shortcutTitle: {
-    fontSize: rf(16),
-    fontWeight: "700",
-  },
-  shortcutCaption: {
-    fontSize: rf(12),
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  adminListGrid: {
-    gap: spacing.md,
-  },
-  adminListCard: {
+  metricTilePrimary: { backgroundColor: "rgba(255,255,255,0.18)" },
+  metricTileDark: { backgroundColor: "rgba(8,15,25,0.78)" },
+  metricValue: { color: "#ffffff", fontSize: rf(28), fontWeight: "900" },
+  metricLabel: { color: "#d8e7ff", fontSize: rf(13), fontWeight: "700" },
+  sectionPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-  listSectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  adminListWrap: {
-    gap: spacing.sm,
-  },
-  adminRow: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  adminRowCopy: {
-    flex: 1,
+    padding: spacing.lg,
     gap: spacing.xs,
   },
-  adminRowTitle: {
-    fontSize: rf(15),
-    fontWeight: "700",
-  },
-  adminRowMeta: {
-    fontSize: rf(12),
-    lineHeight: rf(18),
-  },
-  secondaryAction: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  secondaryActionText: {
-    fontSize: rf(12),
-    fontWeight: "700",
-  },
-  primaryOutlineAction: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  primaryOutlineActionText: {
+  panelEyebrow: {
     fontSize: rf(12),
     fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
-  emptyStateText: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
+  panelTitle: { fontSize: rf(20), fontWeight: "900" },
+  panelText: { fontSize: rf(14), lineHeight: rf(20) },
   listWrap: {
-    gap: spacing.md,
+    backgroundColor: "transparent",
   },
-  listCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  listTopRow: {
+  queueRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     gap: spacing.md,
+    paddingVertical: spacing.lg,
+    borderBottomWidth: 1,
   },
-  listTitle: {
-    flex: 1,
-    fontSize: rf(16),
-    fontWeight: "700",
-  },
-  listStatus: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.7,
-  },
-  listDetail: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
+  queueCopy: { flex: 1, gap: spacing.xs },
+  queueTitle: { fontSize: rf(16), fontWeight: "800" },
+  queueDetail: { fontSize: rf(13), lineHeight: rf(18) },
+  queueStatus: { fontSize: rf(12), fontWeight: "800", textAlign: "right" },
 });

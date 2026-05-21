@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listMechanicProfiles } from "../services/admin/staffAdmin";
 import { listClients } from "../services/clients/clientService";
@@ -146,38 +147,16 @@ export default function WorkOrderFormScreen({
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Ordenes
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {editingWorkOrderId ? "Editar orden" : "Registrar orden"}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              La orden queda en una pantalla dedicada y luego vuelve a la lista
-              para seguir con repuestos o cambios de estado.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={onBack}
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.backButtonText, { color: colors.text }]}>
-              Volver
-            </Text>
-          </Pressable>
-        </View>
+        <WorkshopScreenHeader
+          onBack={onBack}
+          section="Ordenes"
+          subtitle="La orden queda en una pantalla dedicada y luego vuelve a la lista para seguir con repuestos o cambios de estado."
+          title={editingWorkOrderId ? "Editar orden" : "Registrar orden"}
+        />
 
         <View
           style={[
@@ -361,28 +340,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  headerCopy: { flex: 1, gap: spacing.sm },
-  kicker: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  title: { fontSize: rf(28), fontWeight: "900", letterSpacing: -0.8 },
-  subtitle: { fontSize: rf(14), lineHeight: rf(20) },
-  backButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  backButtonText: { fontSize: rf(12), fontWeight: "700" },
   formCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,

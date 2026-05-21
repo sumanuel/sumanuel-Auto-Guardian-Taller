@@ -11,14 +11,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { deleteClient, listClients } from "../services/clients/clientService";
 import {
-  createEmptyVehicleForm,
-  createVehicle,
   deleteVehicle,
   listVehiclesByClientId,
-  updateVehicle,
 } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
@@ -37,28 +35,11 @@ function getEntityId(entity) {
   return entity?.refId || entity?.id || "";
 }
 
-function buildVehicleForm(vehicle, clientId = "") {
-  if (!vehicle) {
-    return createEmptyVehicleForm(clientId);
-  }
-
-  return {
-    clientId: vehicle.clientId || clientId,
-    plate: vehicle.plate || "",
-    brand: vehicle.brand || "",
-    model: vehicle.model || "",
-    year: vehicle.year || "",
-    color: vehicle.color || "",
-    vin: vehicle.vin || "",
-    mileage:
-      vehicle.mileage === null || vehicle.mileage === undefined
-        ? ""
-        : String(vehicle.mileage),
-    notes: vehicle.notes || "",
-  };
-}
-
-export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
+export default function ClientsScreen({
+  onOpenClientForm,
+  onOpenVehicleForm,
+  viewState,
+}) {
   const { colors } = useTheme();
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
   const [clients, setClients] = useState([]);
@@ -68,10 +49,6 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
   const [selectedClient, setSelectedClient] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [vehicleLoading, setVehicleLoading] = useState(false);
-  const [vehicleSubmitting, setVehicleSubmitting] = useState(false);
-  const [vehicleFormVisible, setVehicleFormVisible] = useState(false);
-  const [editingVehicleId, setEditingVehicleId] = useState(null);
-  const [vehicleForm, setVehicleForm] = useState(createEmptyVehicleForm());
 
   const selectedClientId = getEntityId(selectedClient);
 
@@ -109,14 +86,6 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
     });
   }, [activeFilter, clients, searchQuery]);
 
-  const clientStats = useMemo(
-    () => ({
-      totalClients: clients.length,
-      selectedLabel: selectedClient?.fullName || "Sin cliente activo",
-    }),
-    [clients.length, selectedClient?.fullName],
-  );
-
   const refreshClients = async () => {
     setLoading(true);
 
@@ -134,14 +103,10 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
         } else {
           setSelectedClient(null);
           setScreenMode(SCREEN_MODES.LIST);
-          setVehicleFormVisible(false);
         }
       }
-
-      return nextClients;
     } catch (error) {
       Alert.alert("Clientes", "No se pudo cargar el listado de clientes.");
-      return [];
     } finally {
       setLoading(false);
     }
@@ -174,8 +139,6 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
   useEffect(() => {
     if (!selectedClientId) {
       setVehicles([]);
-      setVehicleForm(createEmptyVehicleForm());
-      setEditingVehicleId(null);
       return;
     }
 
@@ -193,58 +156,34 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
     };
 
     refreshVehicles();
-    setVehicleForm(createEmptyVehicleForm(selectedClientId));
-    setEditingVehicleId(null);
   }, [selectedClientId]);
 
-  const resetVehicleForm = () => {
-    setVehicleForm(createEmptyVehicleForm(selectedClientId));
-    setEditingVehicleId(null);
-  };
-
-  const closeVehicleForm = () => {
-    resetVehicleForm();
-    setVehicleFormVisible(false);
-  };
-
-  const openClientDetail = (client, options = {}) => {
+  const openClientDetail = (client) => {
     setSelectedClient(client);
     setScreenMode(SCREEN_MODES.DETAIL);
-    setVehicleFormVisible(Boolean(options.openVehicleForm));
-    setEditingVehicleId(null);
-    setVehicleForm(createEmptyVehicleForm(getEntityId(client)));
   };
 
   const handleBackToList = () => {
     setScreenMode(SCREEN_MODES.LIST);
-    setVehicleFormVisible(false);
-    setEditingVehicleId(null);
   };
 
-  const handleDelete = (client) => {
+  const handleDeleteClient = (client) => {
     Alert.alert(
       "Eliminar cliente",
       `Se eliminara ${client.fullName || "este cliente"} del padron operativo.`,
       [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
           onPress: async () => {
             try {
               await deleteClient(getEntityId(client));
-
               if (selectedClientId === getEntityId(client)) {
                 setSelectedClient(null);
                 setScreenMode(SCREEN_MODES.LIST);
-                closeVehicleForm();
               }
-
               await refreshClients();
-              Alert.alert("Clientes", "El cliente fue eliminado.");
             } catch (error) {
               Alert.alert(
                 "Clientes",
@@ -257,72 +196,12 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
     );
   };
 
-  const openCreateVehicleForm = () => {
-    if (!selectedClientId) {
-      return;
-    }
-
-    resetVehicleForm();
-    setVehicleFormVisible(true);
-  };
-
-  const handleVehicleSubmit = async () => {
-    if (!selectedClientId) {
-      Alert.alert("Vehiculos", "Selecciona primero un cliente.");
-      return;
-    }
-
-    if (!vehicleForm.plate.trim()) {
-      Alert.alert("Vehiculos", "Ingresa al menos la placa del vehiculo.");
-      return;
-    }
-
-    setVehicleSubmitting(true);
-
-    try {
-      if (editingVehicleId) {
-        await updateVehicle(editingVehicleId, vehicleForm);
-      } else {
-        await createVehicle({
-          ...vehicleForm,
-          clientId: selectedClientId,
-        });
-      }
-
-      const nextVehicles = await listVehiclesByClientId(selectedClientId);
-      setVehicles(nextVehicles);
-      closeVehicleForm();
-      Alert.alert(
-        "Vehiculos",
-        editingVehicleId
-          ? "El vehiculo fue actualizado."
-          : "El vehiculo fue agregado al cliente.",
-      );
-    } catch (error) {
-      Alert.alert(
-        "Vehiculos",
-        error?.message || "No se pudo guardar el vehiculo.",
-      );
-    } finally {
-      setVehicleSubmitting(false);
-    }
-  };
-
-  const handleEditVehicle = (vehicle) => {
-    setEditingVehicleId(getEntityId(vehicle));
-    setVehicleForm(buildVehicleForm(vehicle, selectedClientId));
-    setVehicleFormVisible(true);
-  };
-
   const handleDeleteVehicle = (vehicle) => {
     Alert.alert(
       "Eliminar vehiculo",
       `Se eliminara ${vehicle.plate || "este vehiculo"} del cliente activo.`,
       [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
@@ -332,12 +211,6 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
               const nextVehicles =
                 await listVehiclesByClientId(selectedClientId);
               setVehicles(nextVehicles);
-
-              if (editingVehicleId === getEntityId(vehicle)) {
-                closeVehicleForm();
-              }
-
-              Alert.alert("Vehiculos", "El vehiculo fue eliminado.");
             } catch (error) {
               Alert.alert(
                 "Vehiculos",
@@ -350,234 +223,14 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
     );
   };
 
-  const renderVehicleForm = () => (
-    <View
-      style={[
-        styles.formCard,
-        {
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.border,
-        },
-      ]}
-    >
-      <View style={styles.formHeader}>
-        <View style={styles.formHeaderCopy}>
-          <Text style={[styles.formTitle, { color: colors.text }]}>
-            {editingVehicleId ? "Editar vehiculo" : "Asociar vehiculo"}
-          </Text>
-          <Text style={[styles.formSubtitle, { color: colors.textSecondary }]}>
-            Placa, datos operativos y contexto rapido del vehiculo.
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={closeVehicleForm}
-          style={[
-            styles.secondaryButton,
-            {
-              borderColor: colors.borderStrong,
-              backgroundColor: colors.cardBackground,
-            },
-          ]}
-        >
-          <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
-            Cerrar
-          </Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.formGrid}>
-        <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>Placa</Text>
-          <TextInput
-            autoCapitalize="characters"
-            onChangeText={(value) =>
-              setVehicleForm((current) => ({ ...current, plate: value }))
-            }
-            placeholder="AB123CD"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={vehicleForm.plate}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>Marca</Text>
-          <TextInput
-            onChangeText={(value) =>
-              setVehicleForm((current) => ({ ...current, brand: value }))
-            }
-            placeholder="Toyota"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={vehicleForm.brand}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>
-            Modelo
-          </Text>
-          <TextInput
-            onChangeText={(value) =>
-              setVehicleForm((current) => ({ ...current, model: value }))
-            }
-            placeholder="Hilux"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={vehicleForm.model}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>Ano</Text>
-          <TextInput
-            keyboardType="number-pad"
-            onChangeText={(value) =>
-              setVehicleForm((current) => ({ ...current, year: value }))
-            }
-            placeholder="2019"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={vehicleForm.year}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>Color</Text>
-          <TextInput
-            onChangeText={(value) =>
-              setVehicleForm((current) => ({ ...current, color: value }))
-            }
-            placeholder="Blanco"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={vehicleForm.color}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>VIN</Text>
-          <TextInput
-            autoCapitalize="characters"
-            onChangeText={(value) =>
-              setVehicleForm((current) => ({ ...current, vin: value }))
-            }
-            placeholder="8X1ABC12345678901"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={vehicleForm.vin}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>
-            Kilometraje
-          </Text>
-          <TextInput
-            keyboardType="number-pad"
-            onChangeText={(value) =>
-              setVehicleForm((current) => ({ ...current, mileage: value }))
-            }
-            placeholder="120000"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={vehicleForm.mileage}
-          />
-        </View>
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={[styles.fieldLabel, { color: colors.text }]}>
-          Notas del vehiculo
-        </Text>
-        <TextInput
-          multiline
-          numberOfLines={3}
-          onChangeText={(value) =>
-            setVehicleForm((current) => ({ ...current, notes: value }))
-          }
-          placeholder="Observaciones, accesorios, condicion general"
-          placeholderTextColor={colors.textTertiary}
-          style={[
-            styles.textArea,
-            {
-              backgroundColor: colors.inputBackground,
-              borderColor: colors.border,
-              color: colors.text,
-            },
-          ]}
-          textAlignVertical="top"
-          value={vehicleForm.notes}
-        />
-      </View>
-
-      <Pressable
-        onPress={handleVehicleSubmit}
-        style={[styles.primaryAction, { backgroundColor: colors.accent }]}
-      >
-        <Text style={[styles.primaryActionText, { color: colors.white }]}>
-          {vehicleSubmitting
-            ? "Guardando vehiculo..."
-            : editingVehicleId
-              ? "Guardar vehiculo"
-              : "Asociar vehiculo"}
-        </Text>
-      </Pressable>
-    </View>
-  );
-
   const renderListScreen = () => (
     <>
+      <WorkshopScreenHeader
+        section="Recepcion"
+        subtitle="La lista queda limpia y directa; el alta y la asociacion viven en pantallas separadas."
+        title="Clientes"
+      />
+
       <View
         style={[
           styles.summaryCard,
@@ -587,919 +240,433 @@ export default function ClientsScreen({ onBack, onOpenClientForm, viewState }) {
           },
         ]}
       >
-        <Text style={[styles.summaryEyebrow, { color: colors.primary }]}>
-          Recepcion
+        <Text style={[styles.summaryValue, { color: colors.text }]}>
+          {clients.length}
         </Text>
-        <Text style={[styles.summaryTitle, { color: colors.text }]}>
+        <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
           Clientes registrados
         </Text>
-        <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
-          La lista prioriza la consulta rapida, con busqueda, filtros y accesos
-          directos a la ficha del cliente.
-        </Text>
-
-        <View style={styles.summaryMetrics}>
-          <View
-            style={[
-              styles.summaryMetric,
-              { backgroundColor: colors.cardMuted, borderColor: colors.border },
-            ]}
-          >
-            <Text style={[styles.summaryMetricValue, { color: colors.text }]}>
-              {clientStats.totalClients}
-            </Text>
-            <Text
-              style={[
-                styles.summaryMetricLabel,
-                { color: colors.textSecondary },
-              ]}
-            >
-              Clientes
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.summaryMetricWide,
-              { backgroundColor: colors.cardMuted, borderColor: colors.border },
-            ]}
-          >
-            <Text
-              style={[
-                styles.summaryMetricLabel,
-                { color: colors.textSecondary },
-              ]}
-            >
-              Cliente activo
-            </Text>
-            <Text
-              style={[styles.summaryMetricWideText, { color: colors.text }]}
-            >
-              {clientStats.selectedLabel}
-            </Text>
-          </View>
-        </View>
       </View>
 
       <View
         style={[
-          styles.listCard,
+          styles.controlsPanel,
           {
             backgroundColor: colors.cardBackground,
             borderColor: colors.border,
           },
         ]}
       >
-        <View style={styles.searchSection}>
-          <TextInput
-            autoCapitalize="none"
-            onChangeText={setSearchQuery}
-            placeholder="Buscar por nombre, codigo, telefono o correo"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={searchQuery}
-          />
+        <TextInput
+          autoCapitalize="none"
+          onChangeText={setSearchQuery}
+          placeholder="Buscar por nombre, codigo, telefono o correo"
+          placeholderTextColor={colors.textTertiary}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.border,
+              color: colors.text,
+            },
+          ]}
+          value={searchQuery}
+        />
 
-          <View style={styles.filterRow}>
-            {[
-              { key: CLIENT_FILTERS.ALL, label: "Todos" },
-              { key: CLIENT_FILTERS.WITH_EMAIL, label: "Con correo" },
-              { key: CLIENT_FILTERS.WITH_PHONE, label: "Con telefono" },
-            ].map((filter) => {
-              const selected = activeFilter === filter.key;
+        <View style={styles.filterRow}>
+          {[
+            { key: CLIENT_FILTERS.ALL, label: "Todos" },
+            { key: CLIENT_FILTERS.WITH_EMAIL, label: "Con correo" },
+            { key: CLIENT_FILTERS.WITH_PHONE, label: "Con telefono" },
+          ].map((filter) => {
+            const selected = activeFilter === filter.key;
 
-              return (
-                <Pressable
-                  key={filter.key}
-                  onPress={() => setActiveFilter(filter.key)}
+            return (
+              <Pressable
+                key={filter.key}
+                onPress={() => setActiveFilter(filter.key)}
+                style={[
+                  styles.filterChip,
+                  {
+                    backgroundColor: selected
+                      ? colors.primary
+                      : colors.cardMuted,
+                    borderColor: selected ? colors.primary : colors.border,
+                  },
+                ]}
+              >
+                <Text
                   style={[
-                    styles.filterChip,
-                    {
-                      backgroundColor: selected
-                        ? colors.primary
-                        : colors.cardMuted,
-                      borderColor: selected ? colors.primary : colors.border,
-                    },
+                    styles.filterChipText,
+                    { color: selected ? colors.white : colors.text },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.filterChipText,
-                      { color: selected ? colors.white : colors.text },
-                    ]}
-                  >
-                    {filter.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                  {filter.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
-
-        <View style={styles.listHeader}>
-          <View style={styles.sectionCopy}>
-            <Text style={[styles.listTitle, { color: colors.text }]}>
-              Lista de clientes
-            </Text>
-            <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
-              Usa los iconos para editar, eliminar o asociar vehiculos.
-            </Text>
-          </View>
-
-          <Pressable onPress={refreshClients}>
-            <Text style={[styles.refreshText, { color: colors.primary }]}>
-              Actualizar
-            </Text>
-          </Pressable>
-        </View>
-
-        {loading ? (
-          <ActivityIndicator color={colors.primary} />
-        ) : filteredClients.length ? (
-          <View style={styles.listBody}>
-            {filteredClients.map((client) => {
-              const isSelected = getEntityId(client) === selectedClientId;
-
-              return (
-                <View
-                  key={getEntityId(client)}
-                  style={[
-                    styles.clientRow,
-                    {
-                      backgroundColor: colors.cardMuted,
-                      borderColor: isSelected ? colors.accent : colors.border,
-                    },
-                  ]}
-                >
-                  <Pressable
-                    onPress={() => openClientDetail(client)}
-                    style={styles.clientCopy}
-                  >
-                    <Text style={[styles.clientTitle, { color: colors.text }]}>
-                      {client.fullName}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.clientMeta,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      {client.id} · {client.phone || "Sin telefono"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.clientMeta,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      {client.email || "Sin correo"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.clientMeta,
-                        { color: colors.textTertiary },
-                      ]}
-                    >
-                      {client.address || "Sin direccion"}
-                    </Text>
-                  </Pressable>
-
-                  <View style={styles.iconActionRow}>
-                    <Pressable
-                      onPress={() =>
-                        openClientDetail(client, { openVehicleForm: true })
-                      }
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.accent,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.accent}
-                        name="car-sport-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() =>
-                        onOpenClientForm?.(client, {
-                          returnTo:
-                            screenMode === SCREEN_MODES.DETAIL
-                              ? "detail"
-                              : "list",
-                        })
-                      }
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.primary,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.primary}
-                        name="create-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleDelete(client)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.danger,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.danger}
-                        name="trash-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        ) : (
-          <Text
-            style={[styles.emptyStateText, { color: colors.textSecondary }]}
-          >
-            {clients.length
-              ? "No hay coincidencias con la busqueda o el filtro actual."
-              : "No hay clientes registrados. Usa el boton flotante para crear el primero y abrir la operacion de recepcion."}
-          </Text>
-        )}
       </View>
+
+      {loading ? (
+        <ActivityIndicator color={colors.primary} />
+      ) : filteredClients.length ? (
+        <View style={styles.listBody}>
+          {filteredClients.map((client) => (
+            <View
+              key={getEntityId(client)}
+              style={[
+                styles.clientRow,
+                {
+                  borderBottomColor: colors.border,
+                },
+              ]}
+            >
+              <Pressable
+                onPress={() => openClientDetail(client)}
+                style={styles.clientCopy}
+              >
+                <Text style={[styles.clientTitle, { color: colors.text }]}>
+                  {client.fullName}
+                </Text>
+                <Text
+                  style={[styles.clientMeta, { color: colors.textSecondary }]}
+                >
+                  {client.id} · {client.phone || "Sin telefono"}
+                </Text>
+                <Text
+                  style={[styles.clientMeta, { color: colors.textSecondary }]}
+                >
+                  {client.email || "Sin correo"}
+                </Text>
+              </Pressable>
+
+              <View style={styles.iconActionRow}>
+                <Pressable
+                  onPress={() =>
+                    onOpenClientForm?.(client, { returnTo: "detail" })
+                  }
+                  style={styles.iconAction}
+                >
+                  <Ionicons
+                    color={colors.primary}
+                    name="create-outline"
+                    size={rf(18)}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={() => handleDeleteClient(client)}
+                  style={styles.iconAction}
+                >
+                  <Ionicons
+                    color={colors.danger}
+                    name="trash-outline"
+                    size={rf(18)}
+                  />
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+          {clients.length
+            ? "No hay coincidencias con la busqueda o el filtro actual."
+            : "No hay clientes registrados. Usa el boton flotante para crear el primero."}
+        </Text>
+      )}
     </>
   );
 
   const renderDetailScreen = () => (
     <>
+      <WorkshopScreenHeader
+        onBack={handleBackToList}
+        section="Ficha cliente"
+        subtitle="La asociacion de vehiculos ocurre en una pantalla propia; aqui solo consultas y gestionas la ficha."
+        title={selectedClient?.fullName || "Cliente"}
+      />
+
       <View
         style={[
-          styles.detailHero,
+          styles.detailCard,
           {
             backgroundColor: colors.cardBackground,
             borderColor: colors.border,
           },
         ]}
       >
-        <View style={styles.detailHeaderRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Cliente activo
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {selectedClient?.fullName || "Detalle del cliente"}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Ficha operativa con datos de contacto, contexto y vehiculos
-              asociados.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={handleBackToList}
-            style={[
-              styles.secondaryButton,
-              {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.secondaryButtonText, { color: colors.text }]}>
-              Ver lista
-            </Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.detailMetaGrid}>
-          <View style={styles.detailMetaBlock}>
-            <Text
-              style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
-            >
+        <View style={styles.detailGrid}>
+          <View style={styles.detailBlock}>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
               Codigo
             </Text>
-            <Text style={[styles.detailMetaValue, { color: colors.text }]}>
+            <Text style={[styles.detailValue, { color: colors.text }]}>
               {selectedClient?.id || "Sin codigo"}
             </Text>
           </View>
-          <View style={styles.detailMetaBlock}>
-            <Text
-              style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
-            >
+          <View style={styles.detailBlock}>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
               Telefono
             </Text>
-            <Text style={[styles.detailMetaValue, { color: colors.text }]}>
+            <Text style={[styles.detailValue, { color: colors.text }]}>
               {selectedClient?.phone || "Sin telefono"}
             </Text>
           </View>
-          <View style={styles.detailMetaBlock}>
-            <Text
-              style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
-            >
+          <View style={styles.detailBlock}>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
               Correo
             </Text>
-            <Text style={[styles.detailMetaValue, { color: colors.text }]}>
+            <Text style={[styles.detailValue, { color: colors.text }]}>
               {selectedClient?.email || "Sin correo"}
             </Text>
           </View>
-          <View style={styles.detailMetaBlock}>
-            <Text
-              style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
-            >
+          <View style={styles.detailBlock}>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
               Direccion
             </Text>
-            <Text style={[styles.detailMetaValue, { color: colors.text }]}>
+            <Text style={[styles.detailValue, { color: colors.text }]}>
               {selectedClient?.address || "Sin direccion"}
             </Text>
           </View>
         </View>
 
-        <View
-          style={[
-            styles.notesPanel,
-            { backgroundColor: colors.cardMuted, borderColor: colors.border },
-          ]}
-        >
-          <Text
-            style={[styles.detailMetaLabel, { color: colors.textSecondary }]}
-          >
-            Notas operativas
+        {selectedClient?.notes ? (
+          <Text style={[styles.notesText, { color: colors.textSecondary }]}>
+            {selectedClient.notes}
           </Text>
-          <Text style={[styles.notesText, { color: colors.text }]}>
-            {selectedClient?.notes || "Sin notas operativas registradas."}
-          </Text>
-        </View>
+        ) : null}
 
-        <View style={styles.detailActionRow}>
+        <View style={styles.actionRow}>
           <Pressable
             onPress={() =>
-              onOpenClientForm?.(selectedClient, {
-                returnTo: "detail",
-              })
+              onOpenClientForm?.(selectedClient, { returnTo: "detail" })
             }
-            style={[styles.actionPill, { backgroundColor: colors.primary }]}
+            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
           >
-            <Ionicons
-              color={colors.white}
-              name="create-outline"
-              size={rf(16)}
-            />
-            <Text style={[styles.actionPillText, { color: colors.white }]}>
-              Editar ficha
+            <Text style={[styles.primaryActionText, { color: colors.white }]}>
+              Editar cliente
             </Text>
           </Pressable>
           <Pressable
-            onPress={openCreateVehicleForm}
-            style={[styles.actionPill, { backgroundColor: colors.accent }]}
+            onPress={() => onOpenVehicleForm?.(selectedClient, null)}
+            style={[styles.secondaryAction, { borderColor: colors.accent }]}
           >
-            <Ionicons
-              color={colors.white}
-              name="car-sport-outline"
-              size={rf(16)}
-            />
-            <Text style={[styles.actionPillText, { color: colors.white }]}>
+            <Text
+              style={[styles.secondaryActionText, { color: colors.accent }]}
+            >
               Asociar vehiculo
             </Text>
           </Pressable>
         </View>
       </View>
 
-      {vehicleFormVisible && renderVehicleForm()}
-
-      <View
-        style={[
-          styles.listCard,
-          {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
-          },
-        ]}
-      >
-        <View style={styles.listHeader}>
-          <View style={styles.sectionCopy}>
-            <Text style={[styles.listTitle, { color: colors.text }]}>
-              Vehiculos asociados
-            </Text>
-            <Text style={[styles.sectionText, { color: colors.textSecondary }]}>
-              Administra los vehiculos vinculados a este cliente.
-            </Text>
-          </View>
-
-          <Text style={[styles.counterText, { color: colors.accent }]}>
-            {vehicles.length}
-          </Text>
-        </View>
-
-        {vehicleLoading ? (
-          <ActivityIndicator color={colors.primary} />
-        ) : vehicles.length ? (
-          <View style={styles.listBody}>
-            {vehicles.map((vehicle) => (
-              <View
-                key={getEntityId(vehicle)}
-                style={[
-                  styles.clientRow,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <View style={styles.clientCopy}>
-                  <Text style={[styles.clientTitle, { color: colors.text }]}>
-                    {vehicle.plate}
-                  </Text>
-                  <Text
-                    style={[styles.clientMeta, { color: colors.textSecondary }]}
-                  >
-                    {vehicle.brand || "Marca"} · {vehicle.model || "Modelo"} ·{" "}
-                    {vehicle.year || "Ano"}
-                  </Text>
-                  <Text
-                    style={[styles.clientMeta, { color: colors.textSecondary }]}
-                  >
-                    {vehicle.id} ·{" "}
-                    {vehicle.mileage
-                      ? `${vehicle.mileage} km`
-                      : "Sin kilometraje"}
-                  </Text>
-                  <Text
-                    style={[styles.clientMeta, { color: colors.textTertiary }]}
-                  >
-                    {vehicle.notes || "Sin notas del vehiculo"}
-                  </Text>
-                </View>
-
-                <View style={styles.iconActionRow}>
-                  <Pressable
-                    onPress={() => handleEditVehicle(vehicle)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.primary,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.primary}
-                      name="create-outline"
-                      size={rf(18)}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => handleDeleteVehicle(vehicle)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.danger,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.danger}
-                      name="trash-outline"
-                      size={rf(18)}
-                    />
-                  </Pressable>
-                </View>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Text
-            style={[styles.emptyStateText, { color: colors.textSecondary }]}
-          >
-            Este cliente aun no tiene vehiculos asociados. Usa la accion de la
-            ficha para registrar el primero.
-          </Text>
-        )}
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Vehiculos asociados
+        </Text>
+        <Text style={[styles.sectionMeta, { color: colors.textTertiary }]}>
+          {vehicles.length} registro{vehicles.length === 1 ? "" : "s"}
+        </Text>
       </View>
+
+      {vehicleLoading ? (
+        <ActivityIndicator color={colors.primary} />
+      ) : vehicles.length ? (
+        <View style={styles.listBody}>
+          {vehicles.map((vehicle) => (
+            <View
+              key={getEntityId(vehicle)}
+              style={[
+                styles.clientRow,
+                {
+                  borderBottomColor: colors.border,
+                },
+              ]}
+            >
+              <View style={styles.clientCopy}>
+                <Text style={[styles.clientTitle, { color: colors.text }]}>
+                  {vehicle.plate || "Sin placa"}
+                </Text>
+                <Text
+                  style={[styles.clientMeta, { color: colors.textSecondary }]}
+                >
+                  {[vehicle.brand, vehicle.model, vehicle.year]
+                    .filter(Boolean)
+                    .join(" · ") || "Sin descripcion"}
+                </Text>
+                <Text
+                  style={[styles.clientMeta, { color: colors.textTertiary }]}
+                >
+                  {vehicle.mileage
+                    ? `${vehicle.mileage} km`
+                    : "Sin kilometraje"}
+                </Text>
+              </View>
+
+              <View style={styles.iconActionRow}>
+                <Pressable
+                  onPress={() => onOpenVehicleForm?.(selectedClient, vehicle)}
+                  style={styles.iconAction}
+                >
+                  <Ionicons
+                    color={colors.primary}
+                    name="create-outline"
+                    size={rf(18)}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={() => handleDeleteVehicle(vehicle)}
+                  style={styles.iconAction}
+                >
+                  <Ionicons
+                    color={colors.danger}
+                    name="trash-outline"
+                    size={rf(18)}
+                  />
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+          Este cliente todavia no tiene vehiculos asociados.
+        </Text>
+      )}
     </>
   );
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          screenMode === SCREEN_MODES.LIST && styles.scrollContentWithFab,
-        ]}
+        contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Clientes
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {screenMode === SCREEN_MODES.DETAIL
-                ? "Detalle operativo"
-                : "Base operativa del taller"}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {screenMode === SCREEN_MODES.DETAIL
-                ? "Consulta la ficha del cliente y administra sus vehiculos desde un solo lugar."
-                : "Lista prioritaria de clientes con busqueda, filtros y accesos rapidos para recepcion."}
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={onBack}
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.backButtonText, { color: colors.text }]}>
-              Volver
-            </Text>
-          </Pressable>
-        </View>
-
         {screenMode === SCREEN_MODES.LIST
           ? renderListScreen()
           : renderDetailScreen()}
       </ScrollView>
 
-      {screenMode === SCREEN_MODES.LIST && (
+      {screenMode === SCREEN_MODES.LIST ? (
         <Pressable
-          onPress={() =>
-            onOpenClientForm?.(null, {
-              returnTo: "list",
-            })
-          }
+          onPress={() => onOpenClientForm?.(null, { returnTo: "list" })}
           style={[
             styles.fab,
-            {
-              backgroundColor: colors.primary,
-              shadowColor: colors.shadow,
-            },
+            { backgroundColor: colors.primary, shadowColor: colors.shadow },
           ]}
         >
           <Ionicons color={colors.white} name="add" size={rf(24)} />
         </Pressable>
-      )}
+      ) : null}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    position: "relative",
-  },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
-  },
-  scrollContentWithFab: {
-    paddingBottom: spacing.xxl * 2.6,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  headerCopy: {
-    flex: 1,
-    gap: spacing.sm,
-  },
-  kicker: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  title: {
-    fontSize: rf(28),
-    fontWeight: "900",
-    letterSpacing: -0.8,
-  },
-  subtitle: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  backButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  backButtonText: {
-    fontSize: rf(12),
-    fontWeight: "700",
-  },
+  safeArea: { flex: 1, position: "relative" },
+  scrollContent: { padding: spacing.lg, gap: spacing.lg },
+  scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
   summaryCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
-    gap: spacing.md,
-  },
-  summaryEyebrow: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  summaryTitle: {
-    fontSize: rf(22),
-    fontWeight: "900",
-  },
-  summaryText: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  summaryMetrics: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  summaryMetric: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    minWidth: spacing.xxl * 2.1,
     gap: spacing.xs,
   },
-  summaryMetricWide: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  summaryMetricValue: {
-    fontSize: rf(24),
-    fontWeight: "900",
-  },
-  summaryMetricLabel: {
-    fontSize: rf(12),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  summaryMetricWideText: {
-    fontSize: rf(14),
-    fontWeight: "700",
-  },
-  searchSection: {
-    gap: spacing.sm,
-  },
-  listCard: {
+  summaryValue: { fontSize: rf(30), fontWeight: "900" },
+  summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
+  controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
+    padding: spacing.lg,
     gap: spacing.md,
-  },
-  listHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  listTitle: {
-    fontSize: rf(18),
-    fontWeight: "800",
-  },
-  sectionCopy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  sectionText: {
-    fontSize: rf(13),
-    lineHeight: rf(19),
-  },
-  refreshText: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  filterRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  filterChip: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  filterChipText: {
-    fontSize: rf(12),
-    fontWeight: "700",
   },
   input: {
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    fontSize: rf(15),
+    paddingVertical: spacing.md,
+    fontSize: rf(14),
   },
-  listBody: {
-    gap: spacing.sm,
-  },
-  clientRow: {
+  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  filterChip: {
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  filterChipText: { fontSize: rf(12), fontWeight: "700" },
+  listBody: { gap: spacing.sm },
+  clientRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
   },
-  clientCopy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  clientTitle: {
-    fontSize: rf(15),
-    fontWeight: "700",
-  },
-  clientMeta: {
-    fontSize: rf(12),
-    lineHeight: rf(18),
-  },
-  iconActionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
+  clientCopy: { flex: 1, gap: spacing.xs },
+  clientTitle: { fontSize: rf(16), fontWeight: "800" },
+  clientMeta: { fontSize: rf(12), lineHeight: rf(18) },
+  iconActionRow: { flexDirection: "row", gap: spacing.sm },
   iconAction: {
-    width: rf(38),
-    height: rf(38),
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    width: rf(40),
+    height: rf(40),
+    borderRadius: borderRadius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
-  emptyStateText: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  formCard: {
+  detailCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
     gap: spacing.lg,
   },
-  formHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  formHeaderCopy: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  formTitle: {
-    fontSize: rf(18),
-    fontWeight: "800",
-  },
-  formSubtitle: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  secondaryButtonText: {
-    fontSize: rf(12),
-    fontWeight: "700",
-  },
-  formGrid: {
-    gap: spacing.md,
-  },
-  formGroup: {
-    gap: spacing.sm,
-  },
-  fieldLabel: {
-    fontSize: rf(12),
+  detailGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
+  detailBlock: { width: "47%", gap: spacing.xs },
+  detailLabel: {
+    fontSize: rf(11),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    fontSize: rf(15),
-    minHeight: spacing.xxl * 2.5,
-  },
+  detailValue: { fontSize: rf(15), fontWeight: "700" },
+  notesText: { fontSize: rf(13), lineHeight: rf(19) },
+  actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   primaryAction: {
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
+    borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.lg,
-    alignItems: "center",
+    paddingVertical: spacing.md,
   },
-  primaryActionText: {
-    fontSize: rf(14),
-    fontWeight: "800",
-  },
-  detailHero: {
+  primaryActionText: { fontSize: rf(13), fontWeight: "800" },
+  secondaryAction: {
     borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
-  detailHeaderRow: {
+  secondaryActionText: { fontSize: rf(13), fontWeight: "800" },
+  sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  detailMetaGrid: {
-    gap: spacing.md,
-  },
-  detailMetaBlock: {
-    gap: spacing.xs,
-  },
-  detailMetaLabel: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  detailMetaValue: {
-    fontSize: rf(15),
-    fontWeight: "700",
-    lineHeight: rf(21),
-  },
-  notesPanel: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  notesText: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  detailActionRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  actionPill: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
   },
-  actionPillText: {
-    fontSize: rf(13),
-    fontWeight: "800",
-  },
-  counterText: {
-    fontSize: rf(18),
-    fontWeight: "900",
-  },
+  sectionTitle: { fontSize: rf(18), fontWeight: "900" },
+  sectionMeta: { fontSize: rf(12), fontWeight: "700" },
+  emptyText: { fontSize: rf(13), lineHeight: rf(20) },
   fab: {
     position: "absolute",
     right: spacing.lg,
     bottom: spacing.xl,
-    width: rf(60),
-    height: rf(60),
-    borderRadius: rf(30),
+    width: rf(58),
+    height: rf(58),
+    borderRadius: borderRadius.pill,
     alignItems: "center",
     justifyContent: "center",
-    shadowOpacity: 0.28,
-    shadowRadius: 16,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    elevation: 8,
+    elevation: 6,
   },
 });

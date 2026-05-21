@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { createClient, updateClient } from "../services/clients/clientService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
@@ -83,41 +84,19 @@ export default function ClientFormScreen({
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Clientes
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {editingClientId ? "Editar cliente" : "Registrar cliente"}
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Completa la ficha de contacto en una pantalla dedicada, separada
-              de la lista operativa.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={onBack}
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.backButtonText, { color: colors.text }]}>
-              Volver
-            </Text>
-          </Pressable>
-        </View>
+        <WorkshopScreenHeader
+          onBack={onBack}
+          section="Clientes"
+          subtitle="Completa la ficha de contacto en una pantalla dedicada, separada de la lista operativa."
+          title={editingClientId ? "Editar cliente" : "Registrar cliente"}
+        />
 
         <View
           style={[
@@ -270,41 +249,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  headerCopy: {
-    flex: 1,
-    gap: spacing.sm,
-  },
-  kicker: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  title: {
-    fontSize: rf(28),
-    fontWeight: "900",
-    letterSpacing: -0.8,
-  },
-  subtitle: {
-    fontSize: rf(14),
-    lineHeight: rf(20),
-  },
-  backButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  backButtonText: {
-    fontSize: rf(12),
-    fontWeight: "700",
   },
   formCard: {
     borderWidth: 1,

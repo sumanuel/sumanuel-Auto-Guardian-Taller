@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listStaffProfiles } from "../services/admin/staffAdmin";
 import { listClients } from "../services/clients/clientService";
@@ -315,7 +316,7 @@ export default function WorkOrdersScreen({
 
       <View
         style={[
-          styles.listCard,
+          styles.controlsPanel,
           {
             backgroundColor: colors.cardBackground,
             borderColor: colors.border,
@@ -370,136 +371,134 @@ export default function WorkOrdersScreen({
             },
           )}
         </View>
-
-        {loading ? (
-          <ActivityIndicator color={colors.primary} />
-        ) : filteredOrders.length ? (
-          <View style={styles.listBody}>
-            {filteredOrders.map((workOrder) => {
-              const client = clientLookup[workOrder.clientId];
-              const vehicle = vehicleLookup[workOrder.vehicleId];
-              const diagnostic = diagnosticLookup[workOrder.diagnosticId];
-              const assignedMechanics = (workOrder.assignedMechanicUids || [])
-                .map(
-                  (uid) =>
-                    staffLookup[uid]?.fullName || staffLookup[uid]?.email,
-                )
-                .filter(Boolean)
-                .join(", ");
-              const isSelected =
-                viewState?.selectedWorkOrderId === getEntityId(workOrder);
-
-              return (
-                <View
-                  key={getEntityId(workOrder)}
-                  style={[
-                    styles.row,
-                    {
-                      backgroundColor: colors.cardMuted,
-                      borderColor: isSelected ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Pressable
-                    onPress={() => openWorkOrderDetail(workOrder)}
-                    style={styles.rowCopy}
-                  >
-                    <Text style={[styles.rowTitle, { color: colors.text }]}>
-                      {workOrder.id}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
-                    >
-                      {diagnostic?.id ||
-                        workOrder.diagnosticId ||
-                        "Sin diagnostico"}{" "}
-                      ·{" "}
-                      {vehicle?.plate || workOrder.vehicleId || "Sin vehiculo"}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
-                    >
-                      {client?.fullName || workOrder.clientId || "Sin cliente"}{" "}
-                      ·{" "}
-                      {workOrderStatusOptions.find(
-                        (item) => item.key === workOrder.status,
-                      )?.label || workOrder.status}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textTertiary }]}
-                    >
-                      {assignedMechanics || "Sin mecanicos asignados"}
-                    </Text>
-                  </Pressable>
-
-                  <View style={styles.iconActionRow}>
-                    <Pressable
-                      onPress={() =>
-                        onOpenSparePartForm?.(null, {
-                          seedData: {
-                            workOrderId: workOrder.id,
-                            diagnosticId: workOrder.diagnosticId,
-                          },
-                        })
-                      }
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.accent,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.accent}
-                        name="construct-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => onOpenWorkOrderForm?.(workOrder)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.primary,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.primary}
-                        name="create-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleDelete(workOrder)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.danger,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.danger}
-                        name="trash-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        ) : (
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            No hay ordenes para el filtro actual. Usa el boton flotante para
-            registrar la primera.
-          </Text>
-        )}
       </View>
+
+      {loading ? (
+        <ActivityIndicator color={colors.primary} />
+      ) : filteredOrders.length ? (
+        <View style={styles.listBody}>
+          {filteredOrders.map((workOrder) => {
+            const client = clientLookup[workOrder.clientId];
+            const vehicle = vehicleLookup[workOrder.vehicleId];
+            const diagnostic = diagnosticLookup[workOrder.diagnosticId];
+            const assignedMechanics = (workOrder.assignedMechanicUids || [])
+              .map(
+                (uid) => staffLookup[uid]?.fullName || staffLookup[uid]?.email,
+              )
+              .filter(Boolean)
+              .join(", ");
+            const isSelected =
+              viewState?.selectedWorkOrderId === getEntityId(workOrder);
+
+            return (
+              <View
+                key={getEntityId(workOrder)}
+                style={[
+                  styles.row,
+                  {
+                    borderBottomColor: isSelected
+                      ? colors.primary
+                      : colors.border,
+                  },
+                ]}
+              >
+                <Pressable
+                  onPress={() => openWorkOrderDetail(workOrder)}
+                  style={styles.rowCopy}
+                >
+                  <Text style={[styles.rowTitle, { color: colors.text }]}>
+                    {workOrder.id}
+                  </Text>
+                  <Text
+                    style={[styles.rowMeta, { color: colors.textSecondary }]}
+                  >
+                    {diagnostic?.id ||
+                      workOrder.diagnosticId ||
+                      "Sin diagnostico"}{" "}
+                    · {vehicle?.plate || workOrder.vehicleId || "Sin vehiculo"}
+                  </Text>
+                  <Text
+                    style={[styles.rowMeta, { color: colors.textSecondary }]}
+                  >
+                    {client?.fullName || workOrder.clientId || "Sin cliente"} ·{" "}
+                    {workOrderStatusOptions.find(
+                      (item) => item.key === workOrder.status,
+                    )?.label || workOrder.status}
+                  </Text>
+                  <Text
+                    style={[styles.rowMeta, { color: colors.textTertiary }]}
+                  >
+                    {assignedMechanics || "Sin mecanicos asignados"}
+                  </Text>
+                </Pressable>
+
+                <View style={styles.iconActionRow}>
+                  <Pressable
+                    onPress={() =>
+                      onOpenSparePartForm?.(null, {
+                        seedData: {
+                          workOrderId: workOrder.id,
+                          diagnosticId: workOrder.diagnosticId,
+                        },
+                      })
+                    }
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.accent,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.accent}
+                      name="construct-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => onOpenWorkOrderForm?.(workOrder)}
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.primary}
+                      name="create-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleDelete(workOrder)}
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.danger,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.danger}
+                      name="trash-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+          No hay ordenes para el filtro actual. Usa el boton flotante para
+          registrar la primera.
+        </Text>
+      )}
     </>
   );
 
@@ -522,36 +521,6 @@ export default function WorkOrdersScreen({
             },
           ]}
         >
-          <View style={styles.headerRow}>
-            <View style={styles.headerCopy}>
-              <Text style={[styles.kicker, { color: colors.primary }]}>
-                Orden activa
-              </Text>
-              <Text style={[styles.title, { color: colors.text }]}>
-                {selectedWorkOrder?.id || "Detalle de orden"}
-              </Text>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                Desde aqui puedes revisar contexto, mecanicos asignados y
-                avances cronologicos.
-              </Text>
-            </View>
-
-            <Pressable
-              onPress={handleBackToList}
-              style={[
-                styles.backButton,
-                {
-                  borderColor: colors.borderStrong,
-                  backgroundColor: colors.cardBackground,
-                },
-              ]}
-            >
-              <Text style={[styles.backButtonText, { color: colors.text }]}>
-                Ver lista
-              </Text>
-            </Pressable>
-          </View>
-
           <View style={styles.detailGrid}>
             <View style={styles.detailBlock}>
               <Text
@@ -841,44 +810,31 @@ export default function WorkOrdersScreen({
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
         contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Operacion
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              Ordenes de trabajo
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {screenMode === SCREEN_MODES.DETAIL
-                ? "Detalle operativo de la orden con asignacion y cronologia."
-                : "Registra la orden en una pantalla dedicada y vuelve a la lista para editar, eliminar o continuar con repuestos."}
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={
-              screenMode === SCREEN_MODES.DETAIL ? handleBackToList : onBack
-            }
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.backButtonText, { color: colors.text }]}>
-              {screenMode === SCREEN_MODES.DETAIL ? "Volver" : "Inicio"}
-            </Text>
-          </Pressable>
-        </View>
+        <WorkshopScreenHeader
+          onBack={
+            screenMode === SCREEN_MODES.DETAIL ? handleBackToList : undefined
+          }
+          section={
+            screenMode === SCREEN_MODES.DETAIL ? "Orden activa" : "Operacion"
+          }
+          subtitle={
+            screenMode === SCREEN_MODES.DETAIL
+              ? "Desde aqui puedes revisar contexto, mecanicos asignados y avances cronologicos."
+              : "Registra la orden en una pantalla dedicada y vuelve a la lista para editar, eliminar o continuar con repuestos."
+          }
+          title={
+            screenMode === SCREEN_MODES.DETAIL
+              ? selectedWorkOrder?.id || "Detalle de orden"
+              : "Ordenes de trabajo"
+          }
+        />
 
         {screenMode === SCREEN_MODES.LIST
           ? renderListScreen()
@@ -904,28 +860,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
   scrollContent: { padding: spacing.lg, gap: spacing.lg },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  headerCopy: { flex: 1, gap: spacing.sm },
-  kicker: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  title: { fontSize: rf(28), fontWeight: "900", letterSpacing: -0.8 },
-  subtitle: { fontSize: rf(14), lineHeight: rf(20) },
-  backButton: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  backButtonText: { fontSize: rf(12), fontWeight: "700" },
   summaryCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -934,7 +868,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: { fontSize: rf(30), fontWeight: "900" },
   summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
-  listCard: {
+  controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
@@ -955,7 +889,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   filterChipText: { fontSize: rf(12), fontWeight: "700" },
-  listBody: { gap: spacing.md },
+  listBody: { gap: spacing.sm },
   listHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -963,9 +897,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   row: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+    borderBottomWidth: 1,
+    paddingVertical: spacing.md,
     flexDirection: "row",
     gap: spacing.md,
   },

@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import {
   hasPermission,
   USER_ROLES,
@@ -292,41 +293,19 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
 
   return (
     <SafeAreaView
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
-          <View style={styles.headerCopy}>
-            <Text style={[styles.kicker, { color: colors.primary }]}>
-              Equipo
-            </Text>
-            <Text style={[styles.title, { color: colors.text }]}>
-              Accesos e invitaciones
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Gestion del equipo tecnico, aprobaciones internas y colaboracion
-              operativa del taller.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={onBack}
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.borderStrong,
-                backgroundColor: colors.cardBackground,
-              },
-            ]}
-          >
-            <Text style={[styles.backButtonText, { color: colors.text }]}>
-              Volver
-            </Text>
-          </Pressable>
-        </View>
+        <WorkshopScreenHeader
+          onBack={onBack}
+          section="Equipo"
+          subtitle="Gestion del equipo tecnico, aprobaciones internas y colaboracion operativa del taller."
+          title="Accesos e invitaciones"
+        />
 
         {!canManageCollaborators && (
           <View
