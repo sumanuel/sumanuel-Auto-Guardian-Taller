@@ -20,6 +20,7 @@ function getClientId(client) {
 
 function buildClientForm(client) {
   return {
+    identification: client?.identification || "",
     fullName: client?.fullName || "",
     address: client?.address || "",
     phone: client?.phone || "",
@@ -121,6 +122,28 @@ export default function ClientFormScreen({
             <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
               {editingClientId ? "Actualizacion" : "Alta"}
             </Text>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Identificacion
+            </Text>
+            <TextInput
+              onChangeText={(value) =>
+                setForm((current) => ({ ...current, identification: value }))
+              }
+              placeholder="V-12345678"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={form.identification}
+            />
           </View>
 
           <View style={styles.formGroup}>

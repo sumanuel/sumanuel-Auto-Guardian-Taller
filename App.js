@@ -227,6 +227,13 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.VEHICLE_FORM);
           }}
+          onOpenDiagnosticForm={(diagnostic, options = {}) => {
+            setDiagnosticFormContext({
+              diagnostic: diagnostic || null,
+              draft: options.seedData || null,
+            });
+            setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
+          }}
           userProfile={userProfile}
           viewState={clientsViewState}
         />

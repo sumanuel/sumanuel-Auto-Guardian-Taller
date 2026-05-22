@@ -26,6 +26,7 @@ export async function listClients() {
 }
 
 export async function createClient({
+  identification,
   fullName,
   address,
   phone,
@@ -34,6 +35,7 @@ export async function createClient({
   createdByUid,
 }) {
   return createEntityRecord("clients", {
+    identification: normalizeOptional(identification),
     fullName: fullName.trim(),
     address: normalizeOptional(address),
     phone: normalizeOptional(phone),
@@ -46,6 +48,7 @@ export async function createClient({
 export async function updateClient(clientId, payload) {
   await patchEntityRecord("clients", clientId, {
     ...payload,
+    identification: normalizeOptional(payload.identification),
     fullName: payload.fullName.trim(),
     address: normalizeOptional(payload.address),
     phone: normalizeOptional(payload.phone),
@@ -60,6 +63,7 @@ export async function deleteClient(clientId) {
 
 export function createEmptyClientForm() {
   return {
+    identification: "",
     fullName: "",
     address: "",
     phone: "",

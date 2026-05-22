@@ -16,6 +16,7 @@ import { useTheme } from "../context/ThemeContext";
 import { deleteClient, listClients } from "../services/clients/clientService";
 import {
   deleteVehicle,
+  listVehicles,
   listVehiclesByClientId,
 } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
@@ -25,27 +26,22 @@ const SCREEN_MODES = {
   DETAIL: "detail",
 };
 
-const CLIENT_FILTERS = {
-  ALL: "all",
-  WITH_EMAIL: "with-email",
-  WITH_PHONE: "with-phone",
-};
-
 function getEntityId(entity) {
   return entity?.refId || entity?.id || "";
 }
 
 export default function ClientsScreen({
   onOpenClientForm,
+  onOpenDiagnosticForm,
   onOpenVehicleForm,
   viewState,
 }) {
   const { colors } = useTheme();
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
   const [clients, setClients] = useState([]);
+  const [allVehicles, setAllVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState(CLIENT_FILTERS.ALL);
   const [selectedClient, setSelectedClient] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [vehicleLoading, setVehicleLoading] = useState(false);
@@ -56,42 +52,46 @@ export default function ClientsScreen({
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
     return clients.filter((client) => {
-      const matchesFilter =
-        activeFilter === CLIENT_FILTERS.ALL
-          ? true
-          : activeFilter === CLIENT_FILTERS.WITH_EMAIL
-            ? Boolean(client.email)
-            : Boolean(client.phone);
-
-      if (!matchesFilter) {
-        return false;
-      }
-
       if (!normalizedQuery) {
         return true;
       }
 
-      const searchableText = [
-        client.id,
-        client.fullName,
-        client.email,
-        client.phone,
-        client.address,
-      ]
+      const searchableText = [client.identification, client.fullName]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
       return searchableText.includes(normalizedQuery);
     });
-  }, [activeFilter, clients, searchQuery]);
+  }, [clients, searchQuery]);
+
+  const vehiclesByClientId = useMemo(() => {
+    return allVehicles.reduce((accumulator, vehicle) => {
+      const bucketKey = vehicle.clientId;
+
+      if (!bucketKey) {
+        return accumulator;
+      }
+
+      if (!accumulator[bucketKey]) {
+        accumulator[bucketKey] = [];
+      }
+
+      accumulator[bucketKey].push(vehicle);
+      return accumulator;
+    }, {});
+  }, [allVehicles]);
 
   const refreshClients = async () => {
     setLoading(true);
 
     try {
-      const nextClients = await listClients();
+      const [nextClients, nextVehicles] = await Promise.all([
+        listClients(),
+        listVehicles(),
+      ]);
       setClients(nextClients);
+      setAllVehicles(nextVehicles);
 
       if (selectedClientId) {
         const refreshedClient = nextClients.find(
@@ -231,25 +231,6 @@ export default function ClientsScreen({
         title="Clientes"
       />
 
-      <View style={styles.summaryRow}>
-        <View
-          style={[
-            styles.summaryCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text style={[styles.summaryValue, { color: colors.text }]}>
-            {clients.length}
-          </Text>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-            Clientes
-          </Text>
-        </View>
-      </View>
-
       <View
         style={[
           styles.controlsPanel,
@@ -262,7 +243,7 @@ export default function ClientsScreen({
         <TextInput
           autoCapitalize="none"
           onChangeText={setSearchQuery}
-          placeholder="Buscar por nombre, codigo, telefono o correo"
+          placeholder="Buscar por identificacion o nombre"
           placeholderTextColor={colors.textTertiary}
           style={[
             styles.input,
@@ -274,134 +255,153 @@ export default function ClientsScreen({
           ]}
           value={searchQuery}
         />
-
-        <View style={styles.filterRow}>
-          {[
-            { key: CLIENT_FILTERS.ALL, label: "Todos" },
-            { key: CLIENT_FILTERS.WITH_EMAIL, label: "Con correo" },
-            { key: CLIENT_FILTERS.WITH_PHONE, label: "Con telefono" },
-          ].map((filter) => {
-            const selected = activeFilter === filter.key;
-
-            return (
-              <Pressable
-                key={filter.key}
-                onPress={() => setActiveFilter(filter.key)}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: selected
-                      ? colors.primary
-                      : colors.cardMuted,
-                    borderColor: selected ? colors.primary : colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    { color: selected ? colors.white : colors.text },
-                  ]}
-                >
-                  {filter.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
       </View>
 
       {loading ? (
         <ActivityIndicator color={colors.primary} />
       ) : filteredClients.length ? (
         <View style={styles.listBody}>
-          {filteredClients.map((client) => (
-            <View
-              key={getEntityId(client)}
-              style={[
-                styles.clientRow,
-                {
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Pressable
-                onPress={() => openClientDetail(client)}
-                style={styles.clientCopy}
+          {filteredClients.map((client) => {
+            const clientVehicles = vehiclesByClientId[client.id] || [];
+
+            return (
+              <View
+                key={getEntityId(client)}
+                style={[
+                  styles.clientRow,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
               >
-                <View
-                  style={[
-                    styles.cardHeader,
-                    { borderBottomColor: colors.border },
-                  ]}
+                <Pressable
+                  onPress={() => openClientDetail(client)}
+                  style={styles.clientCopy}
                 >
-                  <View style={styles.cardHeaderCopy}>
-                    <Text
-                      style={[styles.cardEyebrow, { color: colors.primary }]}
-                    >
-                      Recepcion
-                    </Text>
-                    <Text style={[styles.clientTitle, { color: colors.text }]}>
-                      {client.fullName}
+                  <View
+                    style={[
+                      styles.cardHeader,
+                      { borderBottomColor: colors.border },
+                    ]}
+                  >
+                    <View style={styles.cardHeaderCopy}>
+                      <Text
+                        style={[styles.cardEyebrow, { color: colors.primary }]}
+                      >
+                        Recepcion
+                      </Text>
+                      <Text
+                        style={[styles.clientTitle, { color: colors.text }]}
+                      >
+                        {client.fullName}
+                      </Text>
+                    </View>
+                    <Text style={[styles.cardTag, { color: colors.primary }]}>
+                      {client.identification || client.id}
                     </Text>
                   </View>
-                  <Text style={[styles.cardTag, { color: colors.primary }]}>
-                    {client.id}
-                  </Text>
-                </View>
-                <View style={styles.cardBody}>
-                  <Text
-                    style={[styles.clientMeta, { color: colors.textSecondary }]}
-                  >
-                    {client.phone || "Sin telefono"}
-                  </Text>
-                  <Text
-                    style={[styles.clientMeta, { color: colors.textSecondary }]}
-                  >
-                    {client.email || "Sin correo"}
-                  </Text>
-                </View>
-              </Pressable>
+                  <View style={styles.cardBody}>
+                    <Text
+                      style={[
+                        styles.clientMeta,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {client.identification || "Sin identificacion"}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.clientMeta,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {client.phone || "Sin telefono"}
+                    </Text>
+                    {clientVehicles.length ? (
+                      clientVehicles.map((vehicle) => (
+                        <View
+                          key={getEntityId(vehicle)}
+                          style={[
+                            styles.vehicleInlineCard,
+                            {
+                              backgroundColor: colors.cardMuted,
+                              borderColor: colors.border,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.vehicleInlineTitle,
+                              { color: colors.text },
+                            ]}
+                          >
+                            {vehicle.plate || "Sin placa"}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.vehicleInlineMeta,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
+                            {[vehicle.brand, vehicle.model, vehicle.year]
+                              .filter(Boolean)
+                              .join(" · ") || "Sin descripcion"}
+                          </Text>
+                        </View>
+                      ))
+                    ) : (
+                      <Text
+                        style={[
+                          styles.linkHint,
+                          { color: colors.accent, borderColor: colors.border },
+                        ]}
+                      >
+                        Presione aqui para asociar vehiculo
+                      </Text>
+                    )}
+                  </View>
+                </Pressable>
 
-              <View style={styles.iconActionRow}>
-                <Pressable
-                  onPress={() =>
-                    onOpenClientForm?.(client, { returnTo: "detail" })
-                  }
-                  style={[
-                    styles.iconAction,
-                    {
-                      backgroundColor: colors.cardMuted,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    color={colors.primary}
-                    name="create-outline"
-                    size={rf(18)}
-                  />
-                </Pressable>
-                <Pressable
-                  onPress={() => handleDeleteClient(client)}
-                  style={[
-                    styles.iconAction,
-                    {
-                      backgroundColor: colors.cardMuted,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    color={colors.danger}
-                    name="trash-outline"
-                    size={rf(18)}
-                  />
-                </Pressable>
+                <View style={styles.iconActionRow}>
+                  <Pressable
+                    onPress={() =>
+                      onOpenClientForm?.(client, { returnTo: "detail" })
+                    }
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.primary}
+                      name="create-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleDeleteClient(client)}
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.danger}
+                      name="trash-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
       ) : (
         <View
@@ -418,7 +418,7 @@ export default function ClientsScreen({
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {clients.length
-              ? "No hay coincidencias con la busqueda o el filtro actual. Ajusta la busqueda o cambia el estado para recuperar la ficha."
+              ? "No hay coincidencias con la busqueda actual. Prueba con otra identificacion o nombre."
               : "No hay clientes registrados. Usa el boton flotante para abrir la primera ficha de recepcion."}
           </Text>
         </View>
@@ -459,6 +459,14 @@ export default function ClientsScreen({
         </View>
 
         <View style={styles.detailGrid}>
+          <View style={styles.detailBlock}>
+            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
+              Identificacion
+            </Text>
+            <Text style={[styles.detailValue, { color: colors.text }]}>
+              {selectedClient?.identification || "Sin identificacion"}
+            </Text>
+          </View>
           <View style={styles.detailBlock}>
             <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
               Codigo
@@ -588,6 +596,29 @@ export default function ClientsScreen({
 
               <View style={styles.iconActionRow}>
                 <Pressable
+                  onPress={() =>
+                    onOpenDiagnosticForm?.(null, {
+                      seedData: {
+                        clientId: selectedClient?.id || "",
+                        vehicleId: vehicle.id || vehicle.refId || "",
+                      },
+                    })
+                  }
+                  style={[
+                    styles.iconAction,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    color={colors.accent}
+                    name="pulse-outline"
+                    size={rf(18)}
+                  />
+                </Pressable>
+                <Pressable
                   onPress={() => onOpenVehicleForm?.(selectedClient, vehicle)}
                   style={[
                     styles.iconAction,
@@ -678,17 +709,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
   scrollContent: { padding: spacing.lg, gap: spacing.xl },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
-  summaryRow: { flexDirection: "row" },
-  summaryCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.xs,
-    minWidth: rf(132),
-  },
-  summaryValue: { fontSize: rf(28), fontWeight: "900" },
-  summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
   controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -702,14 +722,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: rf(14),
   },
-  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  filterChip: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  filterChipText: { fontSize: rf(11), fontWeight: "700" },
   listBody: { gap: spacing.md },
   clientRow: {
     flexDirection: "row",
@@ -739,6 +751,26 @@ const styles = StyleSheet.create({
   cardBody: { gap: 2 },
   clientTitle: { fontSize: rf(16), fontWeight: "800" },
   clientMeta: { fontSize: rf(12), lineHeight: rf(17) },
+  vehicleInlineCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: 2,
+    marginTop: spacing.xs,
+  },
+  vehicleInlineTitle: { fontSize: rf(12), fontWeight: "800" },
+  vehicleInlineMeta: { fontSize: rf(11), lineHeight: rf(16) },
+  linkHint: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    fontSize: rf(11),
+    fontWeight: "800",
+    alignSelf: "flex-start",
+    marginTop: spacing.xs,
+  },
   iconActionRow: { flexDirection: "row", gap: spacing.sm },
   iconAction: {
     borderWidth: 1,

@@ -1,6 +1,6 @@
 # Roadmap Auto-Guardian-Taller
 
-Ultima actualizacion: 21-05-2026
+Ultima actualizacion: 22-05-2026
 
 ## Como se actualiza este roadmap
 
@@ -35,7 +35,7 @@ Ultima actualizacion: 21-05-2026
 - Bloqueado: notificacion automatica por correo para invitaciones; Firebase Trigger Email sigue pendiente hasta subir el proyecto a Blaze por dependencia de Secret Manager.
 - Completado: CRUD base de clientes disponible en pantalla dedicada para recepcion.
 - Completado: asociacion de uno o varios vehiculos por cliente y CRUD base de vehiculos desde la pantalla de clientes.
-- Completado: vista de detalle real por cliente con acciones rapidas, vehiculos asociados y boton flotante para alta.
+- Completado: vista de detalle real por cliente con acciones rapidas, vehiculos asociados, acceso directo a diagnostico por vehiculo y boton flotante para alta.
 - Completado: directorio formal de personal tecnico con ficha editable de nombre, telefono, rol y estado desde la pantalla de equipo.
 - Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
 
@@ -64,13 +64,13 @@ Ultima actualizacion: 21-05-2026
 
 ## Fase 2. Clientes y vehiculos
 
-| ID   | Aspecto                                                   | Estado     | Prioridad | Dependencias     | Completado |
-| ---- | --------------------------------------------------------- | ---------- | --------- | ---------------- | ---------- |
-| F2-1 | CRUD de clientes con nombre, direccion, telefono y correo | Completado | Alta      | F0-4             | 21-05-2026 |
-| F2-2 | Busqueda y filtrado de clientes                           | Completado | Media     | F2-1             | 21-05-2026 |
-| F2-3 | Asociar uno o varios vehiculos a cada cliente             | Completado | Alta      | F2-1, F0-4       | 21-05-2026 |
-| F2-4 | CRUD de vehiculos con datos operativos basicos            | Completado | Alta      | F2-3             | 21-05-2026 |
-| F2-5 | Vista de detalle del cliente con sus vehiculos            | Completado | Alta      | F2-1, F2-3, F2-4 | 21-05-2026 |
+| ID   | Aspecto                                                                                  | Estado     | Prioridad | Dependencias     | Completado |
+| ---- | ---------------------------------------------------------------------------------------- | ---------- | --------- | ---------------- | ---------- |
+| F2-1 | CRUD de clientes con identificacion, nombre, direccion, telefono y correo                | Completado | Alta      | F0-4             | 22-05-2026 |
+| F2-2 | Busqueda de clientes por identificacion o nombre y lectura rapida de vehiculos asociados | Completado | Media     | F2-1             | 22-05-2026 |
+| F2-3 | Asociar uno o varios vehiculos a cada cliente                                            | Completado | Alta      | F2-1, F0-4       | 21-05-2026 |
+| F2-4 | CRUD de vehiculos con datos operativos basicos                                           | Completado | Alta      | F2-3             | 21-05-2026 |
+| F2-5 | Vista de detalle del cliente con sus vehiculos y acceso directo a diagnostico            | Completado | Alta      | F2-1, F2-3, F2-4 | 22-05-2026 |
 
 ## Fase 3. Mecanicos y equipo
 
@@ -149,6 +149,7 @@ Ultima actualizacion: 21-05-2026
 - 21-05-2026: el alta y edicion de clientes pasan a una pantalla dedicada; la lista principal gana busqueda y filtros rapidos, y los perfiles registrados directamente se promocionan como administradores para evitar bloqueos en accesos e invitaciones.
 - 21-05-2026: las colaboraciones se alinean al modelo de tienda-app, detectando invitaciones pendientes despues del login en estado de acceso; ademas se abren las secciones iniciales de diagnosticos, ordenes y repuestos con lista operativa, formulario dedicado y regreso a la lista.
 - 21-05-2026: diagnosticos y ordenes pasan a asignar mecanicos reales desde userProfiles, y las ordenes ganan detalle operativo con registro de avances y cronologia visible por orden.
+- 22-05-2026: clientes agrega campo de identificacion, la busqueda se limita a identificacion o nombre, la lista principal expone vehiculos asociados y la ficha del cliente abre diagnosticos por vehiculo sin volver a seleccionar cliente ni unidad.
 
 ## Decisiones base cerradas
 
