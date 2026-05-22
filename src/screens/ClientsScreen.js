@@ -713,7 +713,7 @@ export default function ClientsScreen({
                   style={[
                     styles.iconAction,
                     {
-                        backgroundColor: colors.cardBackground,
+                      backgroundColor: colors.cardBackground,
                       borderColor: colors.border,
                     },
                   ]}
@@ -721,7 +721,7 @@ export default function ClientsScreen({
                   <Ionicons
                     color={colors.danger}
                     name="trash-outline"
-                      size={rf(17)}
+                    size={rf(17)}
                   />
                 </Pressable>
               </View>

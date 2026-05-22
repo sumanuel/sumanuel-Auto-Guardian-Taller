@@ -451,7 +451,9 @@ export default function DiagnosticsScreen({
             </Text>{" "}
             {client?.fullName || selectedDiagnostic?.clientId || "Sin cliente"}
           </Text>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>Vehiculo</Text>
+          <Text style={[styles.fieldLabel, { color: colors.text }]}>
+            Vehiculo
+          </Text>
           <View
             style={[
               styles.vehicleCard,

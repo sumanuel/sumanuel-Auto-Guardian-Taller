@@ -587,7 +587,9 @@ export default function WorkOrdersScreen({
               </Text>{" "}
               {client?.fullName || selectedWorkOrder?.clientId || "Sin cliente"}
             </Text>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Vehiculo</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Vehiculo
+            </Text>
             <View
               style={[
                 styles.vehicleCard,
@@ -611,13 +613,17 @@ export default function WorkOrdersScreen({
                   { backgroundColor: colors.border },
                 ]}
               />
-              <Text style={[styles.vehicleMeta, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.vehicleMeta, { color: colors.textSecondary }]}
+              >
                 <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
                   Placa:
                 </Text>{" "}
                 {vehicle?.plate || "Sin placa"}
               </Text>
-              <Text style={[styles.vehicleMeta, { color: colors.textTertiary }]}>
+              <Text
+                style={[styles.vehicleMeta, { color: colors.textTertiary }]}
+              >
                 <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
                   Kilometraje:
                 </Text>{" "}
