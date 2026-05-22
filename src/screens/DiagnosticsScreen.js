@@ -320,7 +320,11 @@ export default function DiagnosticsScreen({
                         { color: colors.textSecondary },
                       ]}
                     >
-                      <Text style={[styles.detailMetaLabel, { color: colors.text }]}>Cliente:</Text>{" "}
+                      <Text
+                        style={[styles.detailMetaLabel, { color: colors.text }]}
+                      >
+                        Cliente:
+                      </Text>{" "}
                       {client?.fullName || diagnostic.clientId || "Sin cliente"}
                     </Text>
                     <Text
@@ -340,7 +344,9 @@ export default function DiagnosticsScreen({
                         },
                       ]}
                     >
-                      <Text style={[styles.vehicleTitle, { color: colors.text }]}>
+                      <Text
+                        style={[styles.vehicleTitle, { color: colors.text }]}
+                      >
                         {[vehicle?.brand, vehicle?.model, vehicle?.year]
                           .filter(Boolean)
                           .join(" ") ||
@@ -361,7 +367,10 @@ export default function DiagnosticsScreen({
                         ]}
                       >
                         <Text
-                          style={[styles.vehicleMetaLabel, { color: colors.text }]}
+                          style={[
+                            styles.vehicleMetaLabel,
+                            { color: colors.text },
+                          ]}
                         >
                           Placa:
                         </Text>{" "}
@@ -374,11 +383,16 @@ export default function DiagnosticsScreen({
                         ]}
                       >
                         <Text
-                          style={[styles.vehicleMetaLabel, { color: colors.text }]}
+                          style={[
+                            styles.vehicleMetaLabel,
+                            { color: colors.text },
+                          ]}
                         >
                           Kilometraje:
                         </Text>{" "}
-                        {vehicle?.mileage ? `${vehicle.mileage} km` : "Sin kilometraje"}
+                        {vehicle?.mileage
+                          ? `${vehicle.mileage} km`
+                          : "Sin kilometraje"}
                       </Text>
                     </View>
                     <Text
@@ -387,7 +401,11 @@ export default function DiagnosticsScreen({
                         { color: colors.textTertiary },
                       ]}
                     >
-                      <Text style={[styles.detailMetaLabel, { color: colors.text }]}>Hallazgos:</Text>{" "}
+                      <Text
+                        style={[styles.detailMetaLabel, { color: colors.text }]}
+                      >
+                        Hallazgos:
+                      </Text>{" "}
                       {diagnostic.concerns || "Sin hallazgos registrados"}
                     </Text>
                     <Pressable
