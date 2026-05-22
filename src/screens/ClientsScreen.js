@@ -378,6 +378,14 @@ export default function ClientsScreen({
                               { color: colors.textSecondary },
                             ]}
                           >
+                            <Text
+                              style={[
+                                styles.vehicleInlineMetaLabel,
+                                { color: colors.text },
+                              ]}
+                            >
+                              Placa:
+                            </Text>
                             {vehicle.plate || "Sin placa"}
                           </Text>
                           <Text
@@ -386,6 +394,14 @@ export default function ClientsScreen({
                               { color: colors.textTertiary },
                             ]}
                           >
+                            <Text
+                              style={[
+                                styles.vehicleInlineMetaLabel,
+                                { color: colors.text },
+                              ]}
+                            >
+                              Kilometraje:
+                            </Text>
                             {vehicle.mileage
                               ? `${vehicle.mileage} km`
                               : "Sin kilometraje"}
@@ -485,7 +501,7 @@ export default function ClientsScreen({
         onBack={handleBackToList}
         section="Ficha cliente"
         subtitle="La asociacion de vehiculos ocurre en una pantalla propia; aqui solo consultas y gestionas la ficha."
-        title={selectedClient?.fullName || "Cliente"}
+        title="Cliente"
       />
 
       <View
@@ -512,6 +528,12 @@ export default function ClientsScreen({
         </View>
 
         <View style={styles.detailLines}>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Nombre:
+            </Text>
+            {selectedClient?.fullName || "Sin nombre"}
+          </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Identificacion:
@@ -545,16 +567,6 @@ export default function ClientsScreen({
         ) : null}
 
         <View style={styles.actionRow}>
-          <Pressable
-            onPress={() =>
-              onOpenClientForm?.(selectedClient, { returnTo: "detail" })
-            }
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              Editar cliente
-            </Text>
-          </Pressable>
           <Pressable
             onPress={() => onOpenVehicleForm?.(selectedClient, null)}
             style={[styles.secondaryAction, { borderColor: colors.accent }]}
@@ -606,24 +618,31 @@ export default function ClientsScreen({
                       Vehiculo
                     </Text>
                     <Text style={[styles.clientTitle, { color: colors.text }]}>
-                      {vehicle.plate || "Sin placa"}
+                      {[vehicle.brand, vehicle.model, vehicle.year]
+                        .filter(Boolean)
+                        .join(" ") || "Sin descripcion"}
                     </Text>
                   </View>
-                  <Text style={[styles.cardTag, { color: colors.accent }]}>
-                    {vehicle.year || "--"}
-                  </Text>
                 </View>
                 <View style={styles.cardBody}>
                   <Text
                     style={[styles.clientMeta, { color: colors.textSecondary }]}
                   >
-                    {[vehicle.brand, vehicle.model]
-                      .filter(Boolean)
-                      .join(" · ") || "Sin descripcion"}
+                    <Text
+                      style={[styles.clientMetaLabel, { color: colors.text }]}
+                    >
+                      Placa:
+                    </Text>
+                    {vehicle.plate || "Sin placa"}
                   </Text>
                   <Text
                     style={[styles.clientMeta, { color: colors.textTertiary }]}
                   >
+                    <Text
+                      style={[styles.clientMetaLabel, { color: colors.text }]}
+                    >
+                      Kilometraje:
+                    </Text>
                     {vehicle.mileage
                       ? `${vehicle.mileage} km`
                       : "Sin kilometraje"}
@@ -788,21 +807,23 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  cardBody: { gap: 2 },
-  clientTitle: { fontSize: rf(16), fontWeight: "800" },
-  clientMeta: { fontSize: rf(12), lineHeight: rf(16) },
-  fieldLine: { fontSize: rf(12), lineHeight: rf(16) },
-  fieldLineLabel: { fontSize: rf(12), fontWeight: "800" },
+  cardBody: { gap: spacing.xs },
+  clientTitle: { fontSize: rf(17), fontWeight: "800" },
+  clientMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  clientMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  fieldLine: { fontSize: rf(13), lineHeight: rf(19) },
+  fieldLineLabel: { fontSize: rf(13), fontWeight: "800" },
   vehicleInlineCard: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    gap: 2,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
     marginTop: spacing.xs,
   },
-  vehicleInlineTitle: { fontSize: rf(12), fontWeight: "800" },
-  vehicleInlineMeta: { fontSize: rf(11), lineHeight: rf(16) },
+  vehicleInlineTitle: { fontSize: rf(13), fontWeight: "800" },
+  vehicleInlineMeta: { fontSize: rf(12), lineHeight: rf(18) },
+  vehicleInlineMetaLabel: { fontSize: rf(12), fontWeight: "800" },
   linkHint: {
     borderWidth: 1,
     borderRadius: borderRadius.pill,
@@ -828,16 +849,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   detailLines: { gap: spacing.xs },
-  detailLine: { fontSize: rf(13), lineHeight: rf(20) },
-  detailLineLabel: { fontSize: rf(13), fontWeight: "800" },
-  notesText: { fontSize: rf(13), lineHeight: rf(18) },
+  detailLine: { fontSize: rf(14), lineHeight: rf(22) },
+  detailLineLabel: { fontSize: rf(14), fontWeight: "800" },
+  notesText: { fontSize: rf(14), lineHeight: rf(20) },
   actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  primaryAction: {
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  primaryActionText: { fontSize: rf(13), fontWeight: "800" },
   secondaryAction: {
     borderWidth: 1,
     borderRadius: borderRadius.pill,
