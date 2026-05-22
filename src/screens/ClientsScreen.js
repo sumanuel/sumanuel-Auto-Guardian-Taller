@@ -404,11 +404,24 @@ export default function ClientsScreen({
           ))}
         </View>
       ) : (
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-          {clients.length
-            ? "No hay coincidencias con la busqueda o el filtro actual."
-            : "No hay clientes registrados. Usa el boton flotante para crear el primero."}
-        </Text>
+        <View
+          style={[
+            styles.emptyStateCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
+            Recepcion
+          </Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            {clients.length
+              ? "No hay coincidencias con la busqueda o el filtro actual. Ajusta la busqueda o cambia el estado para recuperar la ficha."
+              : "No hay clientes registrados. Usa el boton flotante para abrir la primera ficha de recepcion."}
+          </Text>
+        </View>
       )}
     </>
   );
@@ -611,9 +624,23 @@ export default function ClientsScreen({
           ))}
         </View>
       ) : (
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-          Este cliente todavia no tiene vehiculos asociados.
-        </Text>
+        <View
+          style={[
+            styles.emptyStateCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.emptyEyebrow, { color: colors.accent }]}>
+            Vehiculos
+          </Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            Este cliente todavia no tiene vehiculos asociados. Registra la
+            unidad para continuar con diagnosticos u ordenes.
+          </Text>
+        </View>
       )}
     </>
   );
@@ -678,11 +705,11 @@ const styles = StyleSheet.create({
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   filterChip: {
     borderWidth: 1,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  filterChipText: { fontSize: rf(12), fontWeight: "700" },
+  filterChipText: { fontSize: rf(11), fontWeight: "700" },
   listBody: { gap: spacing.md },
   clientRow: {
     flexDirection: "row",
@@ -746,11 +773,11 @@ const styles = StyleSheet.create({
   primaryActionText: { fontSize: rf(13), fontWeight: "800" },
   secondaryAction: {
     borderWidth: 1,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  secondaryActionText: { fontSize: rf(13), fontWeight: "800" },
+  secondaryActionText: { fontSize: rf(12), fontWeight: "800" },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -759,6 +786,18 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: rf(16), fontWeight: "900" },
   sectionMeta: { fontSize: rf(12), fontWeight: "700" },
+  emptyStateCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  emptyEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   emptyText: { fontSize: rf(13), lineHeight: rf(20) },
   fab: {
     position: "absolute",

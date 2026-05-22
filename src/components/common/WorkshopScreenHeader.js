@@ -131,7 +131,7 @@ export default function WorkshopScreenHeader({
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   topRow: {
     flexDirection: "row",
@@ -141,16 +141,17 @@ const styles = StyleSheet.create({
   },
   heroSurface: {
     borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
   },
   heroRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: spacing.md,
   },
   heroBadge: {
-    width: rf(58),
-    height: rf(58),
+    width: rf(54),
+    height: rf(54),
     borderRadius: borderRadius.lg,
     alignItems: "center",
     justifyContent: "center",
@@ -158,24 +159,24 @@ const styles = StyleSheet.create({
   },
   titleWrap: {
     flex: 1,
-    gap: 2,
+    gap: spacing.xs / 2,
   },
   section: {
-    fontSize: rf(12),
+    fontSize: rf(11),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     color: "rgba(255,255,255,0.74)",
   },
   title: {
-    fontSize: rf(24),
+    fontSize: rf(23),
     fontWeight: "800",
     letterSpacing: -0.4,
     color: "#ffffff",
   },
   subtitle: {
-    fontSize: rf(13),
-    lineHeight: rf(18),
+    fontSize: rf(12),
+    lineHeight: rf(17),
     color: "rgba(255,255,255,0.84)",
   },
   iconButton: {

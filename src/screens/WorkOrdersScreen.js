@@ -512,10 +512,23 @@ export default function WorkOrdersScreen({
           })}
         </View>
       ) : (
-        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-          No hay ordenes para el filtro actual. Usa el boton flotante para
-          registrar la primera.
-        </Text>
+        <View
+          style={[
+            styles.emptyStateCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
+            Operacion
+          </Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            No hay ordenes para el filtro actual. Cambia el estado o abre la
+            primera orden desde el boton flotante.
+          </Text>
+        </View>
       )}
     </>
   );
@@ -633,11 +646,24 @@ export default function WorkOrdersScreen({
                   </View>
                 ))
               ) : (
-                <Text
-                  style={[styles.emptyText, { color: colors.textSecondary }]}
+                <View
+                  style={[
+                    styles.emptyInlineChip,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
                 >
-                  Sin mecanicos asignados.
-                </Text>
+                  <Text
+                    style={[
+                      styles.emptyInlineChipText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Sin mecanicos asignados
+                  </Text>
+                </View>
               )}
             </View>
           </View>
@@ -849,9 +875,23 @@ export default function WorkOrdersScreen({
               })}
             </View>
           ) : (
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No hay avances registrados todavia para esta orden.
-            </Text>
+            <View
+              style={[
+                styles.emptyStateCard,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.emptyEyebrow, { color: colors.accent }]}>
+                Cronologia
+              </Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                No hay avances registrados todavia. Usa el bloque superior para
+                documentar el primer movimiento tecnico.
+              </Text>
+            </View>
           )}
         </View>
       </>
@@ -943,11 +983,11 @@ const styles = StyleSheet.create({
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   filterChip: {
     borderWidth: 1,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  filterChipText: { fontSize: rf(12), fontWeight: "700" },
+  filterChipText: { fontSize: rf(11), fontWeight: "700" },
   listBody: { gap: spacing.md },
   listHeaderRow: {
     flexDirection: "row",
@@ -1016,9 +1056,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
   },
   actionPillText: { fontSize: rf(12), fontWeight: "800" },
   iconActionRow: { gap: spacing.sm, justifyContent: "center" },
@@ -1057,6 +1097,26 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   timelineCopy: { flex: 1, gap: spacing.xs },
+  emptyStateCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  emptyEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  emptyInlineChip: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    alignSelf: "flex-start",
+  },
+  emptyInlineChipText: { fontSize: rf(11), fontWeight: "700" },
   emptyText: { fontSize: rf(13), lineHeight: rf(20) },
   fab: {
     position: "absolute",

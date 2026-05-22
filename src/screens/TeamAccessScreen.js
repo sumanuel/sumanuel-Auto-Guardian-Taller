@@ -767,15 +767,33 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                     ))}
                   </View>
                 ) : (
-                  <Text
+                  <View
                     style={[
-                      styles.emptyStateText,
-                      { color: colors.textSecondary },
+                      styles.emptyStateCard,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: colors.border,
+                      },
                     ]}
                   >
-                    No hay invitaciones abiertas. Emite la primera para sumar
-                    personal al taller.
-                  </Text>
+                    <Text
+                      style={[
+                        styles.emptyStateEyebrow,
+                        { color: colors.primary },
+                      ]}
+                    >
+                      Invitaciones
+                    </Text>
+                    <Text
+                      style={[
+                        styles.emptyStateText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      No hay invitaciones abiertas. Emite la primera para sumar
+                      personal al taller.
+                    </Text>
+                  </View>
                 )}
               </View>
 
@@ -886,14 +904,32 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                     ))}
                   </View>
                 ) : (
-                  <Text
+                  <View
                     style={[
-                      styles.emptyStateText,
-                      { color: colors.textSecondary },
+                      styles.emptyStateCard,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: colors.border,
+                      },
                     ]}
                   >
-                    No hay usuarios pendientes de aprobacion interna.
-                  </Text>
+                    <Text
+                      style={[
+                        styles.emptyStateEyebrow,
+                        { color: colors.warning },
+                      ]}
+                    >
+                      Aprobaciones
+                    </Text>
+                    <Text
+                      style={[
+                        styles.emptyStateText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      No hay usuarios pendientes de aprobacion interna.
+                    </Text>
+                  </View>
                 )}
               </View>
 
@@ -1047,14 +1083,32 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                     ))}
                   </View>
                 ) : (
-                  <Text
+                  <View
                     style={[
-                      styles.emptyStateText,
-                      { color: colors.textSecondary },
+                      styles.emptyStateCard,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: colors.border,
+                      },
                     ]}
                   >
-                    No hay personal tecnico registrado todavia.
-                  </Text>
+                    <Text
+                      style={[
+                        styles.emptyStateEyebrow,
+                        { color: colors.accent },
+                      ]}
+                    >
+                      Personal
+                    </Text>
+                    <Text
+                      style={[
+                        styles.emptyStateText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      No hay personal tecnico registrado todavia.
+                    </Text>
+                  </View>
                 )}
               </View>
             </View>
@@ -1172,7 +1226,7 @@ const styles = StyleSheet.create({
   },
   roleOption: {
     borderWidth: 1,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.pill,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
   },
@@ -1263,7 +1317,7 @@ const styles = StyleSheet.create({
   },
   secondaryAction: {
     borderWidth: 1,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.pill,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
   },
@@ -1273,13 +1327,25 @@ const styles = StyleSheet.create({
   },
   approveAction: {
     borderWidth: 1,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.pill,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
   },
   approveActionText: {
     fontSize: rf(12),
     fontWeight: "800",
+  },
+  emptyStateCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  emptyStateEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
   emptyStateText: {
     fontSize: rf(13),
