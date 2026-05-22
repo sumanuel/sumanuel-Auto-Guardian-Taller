@@ -321,7 +321,8 @@ export default function ClientsScreen({
               style={[
                 styles.clientRow,
                 {
-                  borderBottomColor: colors.border,
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
                 },
               ]}
             >
@@ -329,19 +330,38 @@ export default function ClientsScreen({
                 onPress={() => openClientDetail(client)}
                 style={styles.clientCopy}
               >
-                <Text style={[styles.clientTitle, { color: colors.text }]}>
-                  {client.fullName}
-                </Text>
-                <Text
-                  style={[styles.clientMeta, { color: colors.textSecondary }]}
+                <View
+                  style={[
+                    styles.cardHeader,
+                    { borderBottomColor: colors.border },
+                  ]}
                 >
-                  {client.id} · {client.phone || "Sin telefono"}
-                </Text>
-                <Text
-                  style={[styles.clientMeta, { color: colors.textSecondary }]}
-                >
-                  {client.email || "Sin correo"}
-                </Text>
+                  <View style={styles.cardHeaderCopy}>
+                    <Text
+                      style={[styles.cardEyebrow, { color: colors.primary }]}
+                    >
+                      Recepcion
+                    </Text>
+                    <Text style={[styles.clientTitle, { color: colors.text }]}>
+                      {client.fullName}
+                    </Text>
+                  </View>
+                  <Text style={[styles.cardTag, { color: colors.primary }]}>
+                    {client.id}
+                  </Text>
+                </View>
+                <View style={styles.cardBody}>
+                  <Text
+                    style={[styles.clientMeta, { color: colors.textSecondary }]}
+                  >
+                    {client.phone || "Sin telefono"}
+                  </Text>
+                  <Text
+                    style={[styles.clientMeta, { color: colors.textSecondary }]}
+                  >
+                    {client.email || "Sin correo"}
+                  </Text>
+                </View>
               </Pressable>
 
               <View style={styles.iconActionRow}>
@@ -349,7 +369,13 @@ export default function ClientsScreen({
                   onPress={() =>
                     onOpenClientForm?.(client, { returnTo: "detail" })
                   }
-                  style={styles.iconAction}
+                  style={[
+                    styles.iconAction,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
                 >
                   <Ionicons
                     color={colors.primary}
@@ -359,7 +385,13 @@ export default function ClientsScreen({
                 </Pressable>
                 <Pressable
                   onPress={() => handleDeleteClient(client)}
-                  style={styles.iconAction}
+                  style={[
+                    styles.iconAction,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
                 >
                   <Ionicons
                     color={colors.danger}
@@ -483,34 +515,60 @@ export default function ClientsScreen({
               style={[
                 styles.clientRow,
                 {
-                  borderBottomColor: colors.border,
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
                 },
               ]}
             >
               <View style={styles.clientCopy}>
-                <Text style={[styles.clientTitle, { color: colors.text }]}>
-                  {vehicle.plate || "Sin placa"}
-                </Text>
-                <Text
-                  style={[styles.clientMeta, { color: colors.textSecondary }]}
+                <View
+                  style={[
+                    styles.cardHeader,
+                    { borderBottomColor: colors.border },
+                  ]}
                 >
-                  {[vehicle.brand, vehicle.model, vehicle.year]
-                    .filter(Boolean)
-                    .join(" · ") || "Sin descripcion"}
-                </Text>
-                <Text
-                  style={[styles.clientMeta, { color: colors.textTertiary }]}
-                >
-                  {vehicle.mileage
-                    ? `${vehicle.mileage} km`
-                    : "Sin kilometraje"}
-                </Text>
+                  <View style={styles.cardHeaderCopy}>
+                    <Text
+                      style={[styles.cardEyebrow, { color: colors.accent }]}
+                    >
+                      Vehiculo
+                    </Text>
+                    <Text style={[styles.clientTitle, { color: colors.text }]}>
+                      {vehicle.plate || "Sin placa"}
+                    </Text>
+                  </View>
+                  <Text style={[styles.cardTag, { color: colors.accent }]}>
+                    {vehicle.year || "--"}
+                  </Text>
+                </View>
+                <View style={styles.cardBody}>
+                  <Text
+                    style={[styles.clientMeta, { color: colors.textSecondary }]}
+                  >
+                    {[vehicle.brand, vehicle.model]
+                      .filter(Boolean)
+                      .join(" · ") || "Sin descripcion"}
+                  </Text>
+                  <Text
+                    style={[styles.clientMeta, { color: colors.textTertiary }]}
+                  >
+                    {vehicle.mileage
+                      ? `${vehicle.mileage} km`
+                      : "Sin kilometraje"}
+                  </Text>
+                </View>
               </View>
 
               <View style={styles.iconActionRow}>
                 <Pressable
                   onPress={() => onOpenVehicleForm?.(selectedClient, vehicle)}
-                  style={styles.iconAction}
+                  style={[
+                    styles.iconAction,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
                 >
                   <Ionicons
                     color={colors.primary}
@@ -520,7 +578,13 @@ export default function ClientsScreen({
                 </Pressable>
                 <Pressable
                   onPress={() => handleDeleteVehicle(vehicle)}
-                  style={styles.iconAction}
+                  style={[
+                    styles.iconAction,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
                 >
                   <Ionicons
                     color={colors.danger}
@@ -605,22 +669,41 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   filterChipText: { fontSize: rf(12), fontWeight: "700" },
-  listBody: { gap: spacing.sm },
+  listBody: { gap: spacing.md },
   clientRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
   },
   clientCopy: { flex: 1, gap: spacing.xs },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+  },
+  cardHeaderCopy: { flex: 1, gap: 2 },
+  cardEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  cardTag: { fontSize: rf(11), fontWeight: "800" },
+  cardBody: { gap: 2 },
   clientTitle: { fontSize: rf(16), fontWeight: "800" },
-  clientMeta: { fontSize: rf(12), lineHeight: rf(18) },
+  clientMeta: { fontSize: rf(12), lineHeight: rf(17) },
   iconActionRow: { flexDirection: "row", gap: spacing.sm },
   iconAction: {
+    borderWidth: 1,
     width: rf(40),
     height: rf(40),
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -61,22 +61,41 @@ export default function WorkshopMoreScreen({
                   },
                 ]}
               >
-                <View
-                  style={[
-                    styles.iconBadge,
-                    { backgroundColor: colors.cardMuted },
-                  ]}
-                >
-                  <Ionicons
-                    color={colors.primary}
-                    name={item.icon}
-                    size={rf(20)}
-                  />
-                </View>
                 <View style={styles.rowCopy}>
-                  <Text style={[styles.rowTitle, { color: colors.text }]}>
-                    {item.title}
-                  </Text>
+                  <View
+                    style={[
+                      styles.rowHeader,
+                      { borderBottomColor: colors.border },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.iconBadge,
+                        { backgroundColor: colors.cardMuted },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.primary}
+                        name={item.icon}
+                        size={rf(20)}
+                      />
+                    </View>
+                    <View style={styles.rowHeaderCopy}>
+                      <Text
+                        style={[styles.rowEyebrow, { color: colors.primary }]}
+                      >
+                        Modulo
+                      </Text>
+                      <Text style={[styles.rowTitle, { color: colors.text }]}>
+                        {item.title}
+                      </Text>
+                    </View>
+                    <Ionicons
+                      color={colors.textTertiary}
+                      name="chevron-forward"
+                      size={rf(18)}
+                    />
+                  </View>
                   <Text
                     style={[
                       styles.rowSubtitle,
@@ -86,11 +105,6 @@ export default function WorkshopMoreScreen({
                     {item.subtitle}
                   </Text>
                 </View>
-                <Ionicons
-                  color={colors.textTertiary}
-                  name="chevron-forward"
-                  size={rf(18)}
-                />
               </Pressable>
             );
           })}
@@ -147,9 +161,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   iconBadge: {
     width: rf(42),
@@ -158,7 +170,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  rowCopy: { flex: 1, gap: 2 },
+  rowCopy: { gap: spacing.sm },
+  rowHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+  },
+  rowHeaderCopy: { flex: 1, gap: 2 },
+  rowEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   rowTitle: { fontSize: rf(15), fontWeight: "800" },
   rowSubtitle: { fontSize: rf(12), lineHeight: rf(18) },
   actionsPanel: {

@@ -396,9 +396,8 @@ export default function WorkOrdersScreen({
                 style={[
                   styles.row,
                   {
-                    borderBottomColor: isSelected
-                      ? colors.primary
-                      : colors.border,
+                    backgroundColor: colors.cardBackground,
+                    borderColor: isSelected ? colors.primary : colors.border,
                   },
                 ]}
               >
@@ -406,30 +405,49 @@ export default function WorkOrdersScreen({
                   onPress={() => openWorkOrderDetail(workOrder)}
                   style={styles.rowCopy}
                 >
-                  <Text style={[styles.rowTitle, { color: colors.text }]}>
-                    {workOrder.id}
-                  </Text>
-                  <Text
-                    style={[styles.rowMeta, { color: colors.textSecondary }]}
+                  <View
+                    style={[
+                      styles.cardHeader,
+                      { borderBottomColor: colors.border },
+                    ]}
                   >
-                    {diagnostic?.id ||
-                      workOrder.diagnosticId ||
-                      "Sin diagnostico"}{" "}
-                    · {vehicle?.plate || workOrder.vehicleId || "Sin vehiculo"}
-                  </Text>
-                  <Text
-                    style={[styles.rowMeta, { color: colors.textSecondary }]}
-                  >
-                    {client?.fullName || workOrder.clientId || "Sin cliente"} ·{" "}
-                    {workOrderStatusOptions.find(
-                      (item) => item.key === workOrder.status,
-                    )?.label || workOrder.status}
-                  </Text>
-                  <Text
-                    style={[styles.rowMeta, { color: colors.textTertiary }]}
-                  >
-                    {assignedMechanics || "Sin mecanicos asignados"}
-                  </Text>
+                    <View style={styles.cardHeaderCopy}>
+                      <Text
+                        style={[styles.cardEyebrow, { color: colors.primary }]}
+                      >
+                        Operacion
+                      </Text>
+                      <Text style={[styles.rowTitle, { color: colors.text }]}>
+                        {workOrder.id}
+                      </Text>
+                    </View>
+                    <Text style={[styles.cardTag, { color: colors.primary }]}>
+                      {workOrderStatusOptions.find(
+                        (item) => item.key === workOrder.status,
+                      )?.label || workOrder.status}
+                    </Text>
+                  </View>
+                  <View style={styles.cardBody}>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    >
+                      {diagnostic?.id ||
+                        workOrder.diagnosticId ||
+                        "Sin diagnostico"}{" "}
+                      ·{" "}
+                      {vehicle?.plate || workOrder.vehicleId || "Sin vehiculo"}
+                    </Text>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    >
+                      {client?.fullName || workOrder.clientId || "Sin cliente"}
+                    </Text>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textTertiary }]}
+                    >
+                      {assignedMechanics || "Sin mecanicos asignados"}
+                    </Text>
+                  </View>
                 </Pressable>
 
                 <View style={styles.iconActionRow}>
@@ -898,7 +916,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   filterChipText: { fontSize: rf(12), fontWeight: "700" },
-  listBody: { gap: spacing.sm },
+  listBody: { gap: spacing.md },
   listHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -906,14 +924,33 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   row: {
-    borderBottomWidth: 1,
-    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
     flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.md,
   },
   rowCopy: { flex: 1, gap: spacing.xs },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+  },
+  cardHeaderCopy: { flex: 1, gap: 2 },
+  cardEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
+  cardBody: { gap: 2 },
   rowTitle: { fontSize: rf(16), fontWeight: "800" },
-  rowMeta: { fontSize: rf(12), lineHeight: rf(18) },
+  rowMeta: { fontSize: rf(12), lineHeight: rf(17) },
   formGroup: { gap: spacing.sm },
   fieldLabel: { fontSize: rf(12), fontWeight: "700" },
   listCard: {

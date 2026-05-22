@@ -238,39 +238,67 @@ export default function SparePartsScreen({
                   style={[
                     styles.row,
                     {
-                      borderBottomColor: isSelected
-                        ? colors.primary
-                        : colors.border,
+                      backgroundColor: colors.cardBackground,
+                      borderColor: isSelected ? colors.primary : colors.border,
                     },
                   ]}
                 >
                   <View style={styles.rowCopy}>
-                    <Text style={[styles.rowTitle, { color: colors.text }]}>
-                      {part.name}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    <View
+                      style={[
+                        styles.cardHeader,
+                        { borderBottomColor: colors.border },
+                      ]}
                     >
-                      {part.id} · Cant. {part.quantity || 0} · Costo{" "}
-                      {part.unitCost || 0}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
-                    >
-                      {relatedWorkOrder?.id || part.workOrderId || "Sin orden"}{" "}
-                      ·{" "}
-                      {relatedDiagnostic?.id ||
-                        part.diagnosticId ||
-                        "Sin diagnostico"}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textTertiary }]}
-                    >
-                      {part.supplier || "Sin proveedor"} ·{" "}
-                      {sparePartStatusOptions.find(
-                        (item) => item.key === part.status,
-                      )?.label || part.status}
-                    </Text>
+                      <View style={styles.cardHeaderCopy}>
+                        <Text
+                          style={[
+                            styles.cardEyebrow,
+                            { color: colors.primary },
+                          ]}
+                        >
+                          Costos
+                        </Text>
+                        <Text style={[styles.rowTitle, { color: colors.text }]}>
+                          {part.name}
+                        </Text>
+                      </View>
+                      <Text style={[styles.cardTag, { color: colors.primary }]}>
+                        {sparePartStatusOptions.find(
+                          (item) => item.key === part.status,
+                        )?.label || part.status}
+                      </Text>
+                    </View>
+                    <View style={styles.cardBody}>
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {part.id} · Cant. {part.quantity || 0} · Costo{" "}
+                        {part.unitCost || 0}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {relatedWorkOrder?.id ||
+                          part.workOrderId ||
+                          "Sin orden"}{" "}
+                        ·{" "}
+                        {relatedDiagnostic?.id ||
+                          part.diagnosticId ||
+                          "Sin diagnostico"}
+                      </Text>
+                      <Text
+                        style={[styles.rowMeta, { color: colors.textTertiary }]}
+                      >
+                        {part.supplier || "Sin proveedor"}
+                      </Text>
+                    </View>
                   </View>
 
                   <View style={styles.iconActionRow}>
@@ -368,16 +396,35 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   filterChipText: { fontSize: rf(12), fontWeight: "700" },
-  listBody: { gap: spacing.sm },
+  listBody: { gap: spacing.md },
   row: {
-    borderBottomWidth: 1,
-    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
     flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.md,
   },
   rowCopy: { flex: 1, gap: spacing.xs },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+  },
+  cardHeaderCopy: { flex: 1, gap: 2 },
+  cardEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
+  cardBody: { gap: 2 },
   rowTitle: { fontSize: rf(16), fontWeight: "800" },
-  rowMeta: { fontSize: rf(12), lineHeight: rf(18) },
+  rowMeta: { fontSize: rf(12), lineHeight: rf(17) },
   iconActionRow: { gap: spacing.sm, justifyContent: "center" },
   iconAction: {
     borderWidth: 1,

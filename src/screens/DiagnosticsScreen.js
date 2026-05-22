@@ -240,37 +240,60 @@ export default function DiagnosticsScreen({
                   style={[
                     styles.row,
                     {
-                      borderBottomColor: isSelected
-                        ? colors.primary
-                        : colors.border,
+                      backgroundColor: colors.cardBackground,
+                      borderColor: isSelected ? colors.primary : colors.border,
                     },
                   ]}
                 >
                   <View style={styles.rowCopy}>
-                    <Text style={[styles.rowTitle, { color: colors.text }]}>
-                      {diagnostic.id}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    <View
+                      style={[
+                        styles.cardHeader,
+                        { borderBottomColor: colors.border },
+                      ]}
                     >
-                      {client?.fullName || diagnostic.clientId || "Sin cliente"}{" "}
-                      ·{" "}
-                      {vehicle?.plate || diagnostic.vehicleId || "Sin vehiculo"}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
-                    >
-                      {diagnosticStatusOptions.find(
-                        (item) => item.key === diagnostic.status,
-                      )?.label ||
-                        diagnostic.status ||
-                        "Sin estado"}
-                    </Text>
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textTertiary }]}
-                    >
-                      {diagnostic.concerns || "Sin hallazgos registrados"}
-                    </Text>
+                      <View style={styles.cardHeaderCopy}>
+                        <Text
+                          style={[
+                            styles.cardEyebrow,
+                            { color: colors.primary },
+                          ]}
+                        >
+                          Taller
+                        </Text>
+                        <Text style={[styles.rowTitle, { color: colors.text }]}>
+                          {diagnostic.id}
+                        </Text>
+                      </View>
+                      <Text style={[styles.cardTag, { color: colors.primary }]}>
+                        {diagnosticStatusOptions.find(
+                          (item) => item.key === diagnostic.status,
+                        )?.label ||
+                          diagnostic.status ||
+                          "Sin estado"}
+                      </Text>
+                    </View>
+                    <View style={styles.cardBody}>
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {client?.fullName ||
+                          diagnostic.clientId ||
+                          "Sin cliente"}{" "}
+                        ·{" "}
+                        {vehicle?.plate ||
+                          diagnostic.vehicleId ||
+                          "Sin vehiculo"}
+                      </Text>
+                      <Text
+                        style={[styles.rowMeta, { color: colors.textTertiary }]}
+                      >
+                        {diagnostic.concerns || "Sin hallazgos registrados"}
+                      </Text>
+                    </View>
                   </View>
 
                   <View style={styles.iconActionRow}>
@@ -392,16 +415,35 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   filterChipText: { fontSize: rf(12), fontWeight: "700" },
-  listBody: { gap: spacing.sm },
+  listBody: { gap: spacing.md },
   row: {
-    borderBottomWidth: 1,
-    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
     flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.md,
   },
   rowCopy: { flex: 1, gap: spacing.xs },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+  },
+  cardHeaderCopy: { flex: 1, gap: 2 },
+  cardEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
+  cardBody: { gap: 2 },
   rowTitle: { fontSize: rf(16), fontWeight: "800" },
-  rowMeta: { fontSize: rf(12), lineHeight: rf(18) },
+  rowMeta: { fontSize: rf(12), lineHeight: rf(17) },
   iconActionRow: { gap: spacing.sm, justifyContent: "center" },
   iconAction: {
     borderWidth: 1,

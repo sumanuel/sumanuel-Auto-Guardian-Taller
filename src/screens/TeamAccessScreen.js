@@ -692,30 +692,56 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                         ]}
                       >
                         <View style={styles.listCopy}>
-                          <Text
-                            style={[styles.rowTitle, { color: colors.text }]}
-                          >
-                            {invitation.email}
-                          </Text>
-                          <Text
+                          <View
                             style={[
-                              styles.rowMeta,
-                              { color: colors.textSecondary },
+                              styles.listRowHeader,
+                              { borderBottomColor: colors.border },
                             ]}
                           >
-                            {invitation.id || invitation.refId} ·{" "}
-                            {roleLabels[invitation.role] || invitation.role}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.rowMeta,
-                              { color: colors.textTertiary },
-                            ]}
-                          >
-                            Vence {formatShortDate(invitation.expiresAt)} ·
-                            Entrega{" "}
-                            {formatDeliveryStatus(invitation.deliveryStatus)}
-                          </Text>
+                            <View style={styles.listHeaderCopy}>
+                              <Text
+                                style={[
+                                  styles.rowEyebrow,
+                                  { color: colors.primary },
+                                ]}
+                              >
+                                Invitacion
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.rowTitle,
+                                  { color: colors.text },
+                                ]}
+                              >
+                                {invitation.email}
+                              </Text>
+                            </View>
+                            <Text
+                              style={[styles.rowTag, { color: colors.primary }]}
+                            >
+                              {roleLabels[invitation.role] || invitation.role}
+                            </Text>
+                          </View>
+                          <View style={styles.listRowBody}>
+                            <Text
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              Codigo {invitation.id || invitation.refId}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textTertiary },
+                              ]}
+                            >
+                              Vence {formatShortDate(invitation.expiresAt)} ·
+                              Entrega{" "}
+                              {formatDeliveryStatus(invitation.deliveryStatus)}
+                            </Text>
+                          </View>
                         </View>
 
                         <Pressable
@@ -787,28 +813,54 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                         ]}
                       >
                         <View style={styles.listCopy}>
-                          <Text
-                            style={[styles.rowTitle, { color: colors.text }]}
-                          >
-                            {profile.fullName || "Usuario sin nombre"}
-                          </Text>
-                          <Text
+                          <View
                             style={[
-                              styles.rowMeta,
-                              { color: colors.textSecondary },
+                              styles.listRowHeader,
+                              { borderBottomColor: colors.border },
                             ]}
                           >
-                            {profile.email} ·{" "}
-                            {roleLabels[profile.role] || profile.role}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.rowMeta,
-                              { color: colors.textTertiary },
-                            ]}
-                          >
-                            Codigo {profile.userCode || "Sin consecutivo"}
-                          </Text>
+                            <View style={styles.listHeaderCopy}>
+                              <Text
+                                style={[
+                                  styles.rowEyebrow,
+                                  { color: colors.warning },
+                                ]}
+                              >
+                                Pendiente
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.rowTitle,
+                                  { color: colors.text },
+                                ]}
+                              >
+                                {profile.fullName || "Usuario sin nombre"}
+                              </Text>
+                            </View>
+                            <Text
+                              style={[styles.rowTag, { color: colors.warning }]}
+                            >
+                              {roleLabels[profile.role] || profile.role}
+                            </Text>
+                          </View>
+                          <View style={styles.listRowBody}>
+                            <Text
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              {profile.email}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textTertiary },
+                              ]}
+                            >
+                              Codigo {profile.userCode || "Sin consecutivo"}
+                            </Text>
+                          </View>
                         </View>
 
                         <Pressable
@@ -879,38 +931,65 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                         ]}
                       >
                         <View style={styles.listCopy}>
-                          <Text
-                            style={[styles.rowTitle, { color: colors.text }]}
-                          >
-                            {profile.fullName || "Usuario sin nombre"}
-                          </Text>
-                          <Text
+                          <View
                             style={[
-                              styles.rowMeta,
-                              { color: colors.textSecondary },
+                              styles.listRowHeader,
+                              { borderBottomColor: colors.border },
                             ]}
                           >
-                            {profile.userCode || "Sin codigo"} · {profile.email}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.rowMeta,
-                              { color: colors.textTertiary },
-                            ]}
-                          >
-                            {roleLabels[profile.role] || profile.role} · Estado{" "}
-                            {statusLabels[profile.status] ||
-                              profile.status ||
-                              "sin estado"}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.rowMeta,
-                              { color: colors.textTertiary },
-                            ]}
-                          >
-                            {profile.phone || "Sin telefono operativo"}
-                          </Text>
+                            <View style={styles.listHeaderCopy}>
+                              <Text
+                                style={[
+                                  styles.rowEyebrow,
+                                  { color: colors.accent },
+                                ]}
+                              >
+                                Colaborador
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.rowTitle,
+                                  { color: colors.text },
+                                ]}
+                              >
+                                {profile.fullName || "Usuario sin nombre"}
+                              </Text>
+                            </View>
+                            <Text
+                              style={[styles.rowTag, { color: colors.accent }]}
+                            >
+                              {statusLabels[profile.status] ||
+                                profile.status ||
+                                "Sin estado"}
+                            </Text>
+                          </View>
+                          <View style={styles.listRowBody}>
+                            <Text
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              {profile.userCode || "Sin codigo"} ·{" "}
+                              {profile.email}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textTertiary },
+                              ]}
+                            >
+                              {roleLabels[profile.role] || profile.role}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textTertiary },
+                              ]}
+                            >
+                              {profile.phone || "Sin telefono operativo"}
+                            </Text>
+                          </View>
                         </View>
 
                         <View style={styles.staffActions}>
@@ -1148,7 +1227,27 @@ const styles = StyleSheet.create({
   },
   listCopy: {
     flex: 1,
-    gap: spacing.xs,
+    gap: spacing.sm,
+  },
+  listRowHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    borderBottomWidth: 1,
+    paddingBottom: spacing.sm,
+  },
+  listHeaderCopy: { flex: 1, gap: 2 },
+  listRowBody: { gap: 2 },
+  rowEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  rowTag: {
+    fontSize: rf(11),
+    fontWeight: "800",
   },
   staffActions: {
     gap: spacing.sm,

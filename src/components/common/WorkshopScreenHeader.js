@@ -19,6 +19,21 @@ export default function WorkshopScreenHeader({
       style={[styles.wrapper, { paddingTop: Math.max(insets.top, spacing.md) }]}
     >
       <View style={styles.topRow}>
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            style={[
+              styles.iconButton,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons color={colors.text} name="arrow-back" size={rf(20)} />
+          </Pressable>
+        ) : null}
+
         <View style={styles.titleWrap}>
           {section ? (
             <Text style={[styles.section, { color: colors.primary }]}>
@@ -33,20 +48,7 @@ export default function WorkshopScreenHeader({
           ) : null}
         </View>
 
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={[
-              styles.iconButton,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Ionicons color={colors.text} name="arrow-back" size={rf(20)} />
-          </Pressable>
-        ) : rightAction ? (
+        {rightAction ? (
           <Pressable
             onPress={rightAction.onPress}
             style={[
@@ -63,6 +65,8 @@ export default function WorkshopScreenHeader({
               size={rf(20)}
             />
           </Pressable>
+        ) : onBack ? (
+          <View style={styles.iconButtonSpacer} />
         ) : null}
       </View>
     </View>
@@ -105,5 +109,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  iconButtonSpacer: {
+    width: rf(44),
+    height: rf(44),
   },
 });
