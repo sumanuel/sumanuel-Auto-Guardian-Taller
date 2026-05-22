@@ -338,6 +338,12 @@ export async function ensureDiagnosticQuotePdfFile(diagnostic) {
     encoding: FileSystem.EncodingType.Base64,
   });
 
+  const fileInfo = await FileSystem.getInfoAsync(fileUri);
+
+  if (!fileInfo.exists) {
+    throw new Error("El archivo PDF no se pudo preparar en el dispositivo.");
+  }
+
   return {
     fileUri,
     contentUri:

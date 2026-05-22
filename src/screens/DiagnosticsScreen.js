@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as IntentLauncher from "expo-intent-launcher";
 import * as Sharing from "expo-sharing";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -6,6 +7,7 @@ import {
   Alert,
   BackHandler,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -221,8 +223,19 @@ export default function DiagnosticsScreen({
 
   const handleOpenQuotePdf = async (diagnostic) => {
     try {
-      const { contentUri } = await ensureDiagnosticQuotePdfFile(diagnostic);
-      await Linking.openURL(contentUri);
+      const { fileUri, contentUri, mimeType } =
+        await ensureDiagnosticQuotePdfFile(diagnostic);
+
+      if (Platform.OS === "android") {
+        await IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
+          data: contentUri,
+          flags: 1,
+          type: mimeType,
+        });
+        return;
+      }
+
+      await Linking.openURL(fileUri);
     } catch (error) {
       Alert.alert(
         "Diagnosticos",
