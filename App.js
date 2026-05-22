@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { BackHandler, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
@@ -151,6 +151,86 @@ function AppContent() {
     });
   }, [authUser?.uid]);
 
+  useEffect(() => {
+    if (!authReady || !authUser || !userProfile || profileStatus !== "active") {
+      return undefined;
+    }
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (activeScreen === APP_SCREENS.CLIENT_FORM) {
+          setClientsViewState({ selectedClientId: null, screenMode: "list" });
+          setActiveScreen(APP_SCREENS.CLIENTS);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.VEHICLE_FORM) {
+          setClientsViewState({
+            selectedClientId:
+              vehicleFormContext.client?.id ||
+              vehicleFormContext.client?.refId ||
+              null,
+            screenMode: "detail",
+          });
+          setActiveScreen(APP_SCREENS.CLIENTS);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.DIAGNOSTIC_FORM) {
+          setActiveScreen(APP_SCREENS.DIAGNOSTICS);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.WORK_ORDER_FORM) {
+          setActiveScreen(APP_SCREENS.WORK_ORDERS);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.SPARE_PART_FORM) {
+          setActiveScreen(APP_SCREENS.SPARE_PARTS);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.TEAM_ACCESS) {
+          setActiveScreen(APP_SCREENS.MORE);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.SPARE_PARTS) {
+          setActiveScreen(APP_SCREENS.MORE);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.CLIENTS) {
+          setClientsViewState({ selectedClientId: null, screenMode: "list" });
+          setActiveScreen(APP_SCREENS.HOME);
+          return true;
+        }
+
+        if (
+          activeScreen === APP_SCREENS.DIAGNOSTICS ||
+          activeScreen === APP_SCREENS.WORK_ORDERS ||
+          activeScreen === APP_SCREENS.MORE
+        ) {
+          setActiveScreen(APP_SCREENS.HOME);
+          return true;
+        }
+
+        return false;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [
+    activeScreen,
+    authReady,
+    authUser,
+    profileStatus,
+    userProfile,
+    vehicleFormContext.client,
+  ]);
+
   if (!authReady) {
     return (
       <>
@@ -191,16 +271,19 @@ function AppContent() {
     }
 
     if (nextTab === APP_SCREENS.CLIENTS) {
+      setClientsViewState({ selectedClientId: null, screenMode: "list" });
       setActiveScreen(APP_SCREENS.CLIENTS);
       return;
     }
 
     if (nextTab === APP_SCREENS.DIAGNOSTICS) {
+      setDiagnosticsViewState({ selectedDiagnosticId: null });
       setActiveScreen(APP_SCREENS.DIAGNOSTICS);
       return;
     }
 
     if (nextTab === APP_SCREENS.WORK_ORDERS) {
+      setWorkOrdersViewState({ selectedWorkOrderId: null });
       setActiveScreen(APP_SCREENS.WORK_ORDERS);
       return;
     }
@@ -244,12 +327,12 @@ function AppContent() {
       return (
         <ClientFormScreen
           initialClient={clientFormContext.client}
-          onBack={() => setActiveScreen(APP_SCREENS.CLIENTS)}
-          onSaved={(savedClientId) => {
-            setClientsViewState({
-              selectedClientId: savedClientId,
-              screenMode: clientFormContext.returnTo,
-            });
+          onBack={() => {
+            setClientsViewState({ selectedClientId: null, screenMode: "list" });
+            setActiveScreen(APP_SCREENS.CLIENTS);
+          }}
+          onSaved={() => {
+            setClientsViewState({ selectedClientId: null, screenMode: "list" });
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
           userProfile={userProfile}
@@ -262,6 +345,16 @@ function AppContent() {
         <VehicleFormScreen
           initialClient={vehicleFormContext.client}
           initialVehicle={vehicleFormContext.vehicle}
+          onBack={() => {
+            setClientsViewState({
+              selectedClientId:
+                vehicleFormContext.client?.id ||
+                vehicleFormContext.client?.refId ||
+                null,
+              screenMode: "detail",
+            });
+            setActiveScreen(APP_SCREENS.CLIENTS);
+          }}
           onSaved={() => {
             setClientsViewState({
               selectedClientId:
@@ -399,6 +492,7 @@ function AppContent() {
     if (activeScreen === APP_SCREENS.MORE) {
       return (
         <WorkshopMoreScreen
+          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
           onOpenSpareParts={() => setActiveScreen(APP_SCREENS.SPARE_PARTS)}
           onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.TEAM_ACCESS)}
           onSignOut={signOutUser}

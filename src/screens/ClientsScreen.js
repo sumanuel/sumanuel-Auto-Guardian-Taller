@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -31,6 +32,7 @@ function getEntityId(entity) {
 }
 
 export default function ClientsScreen({
+  onBack,
   onOpenClientForm,
   onOpenDiagnosticForm,
   onOpenVehicleForm,
@@ -118,9 +120,8 @@ export default function ClientsScreen({
 
   useEffect(() => {
     if (!viewState?.selectedClientId) {
-      if (viewState?.screenMode === SCREEN_MODES.LIST) {
-        setScreenMode(SCREEN_MODES.LIST);
-      }
+      setSelectedClient(null);
+      setScreenMode(SCREEN_MODES.LIST);
       return;
     }
 
@@ -158,12 +159,30 @@ export default function ClientsScreen({
     refreshVehicles();
   }, [selectedClientId]);
 
+  useEffect(() => {
+    if (screenMode !== SCREEN_MODES.DETAIL) {
+      return undefined;
+    }
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        setSelectedClient(null);
+        setScreenMode(SCREEN_MODES.LIST);
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [screenMode]);
+
   const openClientDetail = (client) => {
     setSelectedClient(client);
     setScreenMode(SCREEN_MODES.DETAIL);
   };
 
   const handleBackToList = () => {
+    setSelectedClient(null);
     setScreenMode(SCREEN_MODES.LIST);
   };
 
@@ -226,6 +245,7 @@ export default function ClientsScreen({
   const renderListScreen = () => (
     <>
       <WorkshopScreenHeader
+        onBack={onBack}
         section="Recepcion"
         subtitle="Lista operativa mas limpia, con alta y asociacion resueltas en pantallas separadas."
         title="Clientes"
@@ -297,26 +317,38 @@ export default function ClientsScreen({
                         {client.fullName}
                       </Text>
                     </View>
-                    <Text style={[styles.cardTag, { color: colors.primary }]}>
-                      {client.identification || client.id}
-                    </Text>
                   </View>
                   <View style={styles.cardBody}>
                     <Text
                       style={[
-                        styles.clientMeta,
+                        styles.fieldLine,
                         { color: colors.textSecondary },
                       ]}
                     >
+                      <Text
+                        style={[styles.fieldLineLabel, { color: colors.text }]}
+                      >
+                        Identificacion:
+                      </Text>
                       {client.identification || "Sin identificacion"}
                     </Text>
                     <Text
                       style={[
-                        styles.clientMeta,
+                        styles.fieldLine,
                         { color: colors.textSecondary },
                       ]}
                     >
+                      <Text
+                        style={[styles.fieldLineLabel, { color: colors.text }]}
+                      >
+                        Telefono:
+                      </Text>
                       {client.phone || "Sin telefono"}
+                    </Text>
+                    <Text
+                      style={[styles.fieldLineLabel, { color: colors.text }]}
+                    >
+                      Vehiculos asociados:
                     </Text>
                     {clientVehicles.length ? (
                       clientVehicles.map((vehicle) => (
@@ -336,7 +368,9 @@ export default function ClientsScreen({
                               { color: colors.text },
                             ]}
                           >
-                            {vehicle.plate || "Sin placa"}
+                            {[vehicle.brand, vehicle.model, vehicle.year]
+                              .filter(Boolean)
+                              .join(" ") || "Sin descripcion"}
                           </Text>
                           <Text
                             style={[
@@ -344,21 +378,40 @@ export default function ClientsScreen({
                               { color: colors.textSecondary },
                             ]}
                           >
-                            {[vehicle.brand, vehicle.model, vehicle.year]
-                              .filter(Boolean)
-                              .join(" · ") || "Sin descripcion"}
+                            {vehicle.plate || "Sin placa"}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.vehicleInlineMeta,
+                              { color: colors.textTertiary },
+                            ]}
+                          >
+                            {vehicle.mileage
+                              ? `${vehicle.mileage} km`
+                              : "Sin kilometraje"}
                           </Text>
                         </View>
                       ))
                     ) : (
-                      <Text
+                      <Pressable
+                        onPress={() => onOpenVehicleForm?.(client, null)}
                         style={[
                           styles.linkHint,
-                          { color: colors.accent, borderColor: colors.border },
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.border,
+                          },
                         ]}
                       >
-                        Presione aqui para asociar vehiculo
-                      </Text>
+                        <Text
+                          style={[
+                            styles.linkHintText,
+                            { color: colors.accent },
+                          ]}
+                        >
+                          Presione aqui para asociar vehiculo
+                        </Text>
+                      </Pressable>
                     )}
                   </View>
                 </Pressable>
@@ -747,10 +800,11 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  cardTag: { fontSize: rf(11), fontWeight: "800" },
   cardBody: { gap: 2 },
   clientTitle: { fontSize: rf(16), fontWeight: "800" },
   clientMeta: { fontSize: rf(12), lineHeight: rf(17) },
+  fieldLine: { fontSize: rf(12), lineHeight: rf(17) },
+  fieldLineLabel: { fontSize: rf(12), fontWeight: "800" },
   vehicleInlineCard: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
@@ -766,11 +820,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    fontSize: rf(11),
-    fontWeight: "800",
     alignSelf: "flex-start",
     marginTop: spacing.xs,
   },
+  linkHintText: { fontSize: rf(11), fontWeight: "800" },
   iconActionRow: { flexDirection: "row", gap: spacing.sm },
   iconAction: {
     borderWidth: 1,

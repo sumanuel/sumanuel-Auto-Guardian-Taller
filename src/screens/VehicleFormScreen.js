@@ -46,6 +46,7 @@ function buildVehicleForm(vehicle, clientId = "") {
 export default function VehicleFormScreen({
   initialClient,
   initialVehicle,
+  onBack,
   onSaved,
 }) {
   const { colors } = useTheme();
@@ -113,6 +114,7 @@ export default function VehicleFormScreen({
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
+          onBack={onBack}
           section="Vehiculos"
           subtitle="Registro operativo separado de la ficha del cliente para mantener una sola accion por pantalla."
           title={editingVehicleId ? "Editar vehiculo" : "Asociar vehiculo"}

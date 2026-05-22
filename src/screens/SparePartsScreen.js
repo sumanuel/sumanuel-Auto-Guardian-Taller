@@ -141,6 +141,7 @@ export default function SparePartsScreen({
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
+          onBack={onBack}
           section="Costos"
           subtitle="Registra piezas en una ficha dedicada y vuelve a la lista para revisar estado, costo y relacion con la orden."
           title="Repuestos"

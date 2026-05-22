@@ -21,6 +21,7 @@ const shortcuts = [
 ];
 
 export default function WorkshopMoreScreen({
+  onBack,
   onOpenSpareParts,
   onOpenTeamAccess,
   onSignOut,
@@ -39,6 +40,7 @@ export default function WorkshopMoreScreen({
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
+          onBack={onBack}
           section="Soporte"
           subtitle="Accesos secundarios, preferencias y control administrativo fuera del flujo principal del taller."
           title="Mas opciones"

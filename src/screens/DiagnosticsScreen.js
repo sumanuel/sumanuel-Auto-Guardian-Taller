@@ -142,6 +142,7 @@ export default function DiagnosticsScreen({
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
+          onBack={onBack}
           section="Taller"
           subtitle="Registra hallazgos, consulta el padron y abre la siguiente accion desde la lista, igual que en Auto-Guardian."
           title="Diagnosticos"
