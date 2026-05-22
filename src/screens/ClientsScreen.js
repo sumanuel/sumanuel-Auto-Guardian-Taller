@@ -353,6 +353,14 @@ export default function ClientsScreen({
                     >
                       Vehiculos asociados:
                     </Text>
+                    <Text
+                      style={[
+                        styles.vehicleSectionHint,
+                        { color: colors.textTertiary },
+                      ]}
+                    >
+                      Presione sobre un vehiculo para ver detalles.
+                    </Text>
                     {clientVehicles.length ? (
                       clientVehicles.map((vehicle) => (
                         <View
@@ -634,12 +642,6 @@ export default function ClientsScreen({
                   </View>
                 </View>
                 <View style={styles.cardBody}>
-                  <View
-                    style={[
-                      styles.vehicleInlineDivider,
-                      { backgroundColor: colors.border },
-                    ]}
-                  />
                   <Text
                     style={[styles.clientMeta, { color: colors.textSecondary }]}
                   >
@@ -833,6 +835,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     lineHeight: rf(19),
   },
+  vehicleSectionHint: { fontSize: rf(12), lineHeight: rf(18) },
   vehicleInlineCard: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,

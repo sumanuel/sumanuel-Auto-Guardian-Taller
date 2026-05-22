@@ -315,15 +315,79 @@ export default function DiagnosticsScreen({
                   </View>
                   <View style={styles.cardBody}>
                     <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                      style={[
+                        styles.detailMetaLine,
+                        { color: colors.textSecondary },
+                      ]}
                     >
-                      {client?.fullName || diagnostic.clientId || "Sin cliente"}{" "}
-                      ·{" "}
-                      {vehicle?.plate || diagnostic.vehicleId || "Sin vehiculo"}
+                      <Text style={[styles.detailMetaLabel, { color: colors.text }]}>Cliente:</Text>{" "}
+                      {client?.fullName || diagnostic.clientId || "Sin cliente"}
                     </Text>
                     <Text
-                      style={[styles.rowMeta, { color: colors.textTertiary }]}
+                      style={[
+                        styles.vehicleSectionLabel,
+                        { color: colors.accent },
+                      ]}
                     >
+                      vehiculo:
+                    </Text>
+                    <View
+                      style={[
+                        styles.vehicleCard,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.vehicleTitle, { color: colors.text }]}>
+                        {[vehicle?.brand, vehicle?.model, vehicle?.year]
+                          .filter(Boolean)
+                          .join(" ") ||
+                          vehicle?.plate ||
+                          diagnostic.vehicleId ||
+                          "Sin vehiculo"}
+                      </Text>
+                      <View
+                        style={[
+                          styles.vehicleDivider,
+                          { backgroundColor: colors.border },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.vehicleMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        <Text
+                          style={[styles.vehicleMetaLabel, { color: colors.text }]}
+                        >
+                          Placa:
+                        </Text>{" "}
+                        {vehicle?.plate || "Sin placa"}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.vehicleMeta,
+                          { color: colors.textTertiary },
+                        ]}
+                      >
+                        <Text
+                          style={[styles.vehicleMetaLabel, { color: colors.text }]}
+                        >
+                          Kilometraje:
+                        </Text>{" "}
+                        {vehicle?.mileage ? `${vehicle.mileage} km` : "Sin kilometraje"}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.detailMetaLine,
+                        { color: colors.textTertiary },
+                      ]}
+                    >
+                      <Text style={[styles.detailMetaLabel, { color: colors.text }]}>Hallazgos:</Text>{" "}
                       {diagnostic.concerns || "Sin hallazgos registrados"}
                     </Text>
                     <Pressable
@@ -451,8 +515,8 @@ export default function DiagnosticsScreen({
             </Text>{" "}
             {client?.fullName || selectedDiagnostic?.clientId || "Sin cliente"}
           </Text>
-          <Text style={[styles.fieldLabel, { color: colors.text }]}>
-            Vehiculo
+          <Text style={[styles.vehicleSectionLabel, { color: colors.accent }]}>
+            vehiculo:
           </Text>
           <View
             style={[
@@ -656,7 +720,15 @@ const styles = StyleSheet.create({
   cardBody: { gap: spacing.xs },
   rowTitle: { fontSize: rf(17), fontWeight: "800" },
   rowMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  detailMetaLine: { fontSize: rf(13), lineHeight: rf(19) },
+  detailMetaLabel: { fontSize: rf(13), fontWeight: "800" },
   fieldLabel: { fontSize: rf(13), fontWeight: "700" },
+  vehicleSectionLabel: {
+    fontSize: rf(13),
+    fontWeight: "900",
+    lineHeight: rf(19),
+    textTransform: "none",
+  },
   detailLines: { gap: spacing.xs },
   detailLine: { fontSize: rf(14), lineHeight: rf(22) },
   detailLineLabel: { fontSize: rf(14), fontWeight: "800" },
