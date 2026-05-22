@@ -206,23 +206,6 @@ export default function DiagnosticsScreen({
     <>
       <View
         style={[
-          styles.summaryCard,
-          {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
-          },
-        ]}
-      >
-        <Text style={[styles.summaryValue, { color: colors.text }]}>
-          {diagnostics.length}
-        </Text>
-        <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-          Diagnosticos registrados
-        </Text>
-      </View>
-
-      <View
-        style={[
           styles.controlsPanel,
           {
             backgroundColor: colors.cardBackground,
@@ -465,19 +448,19 @@ export default function DiagnosticsScreen({
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Cliente:
-            </Text>
+            </Text>{" "}
             {client?.fullName || selectedDiagnostic?.clientId || "Sin cliente"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Vehiculo:
-            </Text>
+            </Text>{" "}
             {vehicle?.plate || selectedDiagnostic?.vehicleId || "Sin vehiculo"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Estado:
-            </Text>
+            </Text>{" "}
             {diagnosticStatusOptions.find(
               (item) => item.key === selectedDiagnostic?.status,
             )?.label ||
@@ -487,13 +470,13 @@ export default function DiagnosticsScreen({
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Hallazgos:
-            </Text>
+            </Text>{" "}
             {selectedDiagnostic?.concerns || "Sin hallazgos registrados"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Notas:
-            </Text>
+            </Text>{" "}
             {selectedDiagnostic?.notes || "Sin notas adicionales"}
           </Text>
         </View>
@@ -596,17 +579,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
   scrollContent: { padding: spacing.lg, gap: spacing.lg },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
-  summaryCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.xs,
-    alignSelf: "flex-start",
-    minWidth: rf(132),
-  },
-  summaryValue: { fontSize: rf(28), fontWeight: "900" },
-  summaryLabel: { fontSize: rf(14), lineHeight: rf(20) },
   controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,

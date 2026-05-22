@@ -329,7 +329,7 @@ export default function ClientsScreen({
                         style={[styles.fieldLineLabel, { color: colors.text }]}
                       >
                         Identificacion:
-                      </Text>
+                      </Text>{" "}
                       {client.identification || "Sin identificacion"}
                     </Text>
                     <Text
@@ -342,11 +342,14 @@ export default function ClientsScreen({
                         style={[styles.fieldLineLabel, { color: colors.text }]}
                       >
                         Telefono:
-                      </Text>
+                      </Text>{" "}
                       {client.phone || "Sin telefono"}
                     </Text>
                     <Text
-                      style={[styles.fieldLineLabel, { color: colors.text }]}
+                      style={[
+                        styles.vehicleSectionTitle,
+                        { color: colors.primary },
+                      ]}
                     >
                       Vehiculos asociados:
                     </Text>
@@ -385,7 +388,7 @@ export default function ClientsScreen({
                               ]}
                             >
                               Placa:
-                            </Text>
+                            </Text>{" "}
                             {vehicle.plate || "Sin placa"}
                           </Text>
                           <Text
@@ -401,7 +404,7 @@ export default function ClientsScreen({
                               ]}
                             >
                               Kilometraje:
-                            </Text>
+                            </Text>{" "}
                             {vehicle.mileage
                               ? `${vehicle.mileage} km`
                               : "Sin kilometraje"}
@@ -531,31 +534,31 @@ export default function ClientsScreen({
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Nombre:
-            </Text>
+            </Text>{" "}
             {selectedClient?.fullName || "Sin nombre"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Identificacion:
-            </Text>
+            </Text>{" "}
             {selectedClient?.identification || "Sin identificacion"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Telefono:
-            </Text>
+            </Text>{" "}
             {selectedClient?.phone || "Sin telefono"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Correo:
-            </Text>
+            </Text>{" "}
             {selectedClient?.email || "Sin correo"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
               Direccion:
-            </Text>
+            </Text>{" "}
             {selectedClient?.address || "Sin direccion"}
           </Text>
         </View>
@@ -632,7 +635,7 @@ export default function ClientsScreen({
                       style={[styles.clientMetaLabel, { color: colors.text }]}
                     >
                       Placa:
-                    </Text>
+                    </Text>{" "}
                     {vehicle.plate || "Sin placa"}
                   </Text>
                   <Text
@@ -642,7 +645,7 @@ export default function ClientsScreen({
                       style={[styles.clientMetaLabel, { color: colors.text }]}
                     >
                       Kilometraje:
-                    </Text>
+                    </Text>{" "}
                     {vehicle.mileage
                       ? `${vehicle.mileage} km`
                       : "Sin kilometraje"}
@@ -813,6 +816,11 @@ const styles = StyleSheet.create({
   clientMetaLabel: { fontSize: rf(13), fontWeight: "800" },
   fieldLine: { fontSize: rf(13), lineHeight: rf(19) },
   fieldLineLabel: { fontSize: rf(13), fontWeight: "800" },
+  vehicleSectionTitle: {
+    fontSize: rf(13),
+    fontWeight: "900",
+    lineHeight: rf(19),
+  },
   vehicleInlineCard: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
@@ -821,9 +829,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     marginTop: spacing.xs,
   },
-  vehicleInlineTitle: { fontSize: rf(13), fontWeight: "800" },
-  vehicleInlineMeta: { fontSize: rf(12), lineHeight: rf(18) },
-  vehicleInlineMetaLabel: { fontSize: rf(12), fontWeight: "800" },
+  vehicleInlineTitle: {
+    fontSize: rf(15),
+    fontWeight: "800",
+    lineHeight: rf(21),
+  },
+  vehicleInlineMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  vehicleInlineMetaLabel: { fontSize: rf(13), fontWeight: "800" },
   linkHint: {
     borderWidth: 1,
     borderRadius: borderRadius.pill,

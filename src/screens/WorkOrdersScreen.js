@@ -317,23 +317,6 @@ export default function WorkOrdersScreen({
     <>
       <View
         style={[
-          styles.statCard,
-          {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
-          },
-        ]}
-      >
-        <Text style={[styles.summaryValue, { color: colors.text }]}>
-          {workOrders.length}
-        </Text>
-        <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-          Ordenes registradas
-        </Text>
-      </View>
-
-      <View
-        style={[
           styles.controlsPanel,
           {
             backgroundColor: colors.cardBackground,
@@ -593,7 +576,7 @@ export default function WorkOrdersScreen({
             <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
               <Text style={[styles.detailLineLabel, { color: colors.text }]}>
                 Diagnostico:
-              </Text>
+              </Text>{" "}
               {diagnostic?.id ||
                 selectedWorkOrder?.diagnosticId ||
                 "Sin diagnostico"}
@@ -601,19 +584,19 @@ export default function WorkOrdersScreen({
             <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
               <Text style={[styles.detailLineLabel, { color: colors.text }]}>
                 Cliente:
-              </Text>
+              </Text>{" "}
               {client?.fullName || selectedWorkOrder?.clientId || "Sin cliente"}
             </Text>
             <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
               <Text style={[styles.detailLineLabel, { color: colors.text }]}>
                 Vehiculo:
-              </Text>
+              </Text>{" "}
               {vehicle?.plate || selectedWorkOrder?.vehicleId || "Sin vehiculo"}
             </Text>
             <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
               <Text style={[styles.detailLineLabel, { color: colors.text }]}>
                 Estado:
-              </Text>
+              </Text>{" "}
               {workOrderStatusOptions.find(
                 (item) => item.key === selectedWorkOrder?.status,
               )?.label ||
@@ -957,17 +940,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
   scrollContent: { padding: spacing.lg, gap: spacing.lg },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
-  statCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.xs,
-    alignSelf: "flex-start",
-    minWidth: rf(132),
-  },
-  summaryValue: { fontSize: rf(28), fontWeight: "900" },
-  summaryLabel: { fontSize: rf(14), lineHeight: rf(20) },
   detailCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
