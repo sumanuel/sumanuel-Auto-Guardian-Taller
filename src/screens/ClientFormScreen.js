@@ -310,13 +310,13 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  cardTitle: { fontSize: rf(16), fontWeight: "800" },
-  cardMeta: { fontSize: rf(11), fontWeight: "700" },
+  cardTitle: { fontSize: rf(17), fontWeight: "800" },
+  cardMeta: { fontSize: rf(12), fontWeight: "700" },
   formGroup: {
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(11),
+    fontSize: rf(12),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -326,14 +326,14 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    fontSize: rf(14),
+    fontSize: rf(15),
   },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    fontSize: rf(14),
+    fontSize: rf(15),
     minHeight: rf(96),
   },
   primaryAction: {
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryActionText: {
-    fontSize: rf(14),
+    fontSize: rf(15),
     fontWeight: "800",
   },
 });

@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
   },
-  filterChipText: { fontSize: rf(11), fontWeight: "700" },
+  filterChipText: { fontSize: rf(12), fontWeight: "700" },
   listBody: { gap: spacing.sm },
   listHeaderRow: {
     flexDirection: "row",
