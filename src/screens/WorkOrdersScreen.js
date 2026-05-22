@@ -430,22 +430,112 @@ export default function WorkOrdersScreen({
                   </View>
                   <View style={styles.cardBody}>
                     <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                      style={[
+                        styles.detailMetaLine,
+                        { color: colors.textSecondary },
+                      ]}
                     >
+                      <Text
+                        style={[styles.detailMetaLabel, { color: colors.text }]}
+                      >
+                        Diagnostico:
+                      </Text>{" "}
                       {diagnostic?.id ||
                         workOrder.diagnosticId ||
-                        "Sin diagnostico"}{" "}
-                      ·{" "}
-                      {vehicle?.plate || workOrder.vehicleId || "Sin vehiculo"}
+                        "Sin diagnostico"}
                     </Text>
                     <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                      style={[
+                        styles.detailMetaLine,
+                        { color: colors.textSecondary },
+                      ]}
                     >
+                      <Text
+                        style={[styles.detailMetaLabel, { color: colors.text }]}
+                      >
+                        Cliente:
+                      </Text>{" "}
                       {client?.fullName || workOrder.clientId || "Sin cliente"}
                     </Text>
                     <Text
-                      style={[styles.rowMeta, { color: colors.textTertiary }]}
+                      style={[
+                        styles.vehicleSectionLabel,
+                        { color: colors.accent },
+                      ]}
                     >
+                      vehiculo:
+                    </Text>
+                    <View
+                      style={[
+                        styles.vehicleCard,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.vehicleTitle, { color: colors.text }]}
+                      >
+                        {[vehicle?.brand, vehicle?.model, vehicle?.year]
+                          .filter(Boolean)
+                          .join(" ") ||
+                          vehicle?.plate ||
+                          workOrder.vehicleId ||
+                          "Sin vehiculo"}
+                      </Text>
+                      <View
+                        style={[
+                          styles.vehicleDivider,
+                          { backgroundColor: colors.border },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.vehicleMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.vehicleMetaLabel,
+                            { color: colors.text },
+                          ]}
+                        >
+                          Placa:
+                        </Text>{" "}
+                        {vehicle?.plate || "Sin placa"}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.vehicleMeta,
+                          { color: colors.textTertiary },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.vehicleMetaLabel,
+                            { color: colors.text },
+                          ]}
+                        >
+                          Kilometraje:
+                        </Text>{" "}
+                        {vehicle?.mileage
+                          ? `${vehicle.mileage} km`
+                          : "Sin kilometraje"}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.detailMetaLine,
+                        { color: colors.textTertiary },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.detailMetaLabel, { color: colors.text }]}
+                      >
+                        Mecanicos:
+                      </Text>{" "}
                       {assignedMechanics || "Sin mecanicos asignados"}
                     </Text>
                     <Pressable
@@ -529,8 +619,8 @@ export default function WorkOrdersScreen({
             Operacion
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            No hay ordenes para el filtro actual. Cambia el estado o abre la
-            primera orden desde el boton flotante.
+            No hay ordenes para el filtro actual. Cambia el estado o crea la
+            primera orden desde un diagnostico activo.
           </Text>
         </View>
       )}
@@ -931,7 +1021,7 @@ export default function WorkOrdersScreen({
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
@@ -944,7 +1034,7 @@ export default function WorkOrdersScreen({
           subtitle={
             screenMode === SCREEN_MODES.DETAIL
               ? "Desde aqui puedes revisar contexto, mecanicos asignados y avances cronologicos."
-              : "Registra la orden en una pantalla dedicada y vuelve a la lista para editar, eliminar o continuar con repuestos."
+              : "Abre la orden desde un diagnostico activo y vuelve a la lista para editar, eliminar o continuar con repuestos."
           }
           title={
             screenMode === SCREEN_MODES.DETAIL
@@ -957,18 +1047,6 @@ export default function WorkOrdersScreen({
           ? renderListScreen()
           : renderDetailScreen()}
       </ScrollView>
-
-      {screenMode === SCREEN_MODES.LIST ? (
-        <Pressable
-          onPress={() => onOpenWorkOrderForm?.(null)}
-          style={[
-            styles.fab,
-            { backgroundColor: colors.primary, shadowColor: colors.shadow },
-          ]}
-        >
-          <Ionicons color={colors.white} name="add" size={rf(24)} />
-        </Pressable>
-      ) : null}
     </SafeAreaView>
   );
 }
@@ -976,7 +1054,6 @@ export default function WorkOrdersScreen({
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
   scrollContent: { padding: spacing.lg, gap: spacing.lg },
-  scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
   detailCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -1040,8 +1117,16 @@ const styles = StyleSheet.create({
   cardBody: { gap: spacing.xs },
   rowTitle: { fontSize: rf(17), fontWeight: "800" },
   rowMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  detailMetaLine: { fontSize: rf(13), lineHeight: rf(19) },
+  detailMetaLabel: { fontSize: rf(13), fontWeight: "800" },
   formGroup: { gap: spacing.sm },
   fieldLabel: { fontSize: rf(13), fontWeight: "700" },
+  vehicleSectionLabel: {
+    fontSize: rf(13),
+    fontWeight: "900",
+    lineHeight: rf(19),
+    textTransform: "none",
+  },
   listCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -1136,15 +1221,4 @@ const styles = StyleSheet.create({
   },
   emptyInlineChipText: { fontSize: rf(11), fontWeight: "700" },
   emptyText: { fontSize: rf(14), lineHeight: rf(21) },
-  fab: {
-    position: "absolute",
-    right: spacing.lg,
-    bottom: spacing.xl,
-    width: rf(58),
-    height: rf(58),
-    borderRadius: borderRadius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 6,
-  },
 });
