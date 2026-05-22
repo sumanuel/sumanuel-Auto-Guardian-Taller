@@ -58,6 +58,8 @@ function normalizeWhatsappPhone(phone) {
   return digits;
 }
 
+const WHATSAPP_PACKAGES = ["com.whatsapp", "com.whatsapp.w4b"];
+
 export default function DiagnosticsScreen({
   onBack,
   onOpenDiagnosticForm,
@@ -246,7 +248,10 @@ export default function DiagnosticsScreen({
 
   const handleSendQuoteWhatsapp = async (diagnostic, client) => {
     if (!client?.phone) {
-      Alert.alert("Diagnosticos", "El cliente no tiene numero asociado.");
+      Alert.alert(
+        "Diagnosticos",
+        "Se debe registrar el numero de telefono del cliente.",
+      );
       return;
     }
 
@@ -255,25 +260,53 @@ export default function DiagnosticsScreen({
     if (!whatsappPhone) {
       Alert.alert(
         "Diagnosticos",
-        "El numero del cliente no es valido para WhatsApp.",
+        "Se debe registrar un numero de telefono valido del cliente.",
       );
       return;
     }
 
     try {
-      const { fileUri, mimeType } =
+      const { fileUri, contentUri, mimeType } =
         await ensureDiagnosticQuotePdfFile(diagnostic);
       const canShare = await Sharing.isAvailableAsync();
+
+      const shareOptions = {
+        mimeType,
+        dialogTitle: `Compartir cotizacion para ${client.fullName || "cliente"}`,
+        UTI: "com.adobe.pdf",
+      };
+
+      if (Platform.OS === "android") {
+        const shareText = `Cotizacion ${diagnostic.id || ""}`.trim();
+
+        for (const packageName of WHATSAPP_PACKAGES) {
+          try {
+            await IntentLauncher.startActivityAsync(
+              "android.intent.action.SEND",
+              {
+                packageName,
+                type: mimeType,
+                flags: 1,
+                extra: {
+                  "android.intent.extra.STREAM": contentUri,
+                  "android.intent.extra.TEXT": shareText,
+                },
+              },
+            );
+            return;
+          } catch (error) {
+            if (!String(error?.message || "").includes("Package not found")) {
+              throw error;
+            }
+          }
+        }
+      }
 
       if (!canShare) {
         throw new Error("El dispositivo no permite compartir archivos PDF.");
       }
 
-      await Sharing.shareAsync(fileUri, {
-        mimeType,
-        dialogTitle: `Compartir cotizacion para ${client.fullName || "cliente"}`,
-        UTI: "com.adobe.pdf",
-      });
+      await Sharing.shareAsync(fileUri, shareOptions);
     } catch (error) {
       Alert.alert(
         "Diagnosticos",
