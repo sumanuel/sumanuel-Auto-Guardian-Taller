@@ -330,7 +330,7 @@ function AppContent() {
               diagnostic: diagnostic || null,
               draft: options.seedData || null,
               returnTo: APP_SCREENS.CLIENTS,
-              clientId: options.seedData?.clientId || client?.id || null,
+              clientId: options.seedData?.clientId || null,
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
           }}

@@ -449,15 +449,15 @@ export default function ClientsScreen({
                     style={[
                       styles.iconAction,
                       {
-                        backgroundColor: colors.cardMuted,
+                        backgroundColor: colors.cardBackground,
                         borderColor: colors.border,
                       },
                     ]}
                   >
                     <Ionicons
-                      color={colors.primary}
+                      color={colors.textTertiary}
                       name="create-outline"
-                      size={rf(18)}
+                      size={rf(17)}
                     />
                   </Pressable>
                   <Pressable
@@ -465,7 +465,7 @@ export default function ClientsScreen({
                     style={[
                       styles.iconAction,
                       {
-                        backgroundColor: colors.cardMuted,
+                        backgroundColor: colors.cardBackground,
                         borderColor: colors.border,
                       },
                     ]}
@@ -473,7 +473,7 @@ export default function ClientsScreen({
                     <Ionicons
                       color={colors.danger}
                       name="trash-outline"
-                      size={rf(18)}
+                      size={rf(17)}
                     />
                   </Pressable>
                 </View>
@@ -697,15 +697,15 @@ export default function ClientsScreen({
                   style={[
                     styles.iconAction,
                     {
-                      backgroundColor: colors.cardMuted,
+                      backgroundColor: colors.cardBackground,
                       borderColor: colors.border,
                     },
                   ]}
                 >
                   <Ionicons
-                    color={colors.primary}
+                    color={colors.textTertiary}
                     name="create-outline"
-                    size={rf(18)}
+                    size={rf(17)}
                   />
                 </Pressable>
                 <Pressable
@@ -713,7 +713,7 @@ export default function ClientsScreen({
                   style={[
                     styles.iconAction,
                     {
-                      backgroundColor: colors.cardMuted,
+                        backgroundColor: colors.cardBackground,
                       borderColor: colors.border,
                     },
                   ]}
@@ -721,7 +721,7 @@ export default function ClientsScreen({
                   <Ionicons
                     color={colors.danger}
                     name="trash-outline"
-                    size={rf(18)}
+                      size={rf(17)}
                   />
                 </Pressable>
               </View>
@@ -865,8 +865,8 @@ const styles = StyleSheet.create({
   iconActionRow: { flexDirection: "row", gap: spacing.xs },
   iconAction: {
     borderWidth: 1,
-    width: rf(38),
-    height: rf(38),
+    width: rf(36),
+    height: rf(36),
     borderRadius: borderRadius.md,
     alignItems: "center",
     justifyContent: "center",

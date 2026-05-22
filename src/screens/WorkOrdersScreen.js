@@ -587,12 +587,43 @@ export default function WorkOrdersScreen({
               </Text>{" "}
               {client?.fullName || selectedWorkOrder?.clientId || "Sin cliente"}
             </Text>
-            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-                Vehiculo:
-              </Text>{" "}
-              {vehicle?.plate || selectedWorkOrder?.vehicleId || "Sin vehiculo"}
-            </Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>Vehiculo</Text>
+            <View
+              style={[
+                styles.vehicleCard,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.vehicleTitle, { color: colors.text }]}>
+                {[vehicle?.brand, vehicle?.model, vehicle?.year]
+                  .filter(Boolean)
+                  .join(" ") ||
+                  vehicle?.plate ||
+                  selectedWorkOrder?.vehicleId ||
+                  "Sin vehiculo"}
+              </Text>
+              <View
+                style={[
+                  styles.vehicleDivider,
+                  { backgroundColor: colors.border },
+                ]}
+              />
+              <Text style={[styles.vehicleMeta, { color: colors.textSecondary }]}>
+                <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
+                  Placa:
+                </Text>{" "}
+                {vehicle?.plate || "Sin placa"}
+              </Text>
+              <Text style={[styles.vehicleMeta, { color: colors.textTertiary }]}>
+                <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
+                  Kilometraje:
+                </Text>{" "}
+                {vehicle?.mileage ? `${vehicle.mileage} km` : "Sin kilometraje"}
+              </Text>
+            </View>
             <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
               <Text style={[styles.detailLineLabel, { color: colors.text }]}>
                 Estado:
@@ -1014,6 +1045,21 @@ const styles = StyleSheet.create({
   detailLines: { gap: spacing.xs },
   detailLine: { fontSize: rf(14), lineHeight: rf(22) },
   detailLineLabel: { fontSize: rf(14), fontWeight: "800" },
+  vehicleCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+  },
+  vehicleTitle: { fontSize: rf(15), fontWeight: "800", lineHeight: rf(21) },
+  vehicleDivider: {
+    height: 1,
+    width: "100%",
+    borderRadius: borderRadius.pill,
+  },
+  vehicleMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  vehicleMetaLabel: { fontSize: rf(13), fontWeight: "800" },
   detailActionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
