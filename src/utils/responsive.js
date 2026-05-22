@@ -93,6 +93,7 @@ export const borderRadius = {
   md: s(12),
   lg: s(18),
   xl: s(24),
+  pill: s(999),
 };
 
 export const iconSize = {

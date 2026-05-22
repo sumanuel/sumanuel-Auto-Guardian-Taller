@@ -1,4 +1,3 @@
-import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
@@ -33,7 +32,7 @@ const roleLabels = {
 };
 
 export default function WorkshopHomeScreen({ userProfile }) {
-  const { colors, isDarkMode } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <SafeAreaView
@@ -47,53 +46,92 @@ export default function WorkshopHomeScreen({ userProfile }) {
           title="Auto-Guardian"
         />
 
-        <LinearGradient
-          colors={
-            isDarkMode
-              ? ["#1350a7", "#0d3570", "#09111a"]
-              : ["#1e7af1", "#0f5fd2", "#0d3f8a"]
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.heroCard}
+        <View
+          style={[
+            styles.heroCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
         >
           <View style={styles.heroTopRow}>
             <View style={styles.heroCopy}>
-              <Text style={styles.heroEyebrow}>Estado operativo</Text>
-              <Text style={styles.heroTitle}>
+              <Text style={[styles.heroEyebrow, { color: colors.primary }]}>
+                Estado operativo
+              </Text>
+              <Text style={[styles.heroTitle, { color: colors.text }]}>
                 {userProfile?.fullName || "Usuario activo"}
               </Text>
-              <Text style={styles.heroSubtitle}>
+              <Text
+                style={[styles.heroSubtitle, { color: colors.textSecondary }]}
+              >
                 {roleLabels[userProfile?.role] ||
                   userProfile?.role ||
                   "Sin rol"}
               </Text>
             </View>
 
-            <View style={styles.alertPill}>
-              <Text style={styles.alertPillText}>3 alertas</Text>
+            <View
+              style={[styles.alertPill, { backgroundColor: colors.cardMuted }]}
+            >
+              <Text style={[styles.alertPillText, { color: colors.primary }]}>
+                3 alertas
+              </Text>
             </View>
           </View>
 
           <View style={styles.metricsGrid}>
-            <View style={[styles.metricTile, styles.metricTilePrimary]}>
-              <Text style={styles.metricValue}>18</Text>
-              <Text style={styles.metricLabel}>Vehiculos</Text>
+            <View
+              style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
+            >
+              <Text style={[styles.metricValue, { color: colors.text }]}>
+                18
+              </Text>
+              <Text
+                style={[styles.metricLabel, { color: colors.textSecondary }]}
+              >
+                Vehiculos
+              </Text>
             </View>
-            <View style={[styles.metricTile, styles.metricTileDark]}>
-              <Text style={styles.metricValue}>5</Text>
-              <Text style={styles.metricLabel}>Urgentes</Text>
+            <View
+              style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
+            >
+              <Text style={[styles.metricValue, { color: colors.text }]}>
+                5
+              </Text>
+              <Text
+                style={[styles.metricLabel, { color: colors.textSecondary }]}
+              >
+                Urgentes
+              </Text>
             </View>
-            <View style={[styles.metricTile, styles.metricTileDark]}>
-              <Text style={styles.metricValue}>7</Text>
-              <Text style={styles.metricLabel}>Diagnosticos</Text>
+            <View
+              style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
+            >
+              <Text style={[styles.metricValue, { color: colors.text }]}>
+                7
+              </Text>
+              <Text
+                style={[styles.metricLabel, { color: colors.textSecondary }]}
+              >
+                Diagnosticos
+              </Text>
             </View>
-            <View style={[styles.metricTile, styles.metricTileDark]}>
-              <Text style={styles.metricValue}>11</Text>
-              <Text style={styles.metricLabel}>Ordenes</Text>
+            <View
+              style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
+            >
+              <Text style={[styles.metricValue, { color: colors.text }]}>
+                11
+              </Text>
+              <Text
+                style={[styles.metricLabel, { color: colors.textSecondary }]}
+              >
+                Ordenes
+              </Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
         <View
           style={[
@@ -123,23 +161,38 @@ export default function WorkshopHomeScreen({ userProfile }) {
               style={[
                 styles.queueRow,
                 {
-                  borderBottomColor: colors.border,
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
                 },
               ]}
             >
               <View style={styles.queueCopy}>
-                <Text style={[styles.queueTitle, { color: colors.text }]}>
-                  {item.title}
-                </Text>
+                <View
+                  style={[
+                    styles.queueHeader,
+                    { borderBottomColor: colors.border },
+                  ]}
+                >
+                  <View style={styles.queueHeaderCopy}>
+                    <Text
+                      style={[styles.queueEyebrow, { color: colors.primary }]}
+                    >
+                      Agenda
+                    </Text>
+                    <Text style={[styles.queueTitle, { color: colors.text }]}>
+                      {item.title}
+                    </Text>
+                  </View>
+                  <Text style={[styles.queueStatus, { color: colors.primary }]}>
+                    {item.status}
+                  </Text>
+                </View>
                 <Text
                   style={[styles.queueDetail, { color: colors.textSecondary }]}
                 >
                   {item.detail}
                 </Text>
               </View>
-              <Text style={[styles.queueStatus, { color: colors.primary }]}>
-                {item.status}
-              </Text>
             </View>
           ))}
         </View>
@@ -156,9 +209,10 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   heroCard: {
-    borderRadius: borderRadius.xxl,
-    padding: spacing.xl,
-    gap: spacing.xl,
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    gap: spacing.lg,
   },
   heroTopRow: {
     flexDirection: "row",
@@ -173,27 +227,24 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: "uppercase",
   },
-  heroTitle: { color: "#ffffff", fontSize: rf(28), fontWeight: "900" },
-  heroSubtitle: { color: "#d8e7ff", fontSize: rf(15), lineHeight: rf(22) },
+  heroTitle: { fontSize: rf(24), fontWeight: "900" },
+  heroSubtitle: { fontSize: rf(14), lineHeight: rf(20) },
   alertPill: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.16)",
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  alertPillText: { color: "#ffffff", fontSize: rf(12), fontWeight: "800" },
+  alertPillText: { fontSize: rf(12), fontWeight: "800" },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
   metricTile: {
     width: "47%",
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.sm,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    gap: 2,
   },
-  metricTilePrimary: { backgroundColor: "rgba(255,255,255,0.18)" },
-  metricTileDark: { backgroundColor: "rgba(8,15,25,0.78)" },
-  metricValue: { color: "#ffffff", fontSize: rf(28), fontWeight: "900" },
-  metricLabel: { color: "#d8e7ff", fontSize: rf(13), fontWeight: "700" },
+  metricValue: { fontSize: rf(24), fontWeight: "900" },
+  metricLabel: { fontSize: rf(12), fontWeight: "700" },
   sectionPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -213,15 +264,27 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   queueRow: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+  },
+  queueCopy: { flex: 1, gap: spacing.sm },
+  queueHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.md,
-    paddingVertical: spacing.lg,
+    paddingBottom: spacing.sm,
     borderBottomWidth: 1,
   },
-  queueCopy: { flex: 1, gap: spacing.xs },
+  queueHeaderCopy: { flex: 1, gap: 2 },
+  queueEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   queueTitle: { fontSize: rf(16), fontWeight: "800" },
   queueDetail: { fontSize: rf(13), lineHeight: rf(18) },
-  queueStatus: { fontSize: rf(12), fontWeight: "800", textAlign: "right" },
+  queueStatus: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
 });

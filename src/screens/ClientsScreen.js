@@ -431,6 +431,20 @@ export default function ClientsScreen({
           },
         ]}
       >
+        <View style={[styles.cardHeader, { borderBottomColor: colors.border }]}>
+          <View style={styles.cardHeaderCopy}>
+            <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
+              Recepcion
+            </Text>
+            <Text style={[styles.clientTitle, { color: colors.text }]}>
+              Resumen del cliente
+            </Text>
+          </View>
+          <Text style={[styles.cardTag, { color: colors.primary }]}>
+            {selectedClient?.id || "Sin codigo"}
+          </Text>
+        </View>
+
         <View style={styles.detailGrid}>
           <View style={styles.detailBlock}>
             <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>

@@ -539,6 +539,22 @@ export default function WorkOrdersScreen({
             },
           ]}
         >
+          <View
+            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
+          >
+            <View style={styles.cardHeaderCopy}>
+              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
+                Operacion
+              </Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>
+                Resumen de orden
+              </Text>
+            </View>
+            <Text style={[styles.cardTag, { color: colors.primary }]}>
+              {selectedWorkOrder?.id || "Sin orden"}
+            </Text>
+          </View>
+
           <View style={styles.detailGrid}>
             <View style={styles.detailBlock}>
               <Text
@@ -672,9 +688,18 @@ export default function WorkOrdersScreen({
             },
           ]}
         >
-          <Text style={[styles.rowTitle, { color: colors.text }]}>
-            Registrar avance
-          </Text>
+          <View
+            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
+          >
+            <View style={styles.cardHeaderCopy}>
+              <Text style={[styles.cardEyebrow, { color: colors.accent }]}>
+                Taller
+              </Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>
+                Registrar avance
+              </Text>
+            </View>
+          </View>
 
           <View style={styles.filterRow}>
             {progressEntryTypeOptions.map((typeOption) => {
@@ -751,10 +776,17 @@ export default function WorkOrdersScreen({
             },
           ]}
         >
-          <View style={styles.listHeaderRow}>
-            <Text style={[styles.rowTitle, { color: colors.text }]}>
-              Cronologia
-            </Text>
+          <View
+            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
+          >
+            <View style={styles.cardHeaderCopy}>
+              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
+                Taller
+              </Text>
+              <Text style={[styles.rowTitle, { color: colors.text }]}>
+                Cronologia
+              </Text>
+            </View>
             <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
               {progressEntries.length} registro
               {progressEntries.length === 1 ? "" : "s"}

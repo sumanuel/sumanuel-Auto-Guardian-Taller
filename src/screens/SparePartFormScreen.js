@@ -121,10 +121,13 @@ export default function SparePartFormScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right"]}
+      edges={["left", "right", "bottom"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <WorkshopScreenHeader
           onBack={onBack}
           section="Repuestos"
@@ -141,6 +144,22 @@ export default function SparePartFormScreen({
             },
           ]}
         >
+          <View
+            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
+          >
+            <View style={styles.cardHeaderCopy}>
+              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
+                Costos
+              </Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>
+                Registro de pieza
+              </Text>
+            </View>
+            <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
+              {editingSparePartId ? "Revision" : "Nueva pieza"}
+            </Text>
+          </View>
+
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
               Orden asociada
@@ -351,7 +370,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+    gap: spacing.xl,
   },
   headerRow: {
     flexDirection: "row",
@@ -378,9 +397,26 @@ const styles = StyleSheet.create({
   formCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
   },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+  },
+  cardHeaderCopy: { flex: 1, gap: 2 },
+  cardEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  cardTitle: { fontSize: rf(16), fontWeight: "800" },
+  cardMeta: { fontSize: rf(11), fontWeight: "700" },
   formGroup: { gap: spacing.sm },
   fieldLabel: { fontSize: rf(12), fontWeight: "700" },
   optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },

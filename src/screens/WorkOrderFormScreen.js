@@ -170,6 +170,22 @@ export default function WorkOrderFormScreen({
             },
           ]}
         >
+          <View
+            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
+          >
+            <View style={styles.cardHeaderCopy}>
+              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
+                Operacion
+              </Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>
+                Plan de trabajo
+              </Text>
+            </View>
+            <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
+              {editingWorkOrderId ? "Actualizacion" : "Nueva orden"}
+            </Text>
+          </View>
+
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
               Diagnostico base
@@ -349,6 +365,23 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+  },
+  cardHeaderCopy: { flex: 1, gap: 2 },
+  cardEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  cardTitle: { fontSize: rf(16), fontWeight: "800" },
+  cardMeta: { fontSize: rf(11), fontWeight: "700" },
   formGroup: { gap: spacing.sm },
   fieldLabel: {
     fontSize: rf(11),
