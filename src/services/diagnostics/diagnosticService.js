@@ -1,8 +1,15 @@
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
 import { firestore } from "../firebase/config";
 import {
   createEntityRecord,
   deleteEntityRecord,
+  getEntityRecord,
   patchEntityRecord,
 } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
@@ -25,7 +32,12 @@ export const diagnosticStatusOptions = [
   { key: "in-review", label: "En revision" },
   { key: "quoted", label: "Cotizado" },
   { key: "approved", label: "Aprobado" },
+  { key: "closed", label: "Cerrado" },
 ];
+
+export function isDiagnosticClosed(status) {
+  return normalizeOptional(status) === "closed";
+}
 
 export async function listDiagnostics() {
   const collectionRef = collection(firestore, diagnosticsCollection.name);
@@ -39,6 +51,31 @@ export async function listDiagnostics() {
   }));
 }
 
+export async function findActiveDiagnosticByVehicleId(
+  vehicleId,
+  excludeDiagnosticId = "",
+) {
+  const normalizedVehicleId = normalizeOptional(vehicleId);
+
+  if (!normalizedVehicleId) {
+    return null;
+  }
+
+  const diagnostics = await listDiagnostics();
+
+  return (
+    diagnostics.find((diagnostic) => {
+      const currentId = diagnostic.refId || diagnostic.id || "";
+
+      return (
+        normalizeOptional(diagnostic.vehicleId) === normalizedVehicleId &&
+        !isDiagnosticClosed(diagnostic.status) &&
+        currentId !== normalizeOptional(excludeDiagnosticId)
+      );
+    }) || null
+  );
+}
+
 export async function createDiagnostic({
   clientId,
   vehicleId,
@@ -50,6 +87,15 @@ export async function createDiagnostic({
   sparePartsText,
   notes,
 }) {
+  const existingActiveDiagnostic =
+    await findActiveDiagnosticByVehicleId(vehicleId);
+
+  if (existingActiveDiagnostic) {
+    throw new Error(
+      "Esta unidad ya tiene un diagnostico abierto. Debes editar ese mismo registro antes de crear otro.",
+    );
+  }
+
   return createEntityRecord("diagnostics", {
     clientId: normalizeOptional(clientId),
     vehicleId: normalizeOptional(vehicleId),
@@ -65,6 +111,27 @@ export async function createDiagnostic({
 }
 
 export async function updateDiagnostic(diagnosticId, payload) {
+  const currentDiagnostic = await getEntityRecord("diagnostics", diagnosticId);
+
+  if (!currentDiagnostic) {
+    throw new Error("No se encontro el diagnostico a actualizar.");
+  }
+
+  if (isDiagnosticClosed(currentDiagnostic.status)) {
+    throw new Error("Este diagnostico ya esta cerrado y no se puede editar.");
+  }
+
+  const existingActiveDiagnostic = await findActiveDiagnosticByVehicleId(
+    payload.vehicleId,
+    diagnosticId,
+  );
+
+  if (existingActiveDiagnostic) {
+    throw new Error(
+      "Esta unidad ya tiene otro diagnostico abierto. Debes continuar con ese registro.",
+    );
+  }
+
   await patchEntityRecord("diagnostics", diagnosticId, {
     clientId: normalizeOptional(payload.clientId),
     vehicleId: normalizeOptional(payload.vehicleId),
@@ -74,6 +141,19 @@ export async function updateDiagnostic(diagnosticId, payload) {
     serviceItems: normalizeListInput(payload.serviceItemsText),
     spareParts: normalizeListInput(payload.sparePartsText),
     notes: normalizeOptional(payload.notes),
+  });
+}
+
+export async function closeDiagnostic(diagnosticId) {
+  const currentDiagnostic = await getEntityRecord("diagnostics", diagnosticId);
+
+  if (!currentDiagnostic || isDiagnosticClosed(currentDiagnostic.status)) {
+    return;
+  }
+
+  await patchEntityRecord("diagnostics", diagnosticId, {
+    status: "closed",
+    closedAt: serverTimestamp(),
   });
 }
 

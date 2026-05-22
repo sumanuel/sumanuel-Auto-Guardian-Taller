@@ -16,6 +16,7 @@ import {
   createDiagnostic,
   createEmptyDiagnosticForm,
   diagnosticStatusOptions,
+  isDiagnosticClosed,
   updateDiagnostic,
 } from "../services/diagnostics/diagnosticService";
 import { listMechanicProfiles } from "../services/admin/staffAdmin";
@@ -46,8 +47,12 @@ export default function DiagnosticFormScreen({
   );
 
   const editingDiagnosticId = getDiagnosticId(initialDiagnostic);
+  const isClosedDiagnostic = isDiagnosticClosed(initialDiagnostic?.status);
   const seededFromClientDetail = Boolean(
     initialDraft?.clientId && initialDraft?.vehicleId,
+  );
+  const editableStatusOptions = diagnosticStatusOptions.filter(
+    (statusOption) => statusOption.key !== "closed",
   );
 
   useEffect(() => {
@@ -100,6 +105,14 @@ export default function DiagnosticFormScreen({
   );
 
   const handleSubmit = async () => {
+    if (isClosedDiagnostic) {
+      Alert.alert(
+        "Diagnosticos",
+        "Este diagnostico ya esta cerrado y no se puede editar.",
+      );
+      return;
+    }
+
     if (!form.clientId.trim() || !form.vehicleId.trim()) {
       Alert.alert(
         "Diagnosticos",
@@ -183,15 +196,7 @@ export default function DiagnosticFormScreen({
           </View>
 
           {seededFromClientDetail ? (
-            <View
-              style={[
-                styles.selectionSummary,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
+            <View style={styles.selectionSummary}>
               <Text
                 style={[styles.selectionLine, { color: colors.textSecondary }]}
               >
@@ -199,12 +204,14 @@ export default function DiagnosticFormScreen({
                   style={[styles.selectionLineLabel, { color: colors.text }]}
                 >
                   Cliente:
-                </Text>
+                </Text>{" "}
                 {selectedClient?.fullName || form.clientId || "Sin cliente"}
               </Text>
 
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Vehiculo:
+              <Text
+                style={[styles.vehicleSummaryLabel, { color: colors.accent }]}
+              >
+                vehiculo:
               </Text>
               <View
                 style={[
@@ -243,7 +250,7 @@ export default function DiagnosticFormScreen({
                     style={[styles.selectionMetaLabel, { color: colors.text }]}
                   >
                     Placa:
-                  </Text>
+                  </Text>{" "}
                   {selectedVehicle?.plate || "Sin placa"}
                 </Text>
                 <Text
@@ -256,7 +263,7 @@ export default function DiagnosticFormScreen({
                     style={[styles.selectionMetaLabel, { color: colors.text }]}
                   >
                     Kilometraje:
-                  </Text>
+                  </Text>{" "}
                   {selectedVehicle?.mileage
                     ? `${selectedVehicle.mileage} km`
                     : "Sin kilometraje"}
@@ -418,7 +425,7 @@ export default function DiagnosticFormScreen({
               Estado
             </Text>
             <View style={styles.optionWrap}>
-              {diagnosticStatusOptions.map((statusOption) => {
+              {editableStatusOptions.map((statusOption) => {
                 const selected = form.status === statusOption.key;
 
                 return (
@@ -453,6 +460,13 @@ export default function DiagnosticFormScreen({
               })}
             </View>
           </View>
+
+          {isClosedDiagnostic ? (
+            <Text style={[styles.closedNote, { color: colors.textSecondary }]}>
+              Este diagnostico ya fue cerrado al crear su orden y queda solo en
+              consulta.
+            </Text>
+          ) : null}
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
@@ -555,15 +569,25 @@ export default function DiagnosticFormScreen({
           </View>
 
           <Pressable
+            disabled={isClosedDiagnostic || submitting}
             onPress={handleSubmit}
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
+            style={[
+              styles.primaryAction,
+              {
+                backgroundColor: isClosedDiagnostic
+                  ? colors.cardMuted
+                  : colors.primary,
+              },
+            ]}
           >
             <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              {submitting
-                ? "Guardando diagnostico..."
-                : editingDiagnosticId
-                  ? "Guardar cambios"
-                  : "Crear diagnostico"}
+              {isClosedDiagnostic
+                ? "Diagnostico cerrado"
+                : submitting
+                  ? "Guardando diagnostico..."
+                  : editingDiagnosticId
+                    ? "Guardar cambios"
+                    : "Crear diagnostico"}
             </Text>
           </Pressable>
         </View>
@@ -618,14 +642,15 @@ const styles = StyleSheet.create({
   },
   optionText: { fontSize: rf(13), fontWeight: "700" },
   helperText: { fontSize: rf(14), lineHeight: rf(20) },
-  selectionSummary: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
+  selectionSummary: { gap: spacing.xs },
   selectionLine: { fontSize: rf(14), lineHeight: rf(21) },
   selectionLineLabel: { fontSize: rf(14), fontWeight: "800" },
+  vehicleSummaryLabel: {
+    fontSize: rf(13),
+    fontWeight: "900",
+    lineHeight: rf(19),
+    textTransform: "none",
+  },
   seededVehicleCard: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
@@ -641,6 +666,7 @@ const styles = StyleSheet.create({
   selectionValue: { fontSize: rf(15), fontWeight: "800" },
   selectionMeta: { fontSize: rf(13), lineHeight: rf(19) },
   selectionMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  closedNote: { fontSize: rf(13), lineHeight: rf(19) },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,

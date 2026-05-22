@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BackHandler, StyleSheet, View } from "react-native";
+import { Alert, BackHandler, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
@@ -20,6 +20,7 @@ import WorkshopHomeScreen from "./src/screens/WorkshopHomeScreen";
 import WorkshopMoreScreen from "./src/screens/WorkshopMoreScreen";
 import VehicleFormScreen from "./src/screens/VehicleFormScreen";
 import WorkshopTabBar from "./src/components/common/WorkshopTabBar";
+import { findActiveDiagnosticByVehicleId } from "./src/services/diagnostics/diagnosticService";
 
 const APP_SCREENS = {
   HOME: "home",
@@ -325,14 +326,47 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.VEHICLE_FORM);
           }}
-          onOpenDiagnosticForm={(diagnostic, options = {}) => {
-            setDiagnosticFormContext({
-              diagnostic: diagnostic || null,
-              draft: options.seedData || null,
-              returnTo: APP_SCREENS.CLIENTS,
-              clientId: options.seedData?.clientId || null,
-            });
-            setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
+          onOpenDiagnosticForm={async (diagnostic, options = {}) => {
+            try {
+              const seedData = options.seedData || null;
+
+              if (!diagnostic && seedData?.vehicleId) {
+                const activeDiagnostic = await findActiveDiagnosticByVehicleId(
+                  seedData.vehicleId,
+                );
+
+                if (activeDiagnostic) {
+                  Alert.alert(
+                    "Diagnosticos",
+                    "Esta unidad ya tiene un diagnostico abierto. Se abrira ese mismo registro para editarlo.",
+                  );
+
+                  setDiagnosticFormContext({
+                    diagnostic: activeDiagnostic,
+                    draft: seedData,
+                    returnTo: APP_SCREENS.CLIENTS,
+                    clientId:
+                      seedData.clientId || activeDiagnostic.clientId || null,
+                  });
+                  setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
+                  return;
+                }
+              }
+
+              setDiagnosticFormContext({
+                diagnostic: diagnostic || null,
+                draft: seedData,
+                returnTo: APP_SCREENS.CLIENTS,
+                clientId: seedData?.clientId || diagnostic?.clientId || null,
+              });
+              setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
+            } catch (error) {
+              Alert.alert(
+                "Diagnosticos",
+                error?.message ||
+                  "No se pudo preparar el diagnostico para esta unidad.",
+              );
+            }
           }}
           userProfile={userProfile}
           viewState={clientsViewState}

@@ -271,6 +271,7 @@ export default function DiagnosticsScreen({
           {filteredDiagnostics.map((diagnostic) => {
             const vehicle = vehicleLookup[diagnostic.vehicleId];
             const client = clientLookup[diagnostic.clientId];
+            const isClosedDiagnostic = diagnostic.status === "closed";
             const isSelected =
               viewState?.selectedDiagnosticId === getEntityId(diagnostic);
 
@@ -408,53 +409,57 @@ export default function DiagnosticsScreen({
                       </Text>{" "}
                       {diagnostic.concerns || "Sin hallazgos registrados"}
                     </Text>
-                    <Pressable
-                      onPress={() =>
-                        onOpenWorkOrderForm?.(null, {
-                          seedData: {
-                            diagnosticId: diagnostic.id,
-                            clientId: diagnostic.clientId,
-                            vehicleId: diagnostic.vehicleId,
-                          },
-                        })
-                      }
-                      style={[
-                        styles.secondaryAction,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
+                    {!isClosedDiagnostic ? (
+                      <Pressable
+                        onPress={() =>
+                          onOpenWorkOrderForm?.(null, {
+                            seedData: {
+                              diagnosticId: diagnostic.id,
+                              clientId: diagnostic.clientId,
+                              vehicleId: diagnostic.vehicleId,
+                            },
+                          })
+                        }
                         style={[
-                          styles.secondaryActionText,
-                          { color: colors.accent },
+                          styles.secondaryAction,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.border,
+                          },
                         ]}
                       >
-                        Crear orden desde este diagnostico
-                      </Text>
-                    </Pressable>
+                        <Text
+                          style={[
+                            styles.secondaryActionText,
+                            { color: colors.accent },
+                          ]}
+                        >
+                          Crear orden desde este diagnostico
+                        </Text>
+                      </Pressable>
+                    ) : null}
                   </View>
                 </Pressable>
 
                 <View style={styles.iconActionRow}>
-                  <Pressable
-                    onPress={() => onOpenDiagnosticForm?.(diagnostic)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.textTertiary}
-                      name="create-outline"
-                      size={rf(17)}
-                    />
-                  </Pressable>
+                  {!isClosedDiagnostic ? (
+                    <Pressable
+                      onPress={() => onOpenDiagnosticForm?.(diagnostic)}
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.textTertiary}
+                        name="create-outline"
+                        size={rf(17)}
+                      />
+                    </Pressable>
+                  ) : null}
                   <Pressable
                     onPress={() => handleDelete(diagnostic)}
                     style={[
@@ -501,6 +506,7 @@ export default function DiagnosticsScreen({
   const renderDetailScreen = () => {
     const client = clientLookup[selectedDiagnostic?.clientId];
     const vehicle = vehicleLookup[selectedDiagnostic?.vehicleId];
+    const isClosedDiagnostic = selectedDiagnostic?.status === "closed";
 
     return (
       <View
@@ -597,46 +603,50 @@ export default function DiagnosticsScreen({
         </View>
 
         <View style={styles.detailActionRow}>
-          <Pressable
-            onPress={() => onOpenDiagnosticForm?.(selectedDiagnostic)}
-            style={[
-              styles.secondaryAction,
-              {
-                backgroundColor: colors.cardMuted,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text
-              style={[styles.secondaryActionText, { color: colors.primary }]}
-            >
-              Editar diagnostico
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() =>
-              onOpenWorkOrderForm?.(null, {
-                seedData: {
-                  diagnosticId: selectedDiagnostic?.id,
-                  clientId: selectedDiagnostic?.clientId,
-                  vehicleId: selectedDiagnostic?.vehicleId,
+          {!isClosedDiagnostic ? (
+            <Pressable
+              onPress={() => onOpenDiagnosticForm?.(selectedDiagnostic)}
+              style={[
+                styles.secondaryAction,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
                 },
-              })
-            }
-            style={[
-              styles.secondaryAction,
-              {
-                backgroundColor: colors.cardMuted,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text
-              style={[styles.secondaryActionText, { color: colors.accent }]}
+              ]}
             >
-              Crear orden desde este diagnostico
-            </Text>
-          </Pressable>
+              <Text
+                style={[styles.secondaryActionText, { color: colors.primary }]}
+              >
+                Editar diagnostico
+              </Text>
+            </Pressable>
+          ) : null}
+          {!isClosedDiagnostic ? (
+            <Pressable
+              onPress={() =>
+                onOpenWorkOrderForm?.(null, {
+                  seedData: {
+                    diagnosticId: selectedDiagnostic?.id,
+                    clientId: selectedDiagnostic?.clientId,
+                    vehicleId: selectedDiagnostic?.vehicleId,
+                  },
+                })
+              }
+              style={[
+                styles.secondaryAction,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={[styles.secondaryActionText, { color: colors.accent }]}
+              >
+                Crear orden desde este diagnostico
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     );

@@ -6,6 +6,11 @@ import {
   patchEntityRecord,
 } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
+import {
+  closeDiagnostic,
+  isDiagnosticClosed,
+} from "../diagnostics/diagnosticService";
+import { getEntityRecord } from "../firestore/repository";
 
 const workOrdersCollection = firestoreCollections.workOrders;
 
@@ -53,7 +58,26 @@ export async function createWorkOrder({
   assignedMechanicIdsText,
   status,
 }) {
-  return createEntityRecord("workOrders", {
+  const normalizedDiagnosticId = normalizeOptional(diagnosticId);
+
+  if (normalizedDiagnosticId) {
+    const diagnostic = await getEntityRecord(
+      "diagnostics",
+      normalizedDiagnosticId,
+    );
+
+    if (!diagnostic) {
+      throw new Error("No se encontro el diagnostico base de la orden.");
+    }
+
+    if (isDiagnosticClosed(diagnostic.status)) {
+      throw new Error(
+        "Este diagnostico ya esta cerrado y no admite una nueva orden.",
+      );
+    }
+  }
+
+  const createdWorkOrder = await createEntityRecord("workOrders", {
     diagnosticId: normalizeOptional(diagnosticId),
     vehicleId: normalizeOptional(vehicleId),
     clientId: normalizeOptional(clientId),
@@ -66,6 +90,12 @@ export async function createWorkOrder({
     finishedAt: null,
     deliveredAt: null,
   });
+
+  if (normalizedDiagnosticId) {
+    await closeDiagnostic(normalizedDiagnosticId);
+  }
+
+  return createdWorkOrder;
 }
 
 export async function updateWorkOrder(workOrderId, payload) {
