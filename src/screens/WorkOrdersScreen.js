@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
     minWidth: rf(132),
   },
   summaryValue: { fontSize: rf(28), fontWeight: "900" },
-  summaryLabel: { fontSize: rf(13), lineHeight: rf(18) },
+  summaryLabel: { fontSize: rf(14), lineHeight: rf(20) },
   detailCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -1028,11 +1028,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
-  cardBody: { gap: 2 },
-  rowTitle: { fontSize: rf(16), fontWeight: "800" },
-  rowMeta: { fontSize: rf(12), lineHeight: rf(16) },
+  cardBody: { gap: spacing.xs },
+  rowTitle: { fontSize: rf(17), fontWeight: "800" },
+  rowMeta: { fontSize: rf(13), lineHeight: rf(19) },
   formGroup: { gap: spacing.sm },
-  fieldLabel: { fontSize: rf(12), fontWeight: "700" },
+  fieldLabel: { fontSize: rf(13), fontWeight: "700" },
   listCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -1040,8 +1040,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   detailLines: { gap: spacing.xs },
-  detailLine: { fontSize: rf(13), lineHeight: rf(20) },
-  detailLineLabel: { fontSize: rf(13), fontWeight: "800" },
+  detailLine: { fontSize: rf(14), lineHeight: rf(22) },
+  detailLineLabel: { fontSize: rf(14), fontWeight: "800" },
   detailActionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1054,7 +1054,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     alignSelf: "flex-start",
   },
-  secondaryActionText: { fontSize: rf(12), fontWeight: "800" },
+  secondaryActionText: { fontSize: rf(13), fontWeight: "800" },
   iconActionRow: { gap: spacing.xs, justifyContent: "center" },
   iconAction: {
     borderWidth: 1,
@@ -1077,7 +1077,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     alignItems: "center",
   },
-  primaryButtonText: { fontSize: rf(14), fontWeight: "800" },
+  primaryButtonText: { fontSize: rf(15), fontWeight: "800" },
   timelineList: { gap: spacing.md },
   timelineRow: {
     borderWidth: 1,
@@ -1111,7 +1111,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   emptyInlineChipText: { fontSize: rf(11), fontWeight: "700" },
-  emptyText: { fontSize: rf(13), lineHeight: rf(20) },
+  emptyText: { fontSize: rf(14), lineHeight: rf(21) },
   fab: {
     position: "absolute",
     right: spacing.lg,

@@ -236,10 +236,16 @@ export default function WorkOrderFormScreen({
             ]}
           >
             <Text style={[styles.summaryText, { color: colors.text }]}>
-              Cliente: {clientName || form.clientId || "Sin cliente"}
+              <Text style={[styles.summaryTextLabel, { color: colors.text }]}>
+                Cliente:{" "}
+              </Text>
+              {clientName || form.clientId || "Sin cliente"}
             </Text>
             <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
-              Vehiculo: {vehiclePlate || form.vehicleId || "Sin vehiculo"}
+              <Text style={[styles.summaryTextLabel, { color: colors.text }]}>
+                Vehiculo:{" "}
+              </Text>
+              {vehiclePlate || form.vehicleId || "Sin vehiculo"}
             </Text>
           </View>
 
@@ -404,7 +410,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
-  summaryText: { fontSize: rf(13), lineHeight: rf(18) },
+  summaryText: { fontSize: rf(13), lineHeight: rf(19) },
+  summaryTextLabel: { fontSize: rf(13), fontWeight: "800" },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
