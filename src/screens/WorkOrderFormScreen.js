@@ -128,9 +128,9 @@ export default function WorkOrderFormScreen({
   const clientName = clients.find(
     (client) => client.id === form.clientId,
   )?.fullName;
-  const vehiclePlate = vehicles.find(
+  const selectedVehicle = vehicles.find(
     (vehicle) => vehicle.id === form.vehicleId,
-  )?.plate;
+  );
 
   const toggleMechanic = (uid) => {
     setForm((current) => {
@@ -241,12 +241,55 @@ export default function WorkOrderFormScreen({
               </Text>
               {clientName || form.clientId || "Sin cliente"}
             </Text>
-            <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
-              <Text style={[styles.summaryTextLabel, { color: colors.text }]}>
-                Vehiculo:{" "}
-              </Text>
-              {vehiclePlate || form.vehicleId || "Sin vehiculo"}
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Vehiculo:
             </Text>
+            <View
+              style={[
+                styles.vehicleCard,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.vehicleTitle, { color: colors.text }]}>
+                {[
+                  selectedVehicle?.brand,
+                  selectedVehicle?.model,
+                  selectedVehicle?.year,
+                ]
+                  .filter(Boolean)
+                  .join(" ") ||
+                  selectedVehicle?.plate ||
+                  form.vehicleId ||
+                  "Sin vehiculo"}
+              </Text>
+              <View
+                style={[
+                  styles.vehicleDivider,
+                  { backgroundColor: colors.border },
+                ]}
+              />
+              <Text
+                style={[styles.vehicleMeta, { color: colors.textSecondary }]}
+              >
+                <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
+                  Placa:
+                </Text>{" "}
+                {selectedVehicle?.plate || "Sin placa"}
+              </Text>
+              <Text
+                style={[styles.vehicleMeta, { color: colors.textSecondary }]}
+              >
+                <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
+                  Kilometraje:
+                </Text>{" "}
+                {selectedVehicle?.mileage
+                  ? `${selectedVehicle.mileage} km`
+                  : "Sin kilometraje"}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.formGroup}>
@@ -412,6 +455,21 @@ const styles = StyleSheet.create({
   },
   summaryText: { fontSize: rf(14), lineHeight: rf(20) },
   summaryTextLabel: { fontSize: rf(14), fontWeight: "800" },
+  vehicleCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+  },
+  vehicleTitle: { fontSize: rf(15), fontWeight: "800", lineHeight: rf(21) },
+  vehicleDivider: {
+    height: 1,
+    width: "100%",
+    borderRadius: borderRadius.pill,
+  },
+  vehicleMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  vehicleMetaLabel: { fontSize: rf(13), fontWeight: "800" },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,

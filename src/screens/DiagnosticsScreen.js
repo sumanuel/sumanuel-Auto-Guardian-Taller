@@ -363,14 +363,14 @@ export default function DiagnosticsScreen({
                       styles.iconAction,
                       {
                         backgroundColor: colors.cardBackground,
-                        borderColor: colors.primary,
+                        borderColor: colors.border,
                       },
                     ]}
                   >
                     <Ionicons
-                      color={colors.primary}
+                      color={colors.textTertiary}
                       name="create-outline"
-                      size={rf(18)}
+                      size={rf(17)}
                     />
                   </Pressable>
                   <Pressable
@@ -379,14 +379,14 @@ export default function DiagnosticsScreen({
                       styles.iconAction,
                       {
                         backgroundColor: colors.cardBackground,
-                        borderColor: colors.danger,
+                        borderColor: colors.border,
                       },
                     ]}
                   >
                     <Ionicons
                       color={colors.danger}
                       name="trash-outline"
-                      size={rf(18)}
+                      size={rf(17)}
                     />
                   </Pressable>
                 </View>
@@ -692,8 +692,8 @@ const styles = StyleSheet.create({
   iconAction: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    width: rf(38),
-    height: rf(38),
+    width: rf(36),
+    height: rf(36),
     alignItems: "center",
     justifyContent: "center",
   },
