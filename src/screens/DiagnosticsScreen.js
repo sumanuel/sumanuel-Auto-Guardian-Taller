@@ -51,8 +51,11 @@ export default function DiagnosticsScreen({
   const [diagnostics, setDiagnostics] = useState([]);
   const [clients, setClients] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [selectedDiagnostic, setSelectedDiagnostic] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+
+  const selectedDiagnosticId = getEntityId(selectedDiagnostic);
 
   const clientLookup = useMemo(() => buildLookup(clients), [clients]);
   const vehicleLookup = useMemo(() => buildLookup(vehicles), [vehicles]);
@@ -69,6 +72,19 @@ export default function DiagnosticsScreen({
       setDiagnostics(nextDiagnostics);
       setClients(nextClients);
       setVehicles(nextVehicles);
+
+      if (selectedDiagnosticId) {
+        const refreshedDiagnostic = nextDiagnostics.find(
+          (item) => getEntityId(item) === selectedDiagnosticId,
+        );
+
+        if (refreshedDiagnostic) {
+          setSelectedDiagnostic(refreshedDiagnostic);
+        } else {
+          setSelectedDiagnostic(null);
+          setScreenMode(SCREEN_MODES.LIST);
+        }
+      }
     } catch (error) {
       Alert.alert(
         "Diagnosticos",
@@ -84,10 +100,24 @@ export default function DiagnosticsScreen({
   }, []);
 
   useEffect(() => {
-    setScreenMode(
-      viewState?.selectedDiagnosticId ? SCREEN_MODES.DETAIL : SCREEN_MODES.LIST,
+    if (!viewState?.selectedDiagnosticId) {
+      setSelectedDiagnostic(null);
+      setScreenMode(SCREEN_MODES.LIST);
+      return;
+    }
+
+    const matchedDiagnostic = diagnostics.find(
+      (diagnostic) =>
+        getEntityId(diagnostic) === viewState.selectedDiagnosticId,
     );
-  }, [viewState?.selectedDiagnosticId]);
+
+    if (!matchedDiagnostic) {
+      return;
+    }
+
+    setSelectedDiagnostic(matchedDiagnostic);
+    setScreenMode(SCREEN_MODES.DETAIL);
+  }, [diagnostics, viewState?.selectedDiagnosticId]);
 
   useEffect(() => {
     if (screenMode !== SCREEN_MODES.DETAIL) {
@@ -97,6 +127,7 @@ export default function DiagnosticsScreen({
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        setSelectedDiagnostic(null);
         setScreenMode(SCREEN_MODES.LIST);
         return true;
       },
@@ -161,172 +192,157 @@ export default function DiagnosticsScreen({
     );
   };
 
-  return (
-    <SafeAreaView
-      edges={["left", "right", "bottom"]}
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
-    >
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
-        showsVerticalScrollIndicator={false}
+  const openDiagnosticDetail = (diagnostic) => {
+    setSelectedDiagnostic(diagnostic);
+    setScreenMode(SCREEN_MODES.DETAIL);
+  };
+
+  const handleBackToList = () => {
+    setSelectedDiagnostic(null);
+    setScreenMode(SCREEN_MODES.LIST);
+  };
+
+  const renderListScreen = () => (
+    <>
+      <View
+        style={[
+          styles.summaryCard,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
       >
-        <WorkshopScreenHeader
-          onBack={onBack}
-          section="Taller"
-          subtitle="Registra hallazgos, consulta el padron y abre la siguiente accion desde la lista, igual que en Auto-Guardian."
-          title="Diagnosticos"
+        <Text style={[styles.summaryValue, { color: colors.text }]}>
+          {diagnostics.length}
+        </Text>
+        <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+          Diagnosticos registrados
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.controlsPanel,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <TextInput
+          autoCapitalize="none"
+          onChangeText={setSearchQuery}
+          placeholder="Buscar por codigo, placa, cliente o hallazgo"
+          placeholderTextColor={colors.textTertiary}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.border,
+              color: colors.text,
+            },
+          ]}
+          value={searchQuery}
         />
 
-        <View
-          style={[
-            styles.summaryCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text style={[styles.summaryValue, { color: colors.text }]}>
-            {diagnostics.length}
-          </Text>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-            Diagnosticos registrados
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.controlsPanel,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <TextInput
-            autoCapitalize="none"
-            onChangeText={setSearchQuery}
-            placeholder="Buscar por codigo, placa, cliente o hallazgo"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={searchQuery}
-          />
-
-          <View style={styles.filterRow}>
-            {[{ key: "all", label: "Todos" }, ...diagnosticStatusOptions].map(
-              (filter) => {
-                const filterKey = filter.key;
-                const selected = activeFilter === filterKey;
-
-                return (
-                  <Pressable
-                    key={filterKey}
-                    onPress={() => setActiveFilter(filterKey)}
-                    style={[
-                      styles.filterChip,
-                      {
-                        backgroundColor: selected
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterChipText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
-                    >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                );
-              },
-            )}
-          </View>
-        </View>
-
-        {loading ? (
-          <ActivityIndicator color={colors.primary} />
-        ) : filteredDiagnostics.length ? (
-          <View style={styles.listBody}>
-            {filteredDiagnostics.map((diagnostic) => {
-              const vehicle = vehicleLookup[diagnostic.vehicleId];
-              const client = clientLookup[diagnostic.clientId];
-              const isSelected =
-                viewState?.selectedDiagnosticId === getEntityId(diagnostic);
+        <View style={styles.filterRow}>
+          {[{ key: "all", label: "Todos" }, ...diagnosticStatusOptions].map(
+            (filter) => {
+              const filterKey = filter.key;
+              const selected = activeFilter === filterKey;
 
               return (
-                <View
-                  key={getEntityId(diagnostic)}
+                <Pressable
+                  key={filterKey}
+                  onPress={() => setActiveFilter(filterKey)}
                   style={[
-                    styles.row,
+                    styles.filterChip,
                     {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: isSelected ? colors.primary : colors.border,
+                      backgroundColor: selected
+                        ? colors.primary
+                        : colors.cardMuted,
+                      borderColor: selected ? colors.primary : colors.border,
                     },
                   ]}
                 >
-                  <View style={styles.rowCopy}>
-                    <View
-                      style={[
-                        styles.cardHeader,
-                        { borderBottomColor: colors.border },
-                      ]}
-                    >
-                      <View style={styles.cardHeaderCopy}>
-                        <Text
-                          style={[
-                            styles.cardEyebrow,
-                            { color: colors.primary },
-                          ]}
-                        >
-                          Taller
-                        </Text>
-                        <Text style={[styles.rowTitle, { color: colors.text }]}>
-                          {diagnostic.id}
-                        </Text>
-                      </View>
-                      <Text style={[styles.cardTag, { color: colors.primary }]}>
-                        {diagnosticStatusOptions.find(
-                          (item) => item.key === diagnostic.status,
-                        )?.label ||
-                          diagnostic.status ||
-                          "Sin estado"}
-                      </Text>
-                    </View>
-                    <View style={styles.cardBody}>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {client?.fullName ||
-                          diagnostic.clientId ||
-                          "Sin cliente"}{" "}
-                        ·{" "}
-                        {vehicle?.plate ||
-                          diagnostic.vehicleId ||
-                          "Sin vehiculo"}
-                      </Text>
-                      <Text
-                        style={[styles.rowMeta, { color: colors.textTertiary }]}
-                      >
-                        {diagnostic.concerns || "Sin hallazgos registrados"}
-                      </Text>
-                    </View>
-                  </View>
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      { color: selected ? colors.white : colors.text },
+                    ]}
+                  >
+                    {filter.label}
+                  </Text>
+                </Pressable>
+              );
+            },
+          )}
+        </View>
+      </View>
 
-                  <View style={styles.iconActionRow}>
+      {loading ? (
+        <ActivityIndicator color={colors.primary} />
+      ) : filteredDiagnostics.length ? (
+        <View style={styles.listBody}>
+          {filteredDiagnostics.map((diagnostic) => {
+            const vehicle = vehicleLookup[diagnostic.vehicleId];
+            const client = clientLookup[diagnostic.clientId];
+            const isSelected =
+              viewState?.selectedDiagnosticId === getEntityId(diagnostic);
+
+            return (
+              <View
+                key={getEntityId(diagnostic)}
+                style={[
+                  styles.row,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: isSelected ? colors.primary : colors.border,
+                  },
+                ]}
+              >
+                <Pressable
+                  onPress={() => openDiagnosticDetail(diagnostic)}
+                  style={styles.rowCopy}
+                >
+                  <View
+                    style={[
+                      styles.cardHeader,
+                      { borderBottomColor: colors.border },
+                    ]}
+                  >
+                    <View style={styles.cardHeaderCopy}>
+                      <Text
+                        style={[styles.cardEyebrow, { color: colors.primary }]}
+                      >
+                        Taller
+                      </Text>
+                      <Text style={[styles.rowTitle, { color: colors.text }]}>
+                        {diagnostic.id}
+                      </Text>
+                    </View>
+                    <Text style={[styles.cardTag, { color: colors.primary }]}>
+                      {diagnosticStatusOptions.find(
+                        (item) => item.key === diagnostic.status,
+                      )?.label ||
+                        diagnostic.status ||
+                        "Sin estado"}
+                    </Text>
+                  </View>
+                  <View style={styles.cardBody}>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    >
+                      {client?.fullName || diagnostic.clientId || "Sin cliente"}{" "}
+                      ·{" "}
+                      {vehicle?.plate || diagnostic.vehicleId || "Sin vehiculo"}
+                    </Text>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textTertiary }]}
+                    >
+                      {diagnostic.concerns || "Sin hallazgos registrados"}
+                    </Text>
                     <Pressable
                       onPress={() =>
                         onOpenWorkOrderForm?.(null, {
@@ -338,86 +354,240 @@ export default function DiagnosticsScreen({
                         })
                       }
                       style={[
-                        styles.iconAction,
+                        styles.secondaryAction,
                         {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.accent,
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
                         },
                       ]}
                     >
-                      <Ionicons
-                        color={colors.accent}
-                        name="clipboard-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => onOpenDiagnosticForm?.(diagnostic)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.primary,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.primary}
-                        name="create-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleDelete(diagnostic)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.danger,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.danger}
-                        name="trash-outline"
-                        size={rf(18)}
-                      />
+                      <Text
+                        style={[
+                          styles.secondaryActionText,
+                          { color: colors.accent },
+                        ]}
+                      >
+                        Crear orden desde este diagnostico
+                      </Text>
                     </Pressable>
                   </View>
+                </Pressable>
+
+                <View style={styles.iconActionRow}>
+                  <Pressable
+                    onPress={() => onOpenDiagnosticForm?.(diagnostic)}
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.primary}
+                      name="create-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleDelete(diagnostic)}
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.danger,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.danger}
+                      name="trash-outline"
+                      size={rf(18)}
+                    />
+                  </Pressable>
                 </View>
-              );
-            })}
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.emptyStateCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
+            Taller
+          </Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            No hay diagnosticos para el filtro actual. Ajusta el estado o
+            registra una nueva revision desde el boton flotante.
+          </Text>
+        </View>
+      )}
+    </>
+  );
+
+  const renderDetailScreen = () => {
+    const client = clientLookup[selectedDiagnostic?.clientId];
+    const vehicle = vehicleLookup[selectedDiagnostic?.vehicleId];
+
+    return (
+      <View
+        style={[
+          styles.detailCard,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+          },
+        ]}
+      >
+        <View style={[styles.cardHeader, { borderBottomColor: colors.border }]}>
+          <View style={styles.cardHeaderCopy}>
+            <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
+              Taller
+            </Text>
+            <Text style={[styles.rowTitle, { color: colors.text }]}>
+              Resumen de diagnostico
+            </Text>
           </View>
-        ) : (
-          <View
+          <Text style={[styles.cardTag, { color: colors.primary }]}>
+            {selectedDiagnostic?.id || "Sin diagnostico"}
+          </Text>
+        </View>
+
+        <View style={styles.detailLines}>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Cliente:
+            </Text>
+            {client?.fullName || selectedDiagnostic?.clientId || "Sin cliente"}
+          </Text>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Vehiculo:
+            </Text>
+            {vehicle?.plate || selectedDiagnostic?.vehicleId || "Sin vehiculo"}
+          </Text>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Estado:
+            </Text>
+            {diagnosticStatusOptions.find(
+              (item) => item.key === selectedDiagnostic?.status,
+            )?.label ||
+              selectedDiagnostic?.status ||
+              "Sin estado"}
+          </Text>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Hallazgos:
+            </Text>
+            {selectedDiagnostic?.concerns || "Sin hallazgos registrados"}
+          </Text>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Notas:
+            </Text>
+            {selectedDiagnostic?.notes || "Sin notas adicionales"}
+          </Text>
+        </View>
+
+        <View style={styles.detailActionRow}>
+          <Pressable
+            onPress={() => onOpenDiagnosticForm?.(selectedDiagnostic)}
             style={[
-              styles.emptyStateCard,
+              styles.secondaryAction,
               {
-                backgroundColor: colors.cardBackground,
+                backgroundColor: colors.cardMuted,
                 borderColor: colors.border,
               },
             ]}
           >
-            <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
-              Taller
+            <Text
+              style={[styles.secondaryActionText, { color: colors.primary }]}
+            >
+              Editar diagnostico
             </Text>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No hay diagnosticos para el filtro actual. Ajusta el estado o
-              registra una nueva revision desde el boton flotante.
+          </Pressable>
+          <Pressable
+            onPress={() =>
+              onOpenWorkOrderForm?.(null, {
+                seedData: {
+                  diagnosticId: selectedDiagnostic?.id,
+                  clientId: selectedDiagnostic?.clientId,
+                  vehicleId: selectedDiagnostic?.vehicleId,
+                },
+              })
+            }
+            style={[
+              styles.secondaryAction,
+              {
+                backgroundColor: colors.cardMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.secondaryActionText, { color: colors.accent }]}
+            >
+              Crear orden desde este diagnostico
             </Text>
-          </View>
-        )}
+          </Pressable>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView
+      edges={["left", "right", "bottom"]}
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    >
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
+        showsVerticalScrollIndicator={false}
+      >
+        <WorkshopScreenHeader
+          onBack={
+            screenMode === SCREEN_MODES.DETAIL ? handleBackToList : onBack
+          }
+          section={
+            screenMode === SCREEN_MODES.DETAIL ? "Diagnostico" : "Taller"
+          }
+          subtitle={
+            screenMode === SCREEN_MODES.DETAIL
+              ? "Revisa el contexto y abre la orden operativa sin perder la lectura rapida del caso."
+              : "Registra hallazgos, consulta el padron y abre la siguiente accion desde la lista, igual que en Auto-Guardian."
+          }
+          title={
+            screenMode === SCREEN_MODES.DETAIL
+              ? selectedDiagnostic?.id || "Detalle de diagnostico"
+              : "Diagnosticos"
+          }
+        />
+
+        {screenMode === SCREEN_MODES.LIST
+          ? renderListScreen()
+          : renderDetailScreen()}
       </ScrollView>
 
-      <Pressable
-        onPress={() => onOpenDiagnosticForm?.(null)}
-        style={[
-          styles.fab,
-          { backgroundColor: colors.primary, shadowColor: colors.shadow },
-        ]}
-      >
-        <Ionicons color={colors.white} name="add" size={rf(24)} />
-      </Pressable>
+      {screenMode === SCREEN_MODES.LIST ? (
+        <Pressable
+          onPress={() => onOpenDiagnosticForm?.(null)}
+          style={[
+            styles.fab,
+            { backgroundColor: colors.primary, shadowColor: colors.shadow },
+          ]}
+        >
+          <Ionicons color={colors.white} name="add" size={rf(24)} />
+        </Pressable>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -458,14 +628,21 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   filterChipText: { fontSize: rf(11), fontWeight: "700" },
-  listBody: { gap: spacing.md },
+  detailCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  listBody: { gap: spacing.sm },
   row: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   rowCopy: { flex: 1, gap: spacing.xs },
   cardHeader: {
@@ -473,7 +650,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
     borderBottomWidth: 1,
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
@@ -486,13 +663,29 @@ const styles = StyleSheet.create({
   cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
   cardBody: { gap: 2 },
   rowTitle: { fontSize: rf(16), fontWeight: "800" },
-  rowMeta: { fontSize: rf(12), lineHeight: rf(17) },
-  iconActionRow: { gap: spacing.sm, justifyContent: "center" },
+  rowMeta: { fontSize: rf(12), lineHeight: rf(16) },
+  detailLines: { gap: spacing.xs },
+  detailLine: { fontSize: rf(13), lineHeight: rf(20) },
+  detailLineLabel: { fontSize: rf(13), fontWeight: "800" },
+  detailActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  secondaryAction: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    alignSelf: "flex-start",
+  },
+  secondaryActionText: { fontSize: rf(12), fontWeight: "800" },
+  iconActionRow: { gap: spacing.xs, justifyContent: "center" },
   iconAction: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    width: rf(42),
-    height: rf(42),
+    width: rf(38),
+    height: rf(38),
     alignItems: "center",
     justifyContent: "center",
   },

@@ -465,33 +465,36 @@ export default function WorkOrdersScreen({
                     >
                       {assignedMechanics || "Sin mecanicos asignados"}
                     </Text>
+                    <Pressable
+                      onPress={() =>
+                        onOpenSparePartForm?.(null, {
+                          seedData: {
+                            workOrderId: workOrder.id,
+                            diagnosticId: workOrder.diagnosticId,
+                          },
+                        })
+                      }
+                      style={[
+                        styles.secondaryAction,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.secondaryActionText,
+                          { color: colors.accent },
+                        ]}
+                      >
+                        Abrir repuestos de esta orden
+                      </Text>
+                    </Pressable>
                   </View>
                 </Pressable>
 
                 <View style={styles.iconActionRow}>
-                  <Pressable
-                    onPress={() =>
-                      onOpenSparePartForm?.(null, {
-                        seedData: {
-                          workOrderId: workOrder.id,
-                          diagnosticId: workOrder.diagnosticId,
-                        },
-                      })
-                    }
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.accent,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.accent}
-                      name="construct-outline"
-                      size={rf(18)}
-                    />
-                  </Pressable>
                   <Pressable
                     onPress={() => onOpenWorkOrderForm?.(workOrder)}
                     style={[
@@ -669,14 +672,17 @@ export default function WorkOrdersScreen({
           <View style={styles.detailActionRow}>
             <Pressable
               onPress={() => onOpenWorkOrderForm?.(selectedWorkOrder)}
-              style={[styles.actionPill, { backgroundColor: colors.primary }]}
+              style={[
+                styles.secondaryAction,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
             >
-              <Ionicons
-                color={colors.white}
-                name="create-outline"
-                size={rf(16)}
-              />
-              <Text style={[styles.actionPillText, { color: colors.white }]}>
+              <Text
+                style={[styles.secondaryActionText, { color: colors.primary }]}
+              >
                 Editar orden
               </Text>
             </Pressable>
@@ -689,14 +695,17 @@ export default function WorkOrdersScreen({
                   },
                 })
               }
-              style={[styles.actionPill, { backgroundColor: colors.accent }]}
+              style={[
+                styles.secondaryAction,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
             >
-              <Ionicons
-                color={colors.white}
-                name="construct-outline"
-                size={rf(16)}
-              />
-              <Text style={[styles.actionPillText, { color: colors.white }]}>
+              <Text
+                style={[styles.secondaryActionText, { color: colors.accent }]}
+              >
                 Agregar repuesto
               </Text>
             </Pressable>
@@ -986,7 +995,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   filterChipText: { fontSize: rf(11), fontWeight: "700" },
-  listBody: { gap: spacing.md },
+  listBody: { gap: spacing.sm },
   listHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -996,10 +1005,11 @@ const styles = StyleSheet.create({
   row: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   rowCopy: { flex: 1, gap: spacing.xs },
   cardHeader: {
@@ -1007,7 +1017,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
     borderBottomWidth: 1,
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
@@ -1020,7 +1030,7 @@ const styles = StyleSheet.create({
   cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
   cardBody: { gap: 2 },
   rowTitle: { fontSize: rf(16), fontWeight: "800" },
-  rowMeta: { fontSize: rf(12), lineHeight: rf(17) },
+  rowMeta: { fontSize: rf(12), lineHeight: rf(16) },
   formGroup: { gap: spacing.sm },
   fieldLabel: { fontSize: rf(12), fontWeight: "700" },
   listCard: {
@@ -1037,21 +1047,20 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm,
   },
-  actionPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
+  secondaryAction: {
+    borderWidth: 1,
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
+    alignSelf: "flex-start",
   },
-  actionPillText: { fontSize: rf(12), fontWeight: "800" },
-  iconActionRow: { gap: spacing.sm, justifyContent: "center" },
+  secondaryActionText: { fontSize: rf(12), fontWeight: "800" },
+  iconActionRow: { gap: spacing.xs, justifyContent: "center" },
   iconAction: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    width: rf(42),
-    height: rf(42),
+    width: rf(38),
+    height: rf(38),
     alignItems: "center",
     justifyContent: "center",
   },

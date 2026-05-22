@@ -409,7 +409,7 @@ export default function ClientsScreen({
                             { color: colors.accent },
                           ]}
                         >
-                          Presione aqui para asociar vehiculo
+                          Asociar vehiculo ahora
                         </Text>
                       </Pressable>
                     )}
@@ -651,7 +651,7 @@ export default function ClientsScreen({
                         { color: colors.accent },
                       ]}
                     >
-                      Abrir diagnostico para esta unidad
+                      Abrir diagnostico de esta unidad
                     </Text>
                   </Pressable>
                 </View>
@@ -762,12 +762,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: rf(14),
   },
-  listBody: { gap: spacing.md },
+  listBody: { gap: spacing.sm },
   clientRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: spacing.md,
-    padding: spacing.md,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderWidth: 1,
     borderRadius: borderRadius.xl,
   },
@@ -777,7 +778,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
     borderBottomWidth: 1,
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
@@ -789,14 +790,14 @@ const styles = StyleSheet.create({
   },
   cardBody: { gap: 2 },
   clientTitle: { fontSize: rf(16), fontWeight: "800" },
-  clientMeta: { fontSize: rf(12), lineHeight: rf(17) },
-  fieldLine: { fontSize: rf(12), lineHeight: rf(17) },
+  clientMeta: { fontSize: rf(12), lineHeight: rf(16) },
+  fieldLine: { fontSize: rf(12), lineHeight: rf(16) },
   fieldLineLabel: { fontSize: rf(12), fontWeight: "800" },
   vehicleInlineCard: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     gap: 2,
     marginTop: spacing.xs,
   },
@@ -811,11 +812,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   linkHintText: { fontSize: rf(11), fontWeight: "800" },
-  iconActionRow: { flexDirection: "row", gap: spacing.sm },
+  iconActionRow: { flexDirection: "row", gap: spacing.xs },
   iconAction: {
     borderWidth: 1,
-    width: rf(40),
-    height: rf(40),
+    width: rf(38),
+    height: rf(38),
     borderRadius: borderRadius.md,
     alignItems: "center",
     justifyContent: "center",
