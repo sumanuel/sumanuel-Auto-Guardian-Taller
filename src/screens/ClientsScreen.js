@@ -348,7 +348,7 @@ export default function ClientsScreen({
                     <Text
                       style={[
                         styles.vehicleSectionTitle,
-                        { color: colors.primary },
+                        { color: colors.accent },
                       ]}
                     >
                       Vehiculos asociados:
@@ -375,6 +375,12 @@ export default function ClientsScreen({
                               .filter(Boolean)
                               .join(" ") || "Sin descripcion"}
                           </Text>
+                          <View
+                            style={[
+                              styles.vehicleInlineDivider,
+                              { backgroundColor: colors.border },
+                            ]}
+                          />
                           <Text
                             style={[
                               styles.vehicleInlineMeta,
@@ -628,6 +634,12 @@ export default function ClientsScreen({
                   </View>
                 </View>
                 <View style={styles.cardBody}>
+                  <View
+                    style={[
+                      styles.vehicleInlineDivider,
+                      { backgroundColor: colors.border },
+                    ]}
+                  />
                   <Text
                     style={[styles.clientMeta, { color: colors.textSecondary }]}
                   >
@@ -828,6 +840,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     gap: spacing.xs,
     marginTop: spacing.xs,
+  },
+  vehicleInlineDivider: {
+    height: 1,
+    width: "100%",
+    borderRadius: borderRadius.pill,
   },
   vehicleInlineTitle: {
     fontSize: rf(15),

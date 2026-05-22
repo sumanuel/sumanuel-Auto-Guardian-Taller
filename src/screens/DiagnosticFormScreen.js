@@ -192,43 +192,76 @@ export default function DiagnosticFormScreen({
                 },
               ]}
             >
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Cliente
-              </Text>
-              <Text style={[styles.selectionValue, { color: colors.text }]}>
-                {selectedClient?.fullName || form.clientId || "Sin cliente"}
-              </Text>
               <Text
-                style={[styles.selectionMeta, { color: colors.textSecondary }]}
+                style={[styles.selectionLine, { color: colors.textSecondary }]}
               >
-                {selectedClient?.identification ||
-                  selectedClient?.id ||
-                  "Sin identificacion"}
+                <Text
+                  style={[styles.selectionLineLabel, { color: colors.text }]}
+                >
+                  Cliente:
+                </Text>
+                {selectedClient?.fullName || form.clientId || "Sin cliente"}
               </Text>
 
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Vehiculo
+                Vehiculo:
               </Text>
-              <Text style={[styles.selectionValue, { color: colors.text }]}>
-                {[
-                  selectedVehicle?.brand,
-                  selectedVehicle?.model,
-                  selectedVehicle?.year,
-                ]
-                  .filter(Boolean)
-                  .join(" ") ||
-                  selectedVehicle?.plate ||
-                  form.vehicleId ||
-                  "Sin vehiculo"}
-              </Text>
-              <Text
-                style={[styles.selectionMeta, { color: colors.textSecondary }]}
+              <View
+                style={[
+                  styles.seededVehicleCard,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
               >
-                {selectedVehicle?.plate || "Sin placa"}
-                {selectedVehicle?.mileage
-                  ? ` · ${selectedVehicle.mileage} km`
-                  : ""}
-              </Text>
+                <Text style={[styles.selectionValue, { color: colors.text }]}>
+                  {[
+                    selectedVehicle?.brand,
+                    selectedVehicle?.model,
+                    selectedVehicle?.year,
+                  ]
+                    .filter(Boolean)
+                    .join(" ") ||
+                    selectedVehicle?.plate ||
+                    form.vehicleId ||
+                    "Sin vehiculo"}
+                </Text>
+                <View
+                  style={[
+                    styles.seededVehicleDivider,
+                    { backgroundColor: colors.border },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.selectionMeta,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  <Text
+                    style={[styles.selectionMetaLabel, { color: colors.text }]}
+                  >
+                    Placa:
+                  </Text>
+                  {selectedVehicle?.plate || "Sin placa"}
+                </Text>
+                <Text
+                  style={[
+                    styles.selectionMeta,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  <Text
+                    style={[styles.selectionMetaLabel, { color: colors.text }]}
+                  >
+                    Kilometraje:
+                  </Text>
+                  {selectedVehicle?.mileage
+                    ? `${selectedVehicle.mileage} km`
+                    : "Sin kilometraje"}
+                </Text>
+              </View>
             </View>
           ) : (
             <>
@@ -591,8 +624,23 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
+  selectionLine: { fontSize: rf(14), lineHeight: rf(21) },
+  selectionLineLabel: { fontSize: rf(14), fontWeight: "800" },
+  seededVehicleCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+  },
+  seededVehicleDivider: {
+    height: 1,
+    width: "100%",
+    borderRadius: borderRadius.pill,
+  },
   selectionValue: { fontSize: rf(15), fontWeight: "800" },
   selectionMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  selectionMetaLabel: { fontSize: rf(13), fontWeight: "800" },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,

@@ -533,7 +533,7 @@ export default function DiagnosticsScreen({
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
@@ -559,18 +559,6 @@ export default function DiagnosticsScreen({
           ? renderListScreen()
           : renderDetailScreen()}
       </ScrollView>
-
-      {screenMode === SCREEN_MODES.LIST ? (
-        <Pressable
-          onPress={() => onOpenDiagnosticForm?.(null)}
-          style={[
-            styles.fab,
-            { backgroundColor: colors.primary, shadowColor: colors.shadow },
-          ]}
-        >
-          <Ionicons color={colors.white} name="add" size={rf(24)} />
-        </Pressable>
-      ) : null}
     </SafeAreaView>
   );
 }
@@ -578,7 +566,6 @@ export default function DiagnosticsScreen({
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
   scrollContent: { padding: spacing.lg, gap: spacing.lg },
-  scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
   controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -674,15 +661,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   emptyText: { fontSize: rf(14), lineHeight: rf(21) },
-  fab: {
-    position: "absolute",
-    right: spacing.lg,
-    bottom: spacing.xl,
-    width: rf(58),
-    height: rf(58),
-    borderRadius: borderRadius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 6,
-  },
 });

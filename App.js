@@ -70,6 +70,8 @@ function AppContent() {
   const [diagnosticFormContext, setDiagnosticFormContext] = useState({
     diagnostic: null,
     draft: null,
+    returnTo: APP_SCREENS.DIAGNOSTICS,
+    clientId: null,
   });
   const [diagnosticsViewState, setDiagnosticsViewState] = useState({
     selectedDiagnosticId: null,
@@ -131,6 +133,8 @@ function AppContent() {
     setDiagnosticFormContext({
       diagnostic: null,
       draft: null,
+      returnTo: APP_SCREENS.DIAGNOSTICS,
+      clientId: null,
     });
     setDiagnosticsViewState({
       selectedDiagnosticId: null,
@@ -178,6 +182,15 @@ function AppContent() {
         }
 
         if (activeScreen === APP_SCREENS.DIAGNOSTIC_FORM) {
+          if (diagnosticFormContext.returnTo === APP_SCREENS.CLIENTS) {
+            setClientsViewState({
+              selectedClientId: diagnosticFormContext.clientId,
+              screenMode: "detail",
+            });
+            setActiveScreen(APP_SCREENS.CLIENTS);
+            return true;
+          }
+
           setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           return true;
         }
@@ -228,6 +241,8 @@ function AppContent() {
     authUser,
     profileStatus,
     userProfile,
+    diagnosticFormContext.clientId,
+    diagnosticFormContext.returnTo,
     vehicleFormContext.client,
   ]);
 
@@ -314,6 +329,8 @@ function AppContent() {
             setDiagnosticFormContext({
               diagnostic: diagnostic || null,
               draft: options.seedData || null,
+              returnTo: APP_SCREENS.CLIENTS,
+              clientId: options.seedData?.clientId || client?.id || null,
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
           }}
@@ -376,6 +393,9 @@ function AppContent() {
             setDiagnosticFormContext({
               diagnostic: diagnostic || null,
               draft: options.seedData || null,
+              returnTo: APP_SCREENS.DIAGNOSTICS,
+              clientId:
+                options.seedData?.clientId || diagnostic?.clientId || null,
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
           }}
@@ -396,8 +416,28 @@ function AppContent() {
         <DiagnosticFormScreen
           initialDiagnostic={diagnosticFormContext.diagnostic}
           initialDraft={diagnosticFormContext.draft}
-          onBack={() => setActiveScreen(APP_SCREENS.DIAGNOSTICS)}
+          onBack={() => {
+            if (diagnosticFormContext.returnTo === APP_SCREENS.CLIENTS) {
+              setClientsViewState({
+                selectedClientId: diagnosticFormContext.clientId,
+                screenMode: "detail",
+              });
+              setActiveScreen(APP_SCREENS.CLIENTS);
+              return;
+            }
+
+            setActiveScreen(APP_SCREENS.DIAGNOSTICS);
+          }}
           onSaved={(savedDiagnosticId) => {
+            if (diagnosticFormContext.returnTo === APP_SCREENS.CLIENTS) {
+              setClientsViewState({
+                selectedClientId: diagnosticFormContext.clientId,
+                screenMode: "detail",
+              });
+              setActiveScreen(APP_SCREENS.CLIENTS);
+              return;
+            }
+
             setDiagnosticsViewState({
               selectedDiagnosticId: savedDiagnosticId,
             });
