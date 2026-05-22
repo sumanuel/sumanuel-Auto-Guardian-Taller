@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Sharing from "expo-sharing";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   BackHandler,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +22,7 @@ import {
   diagnosticStatusOptions,
   listDiagnostics,
 } from "../services/diagnostics/diagnosticService";
+import { ensureDiagnosticQuotePdfFile } from "../services/diagnostics/diagnosticQuotePdfService";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
@@ -37,6 +40,20 @@ function buildLookup(items, field = "id") {
     accumulator[item[field]] = item;
     return accumulator;
   }, {});
+}
+
+function normalizeWhatsappPhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  if (digits.length === 11 && digits.startsWith("0")) {
+    return `58${digits.slice(1)}`;
+  }
+
+  return digits;
 }
 
 export default function DiagnosticsScreen({
@@ -202,6 +219,57 @@ export default function DiagnosticsScreen({
     setScreenMode(SCREEN_MODES.LIST);
   };
 
+  const handleOpenQuotePdf = async (diagnostic) => {
+    try {
+      const { contentUri } = await ensureDiagnosticQuotePdfFile(diagnostic);
+      await Linking.openURL(contentUri);
+    } catch (error) {
+      Alert.alert(
+        "Diagnosticos",
+        error?.message || "No se pudo abrir el PDF de cotizacion.",
+      );
+    }
+  };
+
+  const handleSendQuoteWhatsapp = async (diagnostic, client) => {
+    if (!client?.phone) {
+      Alert.alert("Diagnosticos", "El cliente no tiene numero asociado.");
+      return;
+    }
+
+    const whatsappPhone = normalizeWhatsappPhone(client.phone);
+
+    if (!whatsappPhone) {
+      Alert.alert(
+        "Diagnosticos",
+        "El numero del cliente no es valido para WhatsApp.",
+      );
+      return;
+    }
+
+    try {
+      const { fileUri, mimeType } =
+        await ensureDiagnosticQuotePdfFile(diagnostic);
+      const canShare = await Sharing.isAvailableAsync();
+
+      if (!canShare) {
+        throw new Error("El dispositivo no permite compartir archivos PDF.");
+      }
+
+      await Sharing.shareAsync(fileUri, {
+        mimeType,
+        dialogTitle: `Compartir cotizacion para ${client.fullName || "cliente"}`,
+        UTI: "com.adobe.pdf",
+      });
+    } catch (error) {
+      Alert.alert(
+        "Diagnosticos",
+        error?.message ||
+          "No se pudo compartir el PDF de cotizacion por WhatsApp.",
+      );
+    }
+  };
+
   const renderListScreen = () => (
     <>
       <View
@@ -272,6 +340,9 @@ export default function DiagnosticsScreen({
             const vehicle = vehicleLookup[diagnostic.vehicleId];
             const client = clientLookup[diagnostic.clientId];
             const isClosedDiagnostic = diagnostic.status === "closed";
+            const hasQuotePdf = Boolean(
+              diagnostic.quotePdfBase64 || diagnostic.quotePdfDownloadUrl,
+            );
             const isSelected =
               viewState?.selectedDiagnosticId === getEntityId(diagnostic);
 
@@ -505,6 +576,44 @@ export default function DiagnosticsScreen({
                       size={rf(17)}
                     />
                   </Pressable>
+                  {hasQuotePdf ? (
+                    <Pressable
+                      onPress={() => handleOpenQuotePdf(diagnostic)}
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.accent}
+                        name="document-text-outline"
+                        size={rf(17)}
+                      />
+                    </Pressable>
+                  ) : null}
+                  {hasQuotePdf ? (
+                    <Pressable
+                      onPress={() =>
+                        handleSendQuoteWhatsapp(diagnostic, client)
+                      }
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color="#25D366"
+                        name="logo-whatsapp"
+                        size={rf(17)}
+                      />
+                    </Pressable>
+                  ) : null}
                 </View>
               </View>
             );
@@ -525,7 +634,7 @@ export default function DiagnosticsScreen({
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             No hay diagnosticos para el filtro actual. Ajusta el estado o
-            registra una nueva revision desde el boton flotante.
+            registra una nueva revision desde la ficha del cliente.
           </Text>
         </View>
       )}

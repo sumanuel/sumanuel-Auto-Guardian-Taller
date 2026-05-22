@@ -19,6 +19,7 @@ import {
   isDiagnosticClosed,
   updateDiagnostic,
 } from "../services/diagnostics/diagnosticService";
+import { createDiagnosticQuotePdf } from "../services/diagnostics/diagnosticQuotePdfService";
 import { listMechanicProfiles } from "../services/admin/staffAdmin";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
@@ -139,6 +140,53 @@ export default function DiagnosticFormScreen({
           openedByUid: userProfile?.uid,
         });
         savedDiagnosticId = createdDiagnostic.id;
+      }
+
+      let quoteGenerationError = "";
+
+      if (form.status === "quoted") {
+        try {
+          const assignedMechanic = mechanics.find(
+            (mechanic) => mechanic.uid === form.assignedMechanicUid,
+          );
+
+          await createDiagnosticQuotePdf({
+            diagnosticId: savedDiagnosticId,
+            diagnostic: {
+              ...initialDiagnostic,
+              ...form,
+              id: savedDiagnosticId,
+              serviceItems: String(form.serviceItemsText || "")
+                .split(/\n|,/)
+                .map((item) => item.trim())
+                .filter(Boolean),
+              spareParts: String(form.sparePartsText || "")
+                .split(/\n|,/)
+                .map((item) => item.trim())
+                .filter(Boolean),
+            },
+            client: selectedClient,
+            vehicle: selectedVehicle,
+            workshopProfile: {
+              ...userProfile,
+              assignedMechanicName:
+                assignedMechanic?.fullName ||
+                assignedMechanic?.email ||
+                assignedMechanic?.userCode ||
+                "Sin asignar",
+            },
+          });
+        } catch (quoteError) {
+          quoteGenerationError =
+            quoteError?.message || "no se pudo generar el PDF de cotizacion.";
+        }
+      }
+
+      if (quoteGenerationError) {
+        Alert.alert(
+          "Diagnosticos",
+          `El diagnostico se guardo, pero ${quoteGenerationError}`,
+        );
       }
 
       onSaved?.(savedDiagnosticId);
