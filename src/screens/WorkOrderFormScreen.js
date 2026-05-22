@@ -13,7 +13,10 @@ import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listMechanicProfiles } from "../services/admin/staffAdmin";
 import { listClients } from "../services/clients/clientService";
-import { listDiagnostics } from "../services/diagnostics/diagnosticService";
+import {
+  isDiagnosticClosed,
+  listDiagnostics,
+} from "../services/diagnostics/diagnosticService";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import {
   createEmptyWorkOrderForm,
@@ -81,6 +84,16 @@ export default function WorkOrderFormScreen({
 
   const selectedDiagnostic = useMemo(
     () => diagnostics.find((diagnostic) => diagnostic.id === form.diagnosticId),
+    [diagnostics, form.diagnosticId],
+  );
+
+  const selectableDiagnostics = useMemo(
+    () =>
+      diagnostics.filter(
+        (diagnostic) =>
+          !isDiagnosticClosed(diagnostic.status) ||
+          diagnostic.id === form.diagnosticId,
+      ),
     [diagnostics, form.diagnosticId],
   );
 
@@ -191,12 +204,14 @@ export default function WorkOrderFormScreen({
               Diagnostico base
             </Text>
             <View style={styles.optionWrap}>
-              {diagnostics.slice(0, 10).map((diagnostic) => {
+              {selectableDiagnostics.slice(0, 10).map((diagnostic) => {
                 const selected = form.diagnosticId === diagnostic.id;
+                const isClosed = isDiagnosticClosed(diagnostic.status);
 
                 return (
                   <Pressable
                     key={diagnostic.id}
+                    disabled={isClosed}
                     onPress={() =>
                       setForm((current) => ({
                         ...current,
@@ -212,6 +227,7 @@ export default function WorkOrderFormScreen({
                           ? colors.primary
                           : colors.cardMuted,
                         borderColor: selected ? colors.primary : colors.border,
+                        opacity: isClosed ? 0.55 : 1,
                       },
                     ]}
                   >
@@ -222,27 +238,32 @@ export default function WorkOrderFormScreen({
                       ]}
                     >
                       {diagnostic.id}
+                      {isClosed ? " · Cerrado" : ""}
                     </Text>
                   </Pressable>
                 );
               })}
             </View>
+            {!selectableDiagnostics.length ? (
+              <Text
+                style={[styles.helperText, { color: colors.textSecondary }]}
+              >
+                No hay diagnosticos abiertos disponibles para crear una orden.
+              </Text>
+            ) : null}
           </View>
 
-          <View
-            style={[
-              styles.summaryPanel,
-              { backgroundColor: colors.cardMuted, borderColor: colors.border },
-            ]}
-          >
+          <View style={styles.summaryPanel}>
             <Text style={[styles.summaryText, { color: colors.text }]}>
               <Text style={[styles.summaryTextLabel, { color: colors.text }]}>
                 Cliente:{" "}
               </Text>
               {clientName || form.clientId || "Sin cliente"}
             </Text>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Vehiculo:
+            <Text
+              style={[styles.vehicleSummaryLabel, { color: colors.accent }]}
+            >
+              vehiculo:
             </Text>
             <View
               style={[
@@ -447,14 +468,15 @@ const styles = StyleSheet.create({
   },
   optionText: { fontSize: rf(13), fontWeight: "700" },
   helperText: { fontSize: rf(14), lineHeight: rf(20) },
-  summaryPanel: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
+  summaryPanel: { gap: spacing.xs },
   summaryText: { fontSize: rf(14), lineHeight: rf(20) },
   summaryTextLabel: { fontSize: rf(14), fontWeight: "800" },
+  vehicleSummaryLabel: {
+    fontSize: rf(13),
+    fontWeight: "900",
+    lineHeight: rf(19),
+    textTransform: "none",
+  },
   vehicleCard: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,

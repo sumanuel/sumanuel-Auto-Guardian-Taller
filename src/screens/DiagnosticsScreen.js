@@ -409,6 +409,35 @@ export default function DiagnosticsScreen({
                       </Text>{" "}
                       {diagnostic.concerns || "Sin hallazgos registrados"}
                     </Text>
+                    {isClosedDiagnostic ? (
+                      <View
+                        style={[
+                          styles.closedNotice,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.closedNoticeTitle,
+                            { color: colors.accent },
+                          ]}
+                        >
+                          Ya convertido en orden
+                        </Text>
+                        <Text
+                          style={[
+                            styles.closedNoticeText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          Este diagnostico ya fue cerrado al abrir su orden de
+                          trabajo.
+                        </Text>
+                      </View>
+                    ) : null}
                     {!isClosedDiagnostic ? (
                       <Pressable
                         onPress={() =>
@@ -775,6 +804,15 @@ const styles = StyleSheet.create({
   },
   vehicleMeta: { fontSize: rf(13), lineHeight: rf(19) },
   vehicleMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  closedNotice: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: 4,
+  },
+  closedNoticeTitle: { fontSize: rf(12), fontWeight: "900" },
+  closedNoticeText: { fontSize: rf(12), lineHeight: rf(18) },
   detailActionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
