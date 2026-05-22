@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,6 +23,11 @@ import {
 import { listVehicles } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
+const SCREEN_MODES = {
+  LIST: "list",
+  DETAIL: "detail",
+};
+
 function getEntityId(entity) {
   return entity?.refId || entity?.id || "";
 }
@@ -40,6 +46,7 @@ export default function DiagnosticsScreen({
   viewState,
 }) {
   const { colors } = useTheme();
+  const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
   const [loading, setLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState([]);
   const [clients, setClients] = useState([]);
@@ -75,6 +82,28 @@ export default function DiagnosticsScreen({
   useEffect(() => {
     refreshData();
   }, []);
+
+  useEffect(() => {
+    setScreenMode(
+      viewState?.selectedDiagnosticId ? SCREEN_MODES.DETAIL : SCREEN_MODES.LIST,
+    );
+  }, [viewState?.selectedDiagnosticId]);
+
+  useEffect(() => {
+    if (screenMode !== SCREEN_MODES.DETAIL) {
+      return undefined;
+    }
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        setScreenMode(SCREEN_MODES.LIST);
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [screenMode]);
 
   const filteredDiagnostics = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();

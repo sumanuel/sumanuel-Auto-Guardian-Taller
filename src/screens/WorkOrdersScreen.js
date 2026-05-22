@@ -586,57 +586,37 @@ export default function WorkOrdersScreen({
             </Text>
           </View>
 
-          <View style={styles.detailGrid}>
-            <View style={styles.detailBlock}>
-              <Text
-                style={[styles.detailLabel, { color: colors.textSecondary }]}
-              >
-                Diagnostico
+          <View style={styles.detailLines}>
+            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+                Diagnostico:
               </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {diagnostic?.id ||
-                  selectedWorkOrder?.diagnosticId ||
-                  "Sin diagnostico"}
+              {diagnostic?.id ||
+                selectedWorkOrder?.diagnosticId ||
+                "Sin diagnostico"}
+            </Text>
+            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+                Cliente:
               </Text>
-            </View>
-            <View style={styles.detailBlock}>
-              <Text
-                style={[styles.detailLabel, { color: colors.textSecondary }]}
-              >
-                Cliente
+              {client?.fullName || selectedWorkOrder?.clientId || "Sin cliente"}
+            </Text>
+            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+                Vehiculo:
               </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {client?.fullName ||
-                  selectedWorkOrder?.clientId ||
-                  "Sin cliente"}
+              {vehicle?.plate || selectedWorkOrder?.vehicleId || "Sin vehiculo"}
+            </Text>
+            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+                Estado:
               </Text>
-            </View>
-            <View style={styles.detailBlock}>
-              <Text
-                style={[styles.detailLabel, { color: colors.textSecondary }]}
-              >
-                Vehiculo
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {vehicle?.plate ||
-                  selectedWorkOrder?.vehicleId ||
-                  "Sin vehiculo"}
-              </Text>
-            </View>
-            <View style={styles.detailBlock}>
-              <Text
-                style={[styles.detailLabel, { color: colors.textSecondary }]}
-              >
-                Estado
-              </Text>
-              <Text style={[styles.detailValue, { color: colors.text }]}>
-                {workOrderStatusOptions.find(
-                  (item) => item.key === selectedWorkOrder?.status,
-                )?.label ||
-                  selectedWorkOrder?.status ||
-                  "Sin estado"}
-              </Text>
-            </View>
+              {workOrderStatusOptions.find(
+                (item) => item.key === selectedWorkOrder?.status,
+              )?.label ||
+                selectedWorkOrder?.status ||
+                "Sin estado"}
+            </Text>
           </View>
 
           <View style={styles.formGroup}>
@@ -1049,22 +1029,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  detailGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  detailBlock: {
-    minWidth: "48%",
-    gap: spacing.xs,
-  },
-  detailLabel: {
-    fontSize: rf(10),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  detailValue: { fontSize: rf(14), fontWeight: "700", lineHeight: rf(20) },
+  detailLines: { gap: spacing.xs },
+  detailLine: { fontSize: rf(13), lineHeight: rf(20) },
+  detailLineLabel: { fontSize: rf(13), fontWeight: "800" },
   detailActionRow: {
     flexDirection: "row",
     flexWrap: "wrap",

@@ -628,33 +628,36 @@ export default function ClientsScreen({
                       ? `${vehicle.mileage} km`
                       : "Sin kilometraje"}
                   </Text>
+                  <Pressable
+                    onPress={() =>
+                      onOpenDiagnosticForm?.(null, {
+                        seedData: {
+                          clientId: selectedClient?.id || "",
+                          vehicleId: vehicle.id || vehicle.refId || "",
+                        },
+                      })
+                    }
+                    style={[
+                      styles.diagnosticLinkWrap,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.diagnosticLinkText,
+                        { color: colors.accent },
+                      ]}
+                    >
+                      Abrir diagnostico para esta unidad
+                    </Text>
+                  </Pressable>
                 </View>
               </View>
 
               <View style={styles.iconActionRow}>
-                <Pressable
-                  onPress={() =>
-                    onOpenDiagnosticForm?.(null, {
-                      seedData: {
-                        clientId: selectedClient?.id || "",
-                        vehicleId: vehicle.id || vehicle.refId || "",
-                      },
-                    })
-                  }
-                  style={[
-                    styles.iconAction,
-                    {
-                      backgroundColor: colors.cardMuted,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    color={colors.accent}
-                    name="pulse-outline"
-                    size={rf(18)}
-                  />
-                </Pressable>
                 <Pressable
                   onPress={() => onOpenVehicleForm?.(selectedClient, vehicle)}
                   style={[
@@ -865,6 +868,10 @@ const styles = StyleSheet.create({
   diagnosticLinkWrap: {
     alignSelf: "flex-start",
     marginTop: spacing.xs,
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
   diagnosticLinkText: { fontSize: rf(12), fontWeight: "800" },
   fab: {
