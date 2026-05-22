@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -158,6 +159,23 @@ export default function WorkOrdersScreen({
     setSelectedWorkOrder(matchedWorkOrder);
     setScreenMode(SCREEN_MODES.DETAIL);
   }, [viewState?.selectedWorkOrderId, workOrders]);
+
+  useEffect(() => {
+    if (screenMode !== SCREEN_MODES.DETAIL) {
+      return undefined;
+    }
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        setSelectedWorkOrder(null);
+        setScreenMode(SCREEN_MODES.LIST);
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [screenMode]);
 
   useEffect(() => {
     if (!selectedWorkOrder?.id) {

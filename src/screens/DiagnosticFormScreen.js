@@ -46,6 +46,9 @@ export default function DiagnosticFormScreen({
   );
 
   const editingDiagnosticId = getDiagnosticId(initialDiagnostic);
+  const seededFromClientDetail = Boolean(
+    initialDraft?.clientId && initialDraft?.vehicleId,
+  );
 
   useEffect(() => {
     setForm(
@@ -85,6 +88,16 @@ export default function DiagnosticFormScreen({
 
     return vehicles.filter((vehicle) => vehicle.clientId === form.clientId);
   }, [form.clientId, vehicles]);
+
+  const selectedClient = useMemo(
+    () => clients.find((client) => client.id === form.clientId),
+    [clients, form.clientId],
+  );
+
+  const selectedVehicle = useMemo(
+    () => vehicles.find((vehicle) => vehicle.id === form.vehicleId),
+    [form.vehicleId, vehicles],
+  );
 
   const handleSubmit = async () => {
     if (!form.clientId.trim() || !form.vehicleId.trim()) {
@@ -169,93 +182,150 @@ export default function DiagnosticFormScreen({
             </Text>
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Cliente
-            </Text>
-            <View style={styles.optionWrap}>
-              {clients.slice(0, 8).map((client) => {
-                const selected = form.clientId === client.id;
+          {seededFromClientDetail ? (
+            <View
+              style={[
+                styles.selectionSummary,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Cliente
+              </Text>
+              <Text style={[styles.selectionValue, { color: colors.text }]}>
+                {selectedClient?.fullName || form.clientId || "Sin cliente"}
+              </Text>
+              <Text
+                style={[styles.selectionMeta, { color: colors.textSecondary }]}
+              >
+                {selectedClient?.identification ||
+                  selectedClient?.id ||
+                  "Sin identificacion"}
+              </Text>
 
-                return (
-                  <Pressable
-                    key={client.id}
-                    onPress={() =>
-                      setForm((current) => ({
-                        ...current,
-                        clientId: client.id,
-                        vehicleId:
-                          current.vehicleId &&
-                          vehicles.find((item) => item.id === current.vehicleId)
-                            ?.clientId === client.id
-                            ? current.vehicleId
-                            : "",
-                      }))
-                    }
-                    style={[
-                      styles.optionChip,
-                      {
-                        backgroundColor: selected
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
-                    >
-                      {client.id} · {client.fullName}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Vehiculo
+              </Text>
+              <Text style={[styles.selectionValue, { color: colors.text }]}>
+                {[
+                  selectedVehicle?.brand,
+                  selectedVehicle?.model,
+                  selectedVehicle?.year,
+                ]
+                  .filter(Boolean)
+                  .join(" ") ||
+                  selectedVehicle?.plate ||
+                  form.vehicleId ||
+                  "Sin vehiculo"}
+              </Text>
+              <Text
+                style={[styles.selectionMeta, { color: colors.textSecondary }]}
+              >
+                {selectedVehicle?.plate || "Sin placa"}
+                {selectedVehicle?.mileage
+                  ? ` · ${selectedVehicle.mileage} km`
+                  : ""}
+              </Text>
             </View>
-          </View>
+          ) : (
+            <>
+              <View style={styles.formGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Cliente
+                </Text>
+                <View style={styles.optionWrap}>
+                  {clients.slice(0, 8).map((client) => {
+                    const selected = form.clientId === client.id;
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Vehiculo
-            </Text>
-            <View style={styles.optionWrap}>
-              {filteredVehicles.slice(0, 8).map((vehicle) => {
-                const selected = form.vehicleId === vehicle.id;
+                    return (
+                      <Pressable
+                        key={client.id}
+                        onPress={() =>
+                          setForm((current) => ({
+                            ...current,
+                            clientId: client.id,
+                            vehicleId:
+                              current.vehicleId &&
+                              vehicles.find(
+                                (item) => item.id === current.vehicleId,
+                              )?.clientId === client.id
+                                ? current.vehicleId
+                                : "",
+                          }))
+                        }
+                        style={[
+                          styles.optionChip,
+                          {
+                            backgroundColor: selected
+                              ? colors.primary
+                              : colors.cardMuted,
+                            borderColor: selected
+                              ? colors.primary
+                              : colors.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            { color: selected ? colors.white : colors.text },
+                          ]}
+                        >
+                          {client.id} · {client.fullName}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
 
-                return (
-                  <Pressable
-                    key={vehicle.id}
-                    onPress={() =>
-                      setForm((current) => ({
-                        ...current,
-                        vehicleId: vehicle.id,
-                      }))
-                    }
-                    style={[
-                      styles.optionChip,
-                      {
-                        backgroundColor: selected
-                          ? colors.accent
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.accent : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
-                    >
-                      {vehicle.id} · {vehicle.plate}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
+              <View style={styles.formGroup}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Vehiculo
+                </Text>
+                <View style={styles.optionWrap}>
+                  {filteredVehicles.slice(0, 8).map((vehicle) => {
+                    const selected = form.vehicleId === vehicle.id;
+
+                    return (
+                      <Pressable
+                        key={vehicle.id}
+                        onPress={() =>
+                          setForm((current) => ({
+                            ...current,
+                            vehicleId: vehicle.id,
+                          }))
+                        }
+                        style={[
+                          styles.optionChip,
+                          {
+                            backgroundColor: selected
+                              ? colors.accent
+                              : colors.cardMuted,
+                            borderColor: selected
+                              ? colors.accent
+                              : colors.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            { color: selected ? colors.white : colors.text },
+                          ]}
+                        >
+                          {vehicle.id} · {vehicle.plate}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            </>
+          )}
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
@@ -515,6 +585,14 @@ const styles = StyleSheet.create({
   },
   optionText: { fontSize: rf(12), fontWeight: "700" },
   helperText: { fontSize: rf(13), lineHeight: rf(18) },
+  selectionSummary: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  selectionValue: { fontSize: rf(14), fontWeight: "800" },
+  selectionMeta: { fontSize: rf(12), lineHeight: rf(17) },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,

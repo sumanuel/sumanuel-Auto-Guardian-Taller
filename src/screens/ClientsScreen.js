@@ -511,47 +511,31 @@ export default function ClientsScreen({
           </Text>
         </View>
 
-        <View style={styles.detailGrid}>
-          <View style={styles.detailBlock}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-              Identificacion
+        <View style={styles.detailLines}>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Identificacion:
             </Text>
-            <Text style={[styles.detailValue, { color: colors.text }]}>
-              {selectedClient?.identification || "Sin identificacion"}
+            {selectedClient?.identification || "Sin identificacion"}
+          </Text>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Telefono:
             </Text>
-          </View>
-          <View style={styles.detailBlock}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-              Codigo
+            {selectedClient?.phone || "Sin telefono"}
+          </Text>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Correo:
             </Text>
-            <Text style={[styles.detailValue, { color: colors.text }]}>
-              {selectedClient?.id || "Sin codigo"}
+            {selectedClient?.email || "Sin correo"}
+          </Text>
+          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+              Direccion:
             </Text>
-          </View>
-          <View style={styles.detailBlock}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-              Telefono
-            </Text>
-            <Text style={[styles.detailValue, { color: colors.text }]}>
-              {selectedClient?.phone || "Sin telefono"}
-            </Text>
-          </View>
-          <View style={styles.detailBlock}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-              Correo
-            </Text>
-            <Text style={[styles.detailValue, { color: colors.text }]}>
-              {selectedClient?.email || "Sin correo"}
-            </Text>
-          </View>
-          <View style={styles.detailBlock}>
-            <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>
-              Direccion
-            </Text>
-            <Text style={[styles.detailValue, { color: colors.text }]}>
-              {selectedClient?.address || "Sin direccion"}
-            </Text>
-          </View>
+            {selectedClient?.address || "Sin direccion"}
+          </Text>
         </View>
 
         {selectedClient?.notes ? (
@@ -839,15 +823,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
-  detailGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  detailBlock: { width: "48%", gap: spacing.xs },
-  detailLabel: {
-    fontSize: rf(10),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  detailValue: { fontSize: rf(14), fontWeight: "700", lineHeight: rf(20) },
+  detailLines: { gap: spacing.xs },
+  detailLine: { fontSize: rf(13), lineHeight: rf(20) },
+  detailLineLabel: { fontSize: rf(13), fontWeight: "800" },
   notesText: { fontSize: rf(13), lineHeight: rf(18) },
   actionRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   primaryAction: {
@@ -884,6 +862,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   emptyText: { fontSize: rf(13), lineHeight: rf(20) },
+  diagnosticLinkWrap: {
+    alignSelf: "flex-start",
+    marginTop: spacing.xs,
+  },
+  diagnosticLinkText: { fontSize: rf(12), fontWeight: "800" },
   fab: {
     position: "absolute",
     right: spacing.lg,
