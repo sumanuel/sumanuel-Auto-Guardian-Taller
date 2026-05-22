@@ -287,20 +287,20 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.xl,
+    gap: spacing.lg,
   },
   formCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
     borderBottomWidth: 1,
   },
   cardHeaderCopy: { flex: 1, gap: 2 },

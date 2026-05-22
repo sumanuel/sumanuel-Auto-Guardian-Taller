@@ -594,7 +594,7 @@ export default function DiagnosticsScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
-  scrollContent: { padding: spacing.lg, gap: spacing.xl },
+  scrollContent: { padding: spacing.lg, gap: spacing.lg },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
   summaryCard: {
     borderWidth: 1,
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   input: {
     borderWidth: 1,
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: rf(14),
   },
-  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   filterChip: {
     borderWidth: 1,
     borderRadius: borderRadius.pill,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   listBody: { gap: spacing.sm },
   row: {

@@ -766,13 +766,13 @@ export default function ClientsScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
-  scrollContent: { padding: spacing.lg, gap: spacing.xl },
+  scrollContent: { padding: spacing.lg, gap: spacing.lg },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
   controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   input: {
     borderWidth: 1,
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   detailLines: { gap: spacing.xs },
   detailLine: { fontSize: rf(14), lineHeight: rf(22) },

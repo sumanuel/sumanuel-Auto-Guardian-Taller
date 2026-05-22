@@ -955,7 +955,7 @@ export default function WorkOrdersScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
-  scrollContent: { padding: spacing.lg, gap: spacing.xl },
+  scrollContent: { padding: spacing.lg, gap: spacing.lg },
   scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
   statCard: {
     borderWidth: 1,
@@ -972,13 +972,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   input: {
     borderWidth: 1,
@@ -987,7 +987,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: rf(14),
   },
-  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   filterChip: {
     borderWidth: 1,
     borderRadius: borderRadius.pill,
@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   detailLines: { gap: spacing.xs },
   detailLine: { fontSize: rf(14), lineHeight: rf(22) },
@@ -1078,7 +1078,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryButtonText: { fontSize: rf(15), fontWeight: "800" },
-  timelineList: { gap: spacing.md },
+  timelineList: { gap: spacing.sm },
   timelineRow: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
