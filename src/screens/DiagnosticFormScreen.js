@@ -59,6 +59,9 @@ export default function DiagnosticFormScreen({
   const seededFromClientDetail = Boolean(
     initialDraft?.clientId && initialDraft?.vehicleId,
   );
+  const shouldLockVehicleContext = Boolean(
+    editingDiagnosticId || seededFromClientDetail,
+  );
   const editableStatusOptions = diagnosticStatusOptions.filter(
     (statusOption) => statusOption.key !== "closed",
   );
@@ -255,7 +258,7 @@ export default function DiagnosticFormScreen({
             </Text>
           </View>
 
-          {seededFromClientDetail ? (
+          {shouldLockVehicleContext ? (
             <View style={styles.selectionSummary}>
               <Text
                 style={[styles.selectionLine, { color: colors.textSecondary }]}
