@@ -104,6 +104,10 @@ function getQueueAccentColor(item, colors) {
   }
 }
 
+function getQueueCaseColor(item, colors) {
+  return item.type === "diagnostic" ? colors.primary : colors.warning;
+}
+
 export default function WorkshopHomeScreen({ userProfile }) {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -400,10 +404,6 @@ export default function WorkshopHomeScreen({ userProfile }) {
           <Text style={[styles.panelTitle, { color: colors.text }]}>
             Cola de hoy
           </Text>
-          <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-            Los accesos frecuentes ahora viven en el menu inferior. Aqui quedan
-            solo las prioridades operativas.
-          </Text>
 
           <View style={styles.filtersBlock}>
             <TextInput
@@ -495,6 +495,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
           {filteredQueue.length ? (
             filteredQueue.map((item) => {
               const accentColor = getQueueAccentColor(item, colors);
+              const caseColor = getQueueCaseColor(item, colors);
 
               return (
                 <View
@@ -531,7 +532,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
                             { color: colors.textSecondary },
                           ]}
                         >
-                          {item.plate}
+                          Placa: {item.plate}
                         </Text>
                       </View>
                       <View
@@ -550,7 +551,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
                         </Text>
                       </View>
                     </View>
-                    <Text style={[styles.queueCaseTag, { color: accentColor }]}>
+                    <Text style={[styles.queueCaseTag, { color: caseColor }]}>
                       {item.detail}
                     </Text>
                   </View>

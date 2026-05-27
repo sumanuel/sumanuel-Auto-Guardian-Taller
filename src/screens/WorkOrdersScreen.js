@@ -63,6 +63,23 @@ function formatDateTime(value) {
   return resolvedDate.toLocaleString("es-VE");
 }
 
+function parseOperationalProgressMessage(message) {
+  const normalizedMessage = String(message || "");
+  const match = normalizedMessage.match(
+    /^(Avance operativo ajustado a )([0-9]+%\.?)(.*)$/i,
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    prefix: match[1],
+    value: match[2],
+    suffix: match[3] || "",
+  };
+}
+
 function createEmptyProgressForm(type = "note", progressPercent = 0) {
   return {
     type,
@@ -1364,6 +1381,10 @@ export default function WorkOrdersScreen({
               {progressEntries.map((entry) => {
                 const author = staffLookup[entry.authorUid];
                 const palette = getProgressTypePalette(entry.type, colors);
+                const parsedProgressMessage =
+                  entry.type === "status"
+                    ? parseOperationalProgressMessage(entry.message)
+                    : null;
 
                 return (
                   <View
@@ -1422,23 +1443,51 @@ export default function WorkOrdersScreen({
                           "Sin autor"}{" "}
                         · {formatDateTime(entry.createdAt)}
                       </Text>
-                      <Text
-                        style={
-                          entry.type === "status"
-                            ? [
-                                styles.timelineProgressText,
-                                {
-                                  color: getProgressMeterColor(
-                                    entry.progressPercent,
-                                    colors,
-                                  ),
-                                },
-                              ]
-                            : [styles.rowMeta, { color: colors.text }]
-                        }
-                      >
-                        {entry.message}
-                      </Text>
+                      {entry.type === "status" ? (
+                        parsedProgressMessage ? (
+                          <Text style={styles.timelineProgressText}>
+                            <Text
+                              style={[
+                                styles.timelineProgressPrefix,
+                                { color: colors.white },
+                              ]}
+                            >
+                              {parsedProgressMessage.prefix}
+                            </Text>
+                            <Text
+                              style={{
+                                color: getProgressMeterColor(
+                                  entry.progressPercent,
+                                  colors,
+                                ),
+                              }}
+                            >
+                              {parsedProgressMessage.value}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.timelineProgressPrefix,
+                                { color: colors.white },
+                              ]}
+                            >
+                              {parsedProgressMessage.suffix}
+                            </Text>
+                          </Text>
+                        ) : (
+                          <Text
+                            style={[
+                              styles.timelineProgressText,
+                              { color: colors.white },
+                            ]}
+                          >
+                            {entry.message}
+                          </Text>
+                        )
+                      ) : (
+                        <Text style={[styles.rowMeta, { color: colors.text }]}>
+                          {entry.message}
+                        </Text>
+                      )}
                       {entry.type === "parts" &&
                       entry.sparePartUpdates?.length ? (
                         <View style={styles.timelineNestedList}>
@@ -1726,6 +1775,7 @@ const styles = StyleSheet.create({
   },
   timelineTypeChipText: { fontSize: rf(11), fontWeight: "800" },
   timelineProgressText: { fontSize: rf(18), fontWeight: "900" },
+  timelineProgressPrefix: { fontSize: rf(14), fontWeight: "700" },
   timelineNestedList: { gap: 2 },
   emptyStateCard: {
     borderWidth: 1,
