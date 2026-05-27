@@ -1421,26 +1421,23 @@ export default function WorkOrdersScreen({
                           "Sin autor"}{" "}
                         · {formatDateTime(entry.createdAt)}
                       </Text>
-                      <Text style={[styles.rowMeta, { color: colors.text }]}>
+                      <Text
+                        style={
+                          entry.type === "status"
+                            ? [
+                                styles.timelineProgressText,
+                                {
+                                  color: getProgressMeterColor(
+                                    entry.progressPercent,
+                                    colors,
+                                  ),
+                                },
+                              ]
+                            : [styles.rowMeta, { color: colors.text }]
+                        }
+                      >
                         {entry.message}
                       </Text>
-                      {entry.type === "status" &&
-                      entry.progressPercent !== null ? (
-                        <Text
-                          style={[
-                            styles.timelineProgressText,
-                            {
-                              color: getProgressMeterColor(
-                                entry.progressPercent,
-                                colors,
-                              ),
-                            },
-                          ]}
-                        >
-                          Avance registrado:{" "}
-                          {Math.round(Number(entry.progressPercent) || 0)}%
-                        </Text>
-                      ) : null}
                       {entry.type === "parts" &&
                       entry.sparePartUpdates?.length ? (
                         <View style={styles.timelineNestedList}>

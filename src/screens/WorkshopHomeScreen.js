@@ -1,29 +1,25 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
+import { listClients } from "../services/clients/clientService";
+import {
+  diagnosticStatusOptions,
+  listDiagnostics,
+} from "../services/diagnostics/diagnosticService";
+import { listVehicles } from "../services/vehicles/vehicleService";
+import {
+  listWorkOrders,
+  workOrderStatusOptions,
+} from "../services/workOrders/workOrderService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
-
-const queue = [
-  {
-    key: "1",
-    title: "Ford Fiesta 2014",
-    detail: "Revision de frenos delanteros",
-    status: "Prioridad alta",
-  },
-  {
-    key: "2",
-    title: "Toyota Hilux 2019",
-    detail: "Cambio de aceite y filtro",
-    status: "Recepcion 09:00 AM",
-  },
-  {
-    key: "3",
-    title: "Chevrolet Cruze 2017",
-    detail: "Diagnostico electrico",
-    status: "En espera de validacion",
-  },
-];
 
 const roleLabels = {
   administrator: "Administrador",
@@ -33,6 +29,90 @@ const roleLabels = {
 
 export default function WorkshopHomeScreen({ userProfile }) {
   const { colors } = useTheme();
+  const [loading, setLoading] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [diagnostics, setDiagnostics] = useState([]);
+  const [workOrders, setWorkOrders] = useState([]);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      setLoading(true);
+
+      try {
+        const [nextClients, nextVehicles, nextDiagnostics, nextWorkOrders] =
+          await Promise.all([
+            listClients(),
+            listVehicles(),
+            listDiagnostics(),
+            listWorkOrders(),
+          ]);
+        setClients(nextClients);
+        setVehicles(nextVehicles);
+        setDiagnostics(nextDiagnostics);
+        setWorkOrders(nextWorkOrders);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
+  const queue = useMemo(() => {
+    const vehicleLookup = vehicles.reduce((accumulator, vehicle) => {
+      accumulator[vehicle.id] = vehicle;
+      return accumulator;
+    }, {});
+
+    const latestDiagnostics = diagnostics.slice(0, 2).map((diagnostic) => {
+      const vehicle = vehicleLookup[diagnostic.vehicleId];
+
+      return {
+        key: `diagnostic-${diagnostic.id}`,
+        title:
+          [vehicle?.brand, vehicle?.model, vehicle?.year]
+            .filter(Boolean)
+            .join(" ") ||
+          vehicle?.plate ||
+          diagnostic.vehicleId ||
+          diagnostic.id,
+        detail: `Diagnostico ${diagnostic.id}`,
+        status:
+          diagnosticStatusOptions.find((item) => item.key === diagnostic.status)
+            ?.label ||
+          diagnostic.status ||
+          "Sin estado",
+      };
+    });
+
+    const latestWorkOrders = workOrders.slice(0, 2).map((workOrder) => {
+      const vehicle = vehicleLookup[workOrder.vehicleId];
+
+      return {
+        key: `work-order-${workOrder.id}`,
+        title:
+          [vehicle?.brand, vehicle?.model, vehicle?.year]
+            .filter(Boolean)
+            .join(" ") ||
+          vehicle?.plate ||
+          workOrder.vehicleId ||
+          workOrder.id,
+        detail: `Orden ${workOrder.id}`,
+        status:
+          workOrderStatusOptions.find((item) => item.key === workOrder.status)
+            ?.label ||
+          workOrder.status ||
+          "Sin estado",
+      };
+    });
+
+    return [...latestDiagnostics, ...latestWorkOrders].slice(0, 3);
+  }, [diagnostics, vehicles, workOrders]);
+
+  const activeOrdersCount = workOrders.filter(
+    (workOrder) => workOrder.status !== "delivered",
+  ).length;
 
   return (
     <SafeAreaView
@@ -76,7 +156,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
               style={[styles.alertPill, { backgroundColor: colors.cardMuted }]}
             >
               <Text style={[styles.alertPillText, { color: colors.primary }]}>
-                3 alertas
+                {activeOrdersCount} activas
               </Text>
             </View>
           </View>
@@ -86,7 +166,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
               style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
             >
               <Text style={[styles.metricValue, { color: colors.text }]}>
-                18
+                {vehicles.length}
               </Text>
               <Text
                 style={[styles.metricLabel, { color: colors.textSecondary }]}
@@ -98,19 +178,19 @@ export default function WorkshopHomeScreen({ userProfile }) {
               style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
             >
               <Text style={[styles.metricValue, { color: colors.text }]}>
-                5
+                {clients.length}
               </Text>
               <Text
                 style={[styles.metricLabel, { color: colors.textSecondary }]}
               >
-                Urgentes
+                Clientes
               </Text>
             </View>
             <View
               style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
             >
               <Text style={[styles.metricValue, { color: colors.text }]}>
-                7
+                {diagnostics.length}
               </Text>
               <Text
                 style={[styles.metricLabel, { color: colors.textSecondary }]}
@@ -122,7 +202,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
               style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
             >
               <Text style={[styles.metricValue, { color: colors.text }]}>
-                11
+                {workOrders.length}
               </Text>
               <Text
                 style={[styles.metricLabel, { color: colors.textSecondary }]}
@@ -154,10 +234,57 @@ export default function WorkshopHomeScreen({ userProfile }) {
           </Text>
         </View>
 
+        {loading ? <ActivityIndicator color={colors.primary} /> : null}
+
         <View style={styles.listWrap}>
-          {queue.map((item) => (
+          {queue.length ? (
+            queue.map((item) => (
+              <View
+                key={item.key}
+                style={[
+                  styles.queueRow,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <View style={styles.queueCopy}>
+                  <View
+                    style={[
+                      styles.queueHeader,
+                      { borderBottomColor: colors.border },
+                    ]}
+                  >
+                    <View style={styles.queueHeaderCopy}>
+                      <Text
+                        style={[styles.queueEyebrow, { color: colors.primary }]}
+                      >
+                        Agenda
+                      </Text>
+                      <Text style={[styles.queueTitle, { color: colors.text }]}>
+                        {item.title}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[styles.queueStatus, { color: colors.primary }]}
+                    >
+                      {item.status}
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.queueDetail,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    {item.detail}
+                  </Text>
+                </View>
+              </View>
+            ))
+          ) : (
             <View
-              key={item.key}
               style={[
                 styles.queueRow,
                 {
@@ -167,34 +294,18 @@ export default function WorkshopHomeScreen({ userProfile }) {
               ]}
             >
               <View style={styles.queueCopy}>
-                <View
-                  style={[
-                    styles.queueHeader,
-                    { borderBottomColor: colors.border },
-                  ]}
-                >
-                  <View style={styles.queueHeaderCopy}>
-                    <Text
-                      style={[styles.queueEyebrow, { color: colors.primary }]}
-                    >
-                      Agenda
-                    </Text>
-                    <Text style={[styles.queueTitle, { color: colors.text }]}>
-                      {item.title}
-                    </Text>
-                  </View>
-                  <Text style={[styles.queueStatus, { color: colors.primary }]}>
-                    {item.status}
-                  </Text>
-                </View>
+                <Text style={[styles.queueEyebrow, { color: colors.primary }]}>
+                  Agenda
+                </Text>
                 <Text
                   style={[styles.queueDetail, { color: colors.textSecondary }]}
                 >
-                  {item.detail}
+                  Aun no hay diagnosticos ni ordenes recientes para mostrar en
+                  el home.
                 </Text>
               </View>
             </View>
-          ))}
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
