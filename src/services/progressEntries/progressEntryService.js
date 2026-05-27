@@ -9,6 +9,29 @@ function normalizeOptional(value) {
   return value?.trim() || "";
 }
 
+function normalizeNumber(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
+}
+
+function normalizeSparePartUpdates(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => ({
+      sparePartId: normalizeOptional(item?.sparePartId),
+      sparePartName: normalizeOptional(item?.sparePartName),
+      status: normalizeOptional(item?.status),
+    }))
+    .filter((item) => item.sparePartId && item.status);
+}
+
 function timestampToMillis(value) {
   if (value?.toMillis) {
     return value.toMillis();
@@ -57,6 +80,9 @@ export async function createProgressEntry({
   type,
   message,
   statusSnapshot,
+  progressPercent,
+  sparePartUpdates,
+  deliveryClosedOrder,
 }) {
   return createEntityRecord("progressEntries", {
     workOrderId: normalizeOptional(workOrderId),
@@ -67,5 +93,8 @@ export async function createProgressEntry({
     message: normalizeOptional(message),
     photos: [],
     statusSnapshot: normalizeOptional(statusSnapshot),
+    progressPercent: normalizeNumber(progressPercent),
+    sparePartUpdates: normalizeSparePartUpdates(sparePartUpdates),
+    deliveryClosedOrder: Boolean(deliveryClosedOrder),
   });
 }

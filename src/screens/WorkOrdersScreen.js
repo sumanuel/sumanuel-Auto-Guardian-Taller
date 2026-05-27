@@ -1,3 +1,4 @@
+import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -22,10 +23,16 @@ import {
   listProgressEntriesByWorkOrderId,
   progressEntryTypeOptions,
 } from "../services/progressEntries/progressEntryService";
+import {
+  listSpareParts,
+  sparePartStatusOptions,
+  updateSparePart,
+} from "../services/spareParts/sparePartService";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import {
   deleteWorkOrder,
   listWorkOrders,
+  updateWorkOrderOperationalState,
   workOrderStatusOptions,
 } from "../services/workOrders/workOrderService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
@@ -56,6 +63,97 @@ function formatDateTime(value) {
   return resolvedDate.toLocaleString("es-VE");
 }
 
+function createEmptyProgressForm(type = "note", progressPercent = 0) {
+  return {
+    type,
+    message: "",
+    progressPercent,
+    partUpdates: {},
+  };
+}
+
+function getProgressTypePalette(type, colors) {
+  if (type === "status") {
+    return {
+      accent: colors.warning,
+      surface: colors.cardMuted,
+      text: colors.warning,
+    };
+  }
+
+  if (type === "parts") {
+    return {
+      accent: colors.textTertiary,
+      surface: colors.cardMuted,
+      text: colors.textSecondary,
+    };
+  }
+
+  if (type === "delivery") {
+    return {
+      accent: colors.success,
+      surface: colors.cardMuted,
+      text: colors.success,
+    };
+  }
+
+  return {
+    accent: colors.primary,
+    surface: colors.cardMuted,
+    text: colors.primary,
+  };
+}
+
+function hexToRgb(hex) {
+  const normalizedHex = String(hex || "").replace("#", "");
+
+  if (normalizedHex.length !== 6) {
+    return { red: 0, green: 0, blue: 0 };
+  }
+
+  return {
+    red: parseInt(normalizedHex.slice(0, 2), 16),
+    green: parseInt(normalizedHex.slice(2, 4), 16),
+    blue: parseInt(normalizedHex.slice(4, 6), 16),
+  };
+}
+
+function rgbToHex({ red, green, blue }) {
+  return `#${[red, green, blue]
+    .map((channel) => Math.max(0, Math.min(255, Math.round(channel))))
+    .map((channel) => channel.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+function getProgressMeterColor(progressPercent, colors) {
+  const start = hexToRgb(colors.success);
+  const end = hexToRgb(colors.danger);
+  const clampedProgress =
+    Math.max(0, Math.min(100, Number(progressPercent) || 0)) / 100;
+
+  return rgbToHex({
+    red: start.red + (end.red - start.red) * clampedProgress,
+    green: start.green + (end.green - start.green) * clampedProgress,
+    blue: start.blue + (end.blue - start.blue) * clampedProgress,
+  });
+}
+
+function resolveProgressButtonLabel(type) {
+  if (type === "delivery") {
+    return "Confirmar entrega";
+  }
+
+  if (type === "parts") {
+    return "Registrar repuestos";
+  }
+
+  if (type === "status") {
+    return "Registrar estado";
+  }
+
+  return "Registrar avance";
+}
+
 export default function WorkOrdersScreen({
   onBack,
   onOpenSpareParts,
@@ -74,12 +172,10 @@ export default function WorkOrdersScreen({
   const [vehicles, setVehicles] = useState([]);
   const [diagnostics, setDiagnostics] = useState([]);
   const [staffProfiles, setStaffProfiles] = useState([]);
+  const [spareParts, setSpareParts] = useState([]);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
   const [progressEntries, setProgressEntries] = useState([]);
-  const [progressForm, setProgressForm] = useState({
-    type: "note",
-    message: "",
-  });
+  const [progressForm, setProgressForm] = useState(createEmptyProgressForm());
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -105,18 +201,21 @@ export default function WorkOrdersScreen({
         nextVehicles,
         nextDiagnostics,
         nextStaff,
+        nextSpareParts,
       ] = await Promise.all([
         listWorkOrders(),
         listClients(),
         listVehicles(),
         listDiagnostics(),
         listStaffProfiles(),
+        listSpareParts(),
       ]);
       setWorkOrders(nextOrders);
       setClients(nextClients);
       setVehicles(nextVehicles);
       setDiagnostics(nextDiagnostics);
       setStaffProfiles(nextStaff);
+      setSpareParts(nextSpareParts);
 
       if (selectedWorkOrderId) {
         const refreshedOrder = nextOrders.find(
@@ -181,7 +280,7 @@ export default function WorkOrdersScreen({
   useEffect(() => {
     if (!selectedWorkOrder?.id) {
       setProgressEntries([]);
-      setProgressForm({ type: "note", message: "" });
+      setProgressForm(createEmptyProgressForm());
       return;
     }
 
@@ -205,6 +304,21 @@ export default function WorkOrdersScreen({
 
     loadProgress();
   }, [selectedWorkOrder?.id]);
+
+  useEffect(() => {
+    setProgressForm(
+      createEmptyProgressForm(
+        "note",
+        Number(selectedWorkOrder?.progressPercent) || 0,
+      ),
+    );
+  }, [selectedWorkOrder?.id, selectedWorkOrder?.progressPercent]);
+
+  const selectedWorkOrderSpareParts = useMemo(
+    () =>
+      spareParts.filter((part) => part.workOrderId === selectedWorkOrder?.id),
+    [selectedWorkOrder?.id, spareParts],
+  );
 
   const filteredOrders = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -281,29 +395,162 @@ export default function WorkOrdersScreen({
       return;
     }
 
-    if (!progressForm.message.trim()) {
-      Alert.alert("Ordenes", "Describe el avance para registrarlo.");
+    const selectedPartUpdates = Object.entries(progressForm.partUpdates || {})
+      .map(([sparePartId, status]) => {
+        const matchedPart = selectedWorkOrderSpareParts.find(
+          (part) => getEntityId(part) === sparePartId,
+        );
+
+        if (!matchedPart || !status) {
+          return null;
+        }
+
+        return {
+          refId: getEntityId(matchedPart),
+          sparePartId: matchedPart.id,
+          sparePartName: matchedPart.name,
+          status,
+          payload: matchedPart,
+        };
+      })
+      .filter(Boolean);
+
+    if (progressForm.type === "note" && !progressForm.message.trim()) {
+      Alert.alert("Ordenes", "Describe la nota para registrarla.");
+      return;
+    }
+
+    if (progressForm.type === "parts" && !selectedPartUpdates.length) {
+      Alert.alert(
+        "Ordenes",
+        "Selecciona al menos un repuesto y su estado para registrarlo.",
+      );
+      return;
+    }
+
+    if (progressForm.type === "delivery" && !progressForm.message.trim()) {
+      Alert.alert("Ordenes", "Describe la entrega antes de cerrar la orden.");
+      return;
+    }
+
+    const confirmDelivery = async () => {
+      if (progressForm.type !== "delivery") {
+        return true;
+      }
+
+      return new Promise((resolve) => {
+        Alert.alert(
+          "Cerrar orden",
+          "Se marcara la orden como terminada y entregada. Deseas continuar?",
+          [
+            {
+              text: "Cancelar",
+              style: "cancel",
+              onPress: () => resolve(false),
+            },
+            { text: "Cerrar orden", onPress: () => resolve(true) },
+          ],
+        );
+      });
+    };
+
+    const deliveryConfirmed = await confirmDelivery();
+
+    if (!deliveryConfirmed) {
       return;
     }
 
     setProgressSubmitting(true);
 
     try {
+      let entryMessage = progressForm.message.trim();
+      let statusSnapshot = selectedWorkOrder.status;
+      let progressPercent = null;
+      let sparePartUpdates = [];
+      let deliveryClosedOrder = false;
+
+      if (progressForm.type === "status") {
+        progressPercent = Math.max(
+          0,
+          Math.min(100, Math.round(Number(progressForm.progressPercent) || 0)),
+        );
+        entryMessage =
+          entryMessage || `Avance operativo ajustado a ${progressPercent}%.`;
+
+        await updateWorkOrderOperationalState(selectedWorkOrderId, {
+          progressPercent,
+        });
+      }
+
+      if (progressForm.type === "parts") {
+        await Promise.all(
+          selectedPartUpdates.map((partUpdate) =>
+            updateSparePart(partUpdate.refId, {
+              ...partUpdate.payload,
+              status: partUpdate.status,
+            }),
+          ),
+        );
+
+        sparePartUpdates = selectedPartUpdates.map((partUpdate) => ({
+          sparePartId: partUpdate.sparePartId,
+          sparePartName: partUpdate.sparePartName,
+          status: partUpdate.status,
+        }));
+
+        entryMessage =
+          entryMessage ||
+          sparePartUpdates
+            .map(
+              (item) =>
+                `${item.sparePartName} -> ${
+                  sparePartStatusOptions.find(
+                    (option) => option.key === item.status,
+                  )?.label || item.status
+                }`,
+            )
+            .join(". ");
+      }
+
+      if (progressForm.type === "delivery") {
+        deliveryClosedOrder = true;
+        progressPercent = 100;
+        statusSnapshot = "delivered";
+
+        await updateWorkOrderOperationalState(selectedWorkOrderId, {
+          status: "delivered",
+          progressPercent: 100,
+        });
+      }
+
       await createProgressEntry({
         workOrderId: selectedWorkOrder.id,
         diagnosticId: selectedWorkOrder.diagnosticId,
         vehicleId: selectedWorkOrder.vehicleId,
         authorUid: userProfile?.uid,
         type: progressForm.type,
-        message: progressForm.message,
-        statusSnapshot: selectedWorkOrder.status,
+        message: entryMessage,
+        statusSnapshot,
+        progressPercent,
+        sparePartUpdates,
+        deliveryClosedOrder,
       });
 
+      await refreshData();
       const nextEntries = await listProgressEntriesByWorkOrderId(
         selectedWorkOrder.id,
       );
       setProgressEntries(nextEntries);
-      setProgressForm({ type: "note", message: "" });
+      setProgressForm(
+        createEmptyProgressForm(
+          "note",
+          progressForm.type === "delivery"
+            ? 100
+            : progressForm.type === "status"
+              ? Math.round(Number(progressForm.progressPercent) || 0)
+              : Number(selectedWorkOrder?.progressPercent) || 0,
+        ),
+      );
     } catch (error) {
       Alert.alert(
         "Ordenes",
@@ -628,6 +875,10 @@ export default function WorkOrdersScreen({
     const assignedMechanics = (selectedWorkOrder?.assignedMechanicUids || [])
       .map((uid) => staffLookup[uid])
       .filter(Boolean);
+    const progressMeterColor = getProgressMeterColor(
+      progressForm.progressPercent,
+      colors,
+    );
 
     return (
       <>
@@ -723,6 +974,12 @@ export default function WorkOrdersScreen({
               )?.label ||
                 selectedWorkOrder?.status ||
                 "Sin estado"}
+            </Text>
+            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
+              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
+                Avance:
+              </Text>{" "}
+              {Math.round(Number(selectedWorkOrder?.progressPercent) || 0)}%
             </Text>
           </View>
 
@@ -834,30 +1091,33 @@ export default function WorkOrdersScreen({
           <View style={styles.filterRow}>
             {progressEntryTypeOptions.map((typeOption) => {
               const selected = progressForm.type === typeOption.key;
+              const palette = getProgressTypePalette(typeOption.key, colors);
 
               return (
                 <Pressable
                   key={typeOption.key}
                   onPress={() =>
-                    setProgressForm((current) => ({
-                      ...current,
-                      type: typeOption.key,
-                    }))
+                    setProgressForm(
+                      createEmptyProgressForm(
+                        typeOption.key,
+                        Number(selectedWorkOrder?.progressPercent) || 0,
+                      ),
+                    )
                   }
                   style={[
                     styles.filterChip,
                     {
                       backgroundColor: selected
-                        ? colors.primary
+                        ? palette.accent
                         : colors.cardMuted,
-                      borderColor: selected ? colors.primary : colors.border,
+                      borderColor: selected ? palette.accent : colors.border,
                     },
                   ]}
                 >
                   <Text
                     style={[
                       styles.filterChipText,
-                      { color: selected ? colors.white : colors.text },
+                      { color: selected ? colors.white : palette.text },
                     ]}
                   >
                     {typeOption.label}
@@ -867,32 +1127,212 @@ export default function WorkOrdersScreen({
             })}
           </View>
 
-          <TextInput
-            multiline
-            numberOfLines={4}
-            onChangeText={(value) =>
-              setProgressForm((current) => ({ ...current, message: value }))
-            }
-            placeholder="Describe el avance, cambio de estado o novedad tecnica"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.textArea,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            textAlignVertical="top"
-            value={progressForm.message}
-          />
+          {progressForm.type === "status" ? (
+            <View
+              style={[
+                styles.progressPanel,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <View style={styles.progressHeaderRow}>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Avance operativo
+                </Text>
+                <Text
+                  style={[styles.progressValue, { color: progressMeterColor }]}
+                >
+                  {Math.round(Number(progressForm.progressPercent) || 0)}%
+                </Text>
+              </View>
+              <Slider
+                maximumTrackTintColor={colors.borderStrong}
+                maximumValue={100}
+                minimumTrackTintColor={progressMeterColor}
+                minimumValue={0}
+                onValueChange={(value) =>
+                  setProgressForm((current) => ({
+                    ...current,
+                    progressPercent: Math.round(value),
+                  }))
+                }
+                step={1}
+                style={styles.slider}
+                thumbTintColor={progressMeterColor}
+                value={Number(progressForm.progressPercent) || 0}
+              />
+              <View style={styles.progressScaleRow}>
+                {[0, 25, 50, 75, 100].map((value) => (
+                  <Text
+                    key={value}
+                    style={[
+                      styles.progressScaleText,
+                      { color: colors.textTertiary },
+                    ]}
+                  >
+                    {value}%
+                  </Text>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          {progressForm.type === "parts" ? (
+            selectedWorkOrderSpareParts.length ? (
+              <View style={styles.partsList}>
+                {selectedWorkOrderSpareParts.map((part) => {
+                  const selectedStatus =
+                    progressForm.partUpdates[getEntityId(part)] || "";
+
+                  return (
+                    <View
+                      key={getEntityId(part)}
+                      style={[
+                        styles.partCard,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.rowTitle, { color: colors.text }]}>
+                        {part.name}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Estado actual:{" "}
+                        {sparePartStatusOptions.find(
+                          (option) => option.key === part.status,
+                        )?.label ||
+                          part.status ||
+                          "Sin estado"}
+                      </Text>
+                      <View style={styles.filterRow}>
+                        {[
+                          { key: "received", label: "Recibido" },
+                          { key: "installed", label: "Instalado" },
+                        ].map((statusOption) => {
+                          const selected = selectedStatus === statusOption.key;
+
+                          return (
+                            <Pressable
+                              key={statusOption.key}
+                              onPress={() =>
+                                setProgressForm((current) => ({
+                                  ...current,
+                                  partUpdates: {
+                                    ...current.partUpdates,
+                                    [getEntityId(part)]: selected
+                                      ? ""
+                                      : statusOption.key,
+                                  },
+                                }))
+                              }
+                              style={[
+                                styles.filterChip,
+                                {
+                                  backgroundColor: selected
+                                    ? colors.textTertiary
+                                    : colors.cardBackground,
+                                  borderColor: selected
+                                    ? colors.textTertiary
+                                    : colors.border,
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.filterChipText,
+                                  {
+                                    color: selected
+                                      ? colors.white
+                                      : colors.textSecondary,
+                                  },
+                                ]}
+                              >
+                                {statusOption.label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            ) : (
+              <View
+                style={[
+                  styles.emptyStateCard,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.emptyEyebrow, { color: colors.textSecondary }]}
+                >
+                  Repuestos
+                </Text>
+                <Text
+                  style={[styles.emptyText, { color: colors.textSecondary }]}
+                >
+                  Esta orden todavia no tiene repuestos cargados. Abrelos desde
+                  el bloque superior para agregarlos primero.
+                </Text>
+              </View>
+            )
+          ) : null}
+
+          {progressForm.type !== "status" && progressForm.type !== "parts" ? (
+            <TextInput
+              multiline
+              numberOfLines={4}
+              onChangeText={(value) =>
+                setProgressForm((current) => ({ ...current, message: value }))
+              }
+              placeholder={
+                progressForm.type === "delivery"
+                  ? "Describe la entrega final, observaciones y conformidad"
+                  : "Describe la nota tecnica o novedad operativa"
+              }
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.textArea,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              textAlignVertical="top"
+              value={progressForm.message}
+            />
+          ) : null}
 
           <Pressable
             onPress={handleProgressSubmit}
-            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+            style={[
+              styles.primaryButton,
+              {
+                backgroundColor: getProgressTypePalette(
+                  progressForm.type,
+                  colors,
+                ).accent,
+              },
+            ]}
           >
             <Text style={[styles.primaryButtonText, { color: colors.white }]}>
-              {progressSubmitting ? "Guardando avance..." : "Registrar avance"}
+              {progressSubmitting
+                ? "Guardando avance..."
+                : resolveProgressButtonLabel(progressForm.type)}
             </Text>
           </Pressable>
         </View>
@@ -929,6 +1369,7 @@ export default function WorkOrdersScreen({
             <View style={styles.timelineList}>
               {progressEntries.map((entry) => {
                 const author = staffLookup[entry.authorUid];
+                const palette = getProgressTypePalette(entry.type, colors);
 
                 return (
                   <View
@@ -937,22 +1378,44 @@ export default function WorkOrdersScreen({
                       styles.timelineRow,
                       {
                         backgroundColor: colors.cardMuted,
-                        borderColor: colors.border,
+                        borderColor: palette.accent,
                       },
                     ]}
                   >
                     <View
                       style={[
                         styles.timelineMarker,
-                        { backgroundColor: colors.primary },
+                        { backgroundColor: palette.accent },
                       ]}
                     />
                     <View style={styles.timelineCopy}>
-                      <Text style={[styles.rowTitle, { color: colors.text }]}>
-                        {progressEntryTypeOptions.find(
-                          (item) => item.key === entry.type,
-                        )?.label || entry.type}
-                      </Text>
+                      <View style={styles.timelineTitleRow}>
+                        <Text style={[styles.rowTitle, { color: colors.text }]}>
+                          {progressEntryTypeOptions.find(
+                            (item) => item.key === entry.type,
+                          )?.label || entry.type}
+                        </Text>
+                        <View
+                          style={[
+                            styles.timelineTypeChip,
+                            {
+                              backgroundColor: palette.surface,
+                              borderColor: palette.accent,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.timelineTypeChipText,
+                              { color: palette.text },
+                            ]}
+                          >
+                            {progressEntryTypeOptions.find(
+                              (item) => item.key === entry.type,
+                            )?.label || entry.type}
+                          </Text>
+                        </View>
+                      </View>
                       <Text
                         style={[
                           styles.rowMeta,
@@ -968,6 +1431,39 @@ export default function WorkOrdersScreen({
                       <Text style={[styles.rowMeta, { color: colors.text }]}>
                         {entry.message}
                       </Text>
+                      {entry.type === "status" &&
+                      entry.progressPercent !== null ? (
+                        <Text style={[styles.rowMeta, { color: palette.text }]}>
+                          Avance registrado:{" "}
+                          {Math.round(Number(entry.progressPercent) || 0)}%
+                        </Text>
+                      ) : null}
+                      {entry.type === "parts" &&
+                      entry.sparePartUpdates?.length ? (
+                        <View style={styles.timelineNestedList}>
+                          {entry.sparePartUpdates.map((item) => (
+                            <Text
+                              key={`${item.sparePartId}-${item.status}`}
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              {item.sparePartName}:{" "}
+                              {sparePartStatusOptions.find(
+                                (option) => option.key === item.status,
+                              )?.label || item.status}
+                            </Text>
+                          ))}
+                        </View>
+                      ) : null}
+                      {entry.deliveryClosedOrder ? (
+                        <Text
+                          style={[styles.rowMeta, { color: colors.success }]}
+                        >
+                          Orden cerrada y entregada.
+                        </Text>
+                      ) : null}
                       <Text
                         style={[styles.rowMeta, { color: colors.textTertiary }]}
                       >
@@ -1168,6 +1664,33 @@ const styles = StyleSheet.create({
     minHeight: rf(88),
     fontSize: rf(14),
   },
+  progressPanel: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  progressHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
+  progressValue: { fontSize: rf(18), fontWeight: "900" },
+  slider: { width: "100%", height: rf(32) },
+  progressScaleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: spacing.xs,
+  },
+  progressScaleText: { fontSize: rf(11), fontWeight: "700" },
+  partsList: { gap: spacing.sm },
+  partCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
   primaryButton: {
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
@@ -1175,6 +1698,12 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: { fontSize: rf(15), fontWeight: "800" },
   timelineList: { gap: spacing.sm },
+  timelineTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+  },
   timelineRow: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
@@ -1187,6 +1716,14 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   timelineCopy: { flex: 1, gap: spacing.xs },
+  timelineTypeChip: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+  },
+  timelineTypeChipText: { fontSize: rf(11), fontWeight: "800" },
+  timelineNestedList: { gap: 2 },
   emptyStateCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
