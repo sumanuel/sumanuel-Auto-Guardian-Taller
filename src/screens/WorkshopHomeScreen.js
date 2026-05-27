@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,6 +29,58 @@ const roleLabels = {
   mechanic: "Mecanico",
 };
 
+const queueTypeOptions = [
+  { key: "all", label: "Todos" },
+  { key: "diagnostic", label: "Diagnosticos" },
+  { key: "work-order", label: "Ordenes" },
+];
+
+function normalizeSearchValue(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function getVehicleKey(vehicle) {
+  return vehicle?.refId || vehicle?.id || "";
+}
+
+function getRecordKey(record) {
+  return record?.refId || record?.id || "";
+}
+
+function getQueueAccentColor(item, colors) {
+  if (item.type === "diagnostic") {
+    switch (item.statusKey) {
+      case "quoted":
+        return colors.warning;
+      case "approved":
+        return colors.success;
+      case "closed":
+        return colors.textSecondary;
+      default:
+        return colors.primary;
+    }
+  }
+
+  switch (item.statusKey) {
+    case "open":
+      return colors.warning;
+    case "approved":
+      return colors.primary;
+    case "in-progress":
+      return colors.accent;
+    case "paused":
+      return colors.danger;
+    case "ready":
+      return colors.success;
+    case "delivered":
+      return colors.textSecondary;
+    default:
+      return colors.primary;
+  }
+}
+
 export default function WorkshopHomeScreen({ userProfile }) {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -34,6 +88,9 @@ export default function WorkshopHomeScreen({ userProfile }) {
   const [vehicles, setVehicles] = useState([]);
   const [diagnostics, setDiagnostics] = useState([]);
   const [workOrders, setWorkOrders] = useState([]);
+  const [plateQuery, setPlateQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -61,23 +118,33 @@ export default function WorkshopHomeScreen({ userProfile }) {
 
   const queue = useMemo(() => {
     const vehicleLookup = vehicles.reduce((accumulator, vehicle) => {
-      accumulator[vehicle.id] = vehicle;
+      const vehicleKey = getVehicleKey(vehicle);
+
+      if (vehicleKey) {
+        accumulator[vehicleKey] = vehicle;
+      }
+
       return accumulator;
     }, {});
 
     const latestDiagnostics = diagnostics.slice(0, 2).map((diagnostic) => {
       const vehicle = vehicleLookup[diagnostic.vehicleId];
+      const sequentialCode =
+        diagnostic.sequentialId || getRecordKey(diagnostic);
 
       return {
-        key: `diagnostic-${diagnostic.id}`,
+        key: `diagnostic-${getRecordKey(diagnostic) || sequentialCode}`,
+        type: "diagnostic",
         title:
           [vehicle?.brand, vehicle?.model, vehicle?.year]
             .filter(Boolean)
             .join(" ") ||
           vehicle?.plate ||
           diagnostic.vehicleId ||
-          diagnostic.id,
-        detail: `Diagnostico ${diagnostic.id}`,
+          sequentialCode,
+        plate: vehicle?.plate || "Sin placa",
+        detail: `Diagnostico ${sequentialCode}`,
+        statusKey: diagnostic.status || "",
         status:
           diagnosticStatusOptions.find((item) => item.key === diagnostic.status)
             ?.label ||
@@ -88,17 +155,21 @@ export default function WorkshopHomeScreen({ userProfile }) {
 
     const latestWorkOrders = workOrders.slice(0, 2).map((workOrder) => {
       const vehicle = vehicleLookup[workOrder.vehicleId];
+      const sequentialCode = workOrder.sequentialId || getRecordKey(workOrder);
 
       return {
-        key: `work-order-${workOrder.id}`,
+        key: `work-order-${getRecordKey(workOrder) || sequentialCode}`,
+        type: "work-order",
         title:
           [vehicle?.brand, vehicle?.model, vehicle?.year]
             .filter(Boolean)
             .join(" ") ||
           vehicle?.plate ||
           workOrder.vehicleId ||
-          workOrder.id,
-        detail: `Orden ${workOrder.id}`,
+          sequentialCode,
+        plate: vehicle?.plate || "Sin placa",
+        detail: `Orden ${sequentialCode}`,
+        statusKey: workOrder.status || "",
         status:
           workOrderStatusOptions.find((item) => item.key === workOrder.status)
             ?.label ||
@@ -109,6 +180,31 @@ export default function WorkshopHomeScreen({ userProfile }) {
 
     return [...latestDiagnostics, ...latestWorkOrders].slice(0, 3);
   }, [diagnostics, vehicles, workOrders]);
+
+  const statusFilterOptions = useMemo(
+    () => [
+      { key: "all", label: "Todos los estados" },
+      ...diagnosticStatusOptions,
+      ...workOrderStatusOptions,
+    ],
+    [],
+  );
+
+  const filteredQueue = useMemo(() => {
+    const normalizedPlateQuery = normalizeSearchValue(plateQuery);
+
+    return queue.filter((item) => {
+      const matchesPlate = normalizedPlateQuery
+        ? normalizeSearchValue(item.plate).includes(normalizedPlateQuery)
+        : true;
+      const matchesType =
+        selectedType === "all" ? true : item.type === selectedType;
+      const matchesStatus =
+        selectedStatus === "all" ? true : item.statusKey === selectedStatus;
+
+      return matchesPlate && matchesType && matchesStatus;
+    });
+  }, [plateQuery, queue, selectedStatus, selectedType]);
 
   const activeOrdersCount = workOrders.filter(
     (workOrder) => workOrder.status !== "delivered",
@@ -232,57 +328,159 @@ export default function WorkshopHomeScreen({ userProfile }) {
             Los accesos frecuentes ahora viven en el menu inferior. Aqui quedan
             solo las prioridades operativas.
           </Text>
+
+          <View style={styles.filtersBlock}>
+            <TextInput
+              placeholder="Buscar por placa"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.searchInput,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={plateQuery}
+              onChangeText={setPlateQuery}
+              autoCapitalize="characters"
+            />
+
+            <View style={styles.filterGroup}>
+              {queueTypeOptions.map((option) => {
+                const isActive = option.key === selectedType;
+
+                return (
+                  <Pressable
+                    key={option.key}
+                    onPress={() => setSelectedType(option.key)}
+                    style={[
+                      styles.filterChip,
+                      {
+                        backgroundColor: isActive
+                          ? colors.primary
+                          : colors.cardMuted,
+                        borderColor: isActive ? colors.primary : colors.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        { color: isActive ? colors.white : colors.text },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={styles.filterGroup}>
+              {statusFilterOptions.map((option) => {
+                const isActive = option.key === selectedStatus;
+
+                return (
+                  <Pressable
+                    key={option.key}
+                    onPress={() => setSelectedStatus(option.key)}
+                    style={[
+                      styles.filterChip,
+                      styles.filterChipCompact,
+                      {
+                        backgroundColor: isActive
+                          ? colors.primaryStrong
+                          : colors.cardMuted,
+                        borderColor: isActive
+                          ? colors.primaryStrong
+                          : colors.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        { color: isActive ? colors.white : colors.text },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
         </View>
 
         {loading ? <ActivityIndicator color={colors.primary} /> : null}
 
         <View style={styles.listWrap}>
-          {queue.length ? (
-            queue.map((item) => (
-              <View
-                key={item.key}
-                style={[
-                  styles.queueRow,
-                  {
-                    backgroundColor: colors.cardBackground,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <View style={styles.queueCopy}>
-                  <View
-                    style={[
-                      styles.queueHeader,
-                      { borderBottomColor: colors.border },
-                    ]}
-                  >
-                    <View style={styles.queueHeaderCopy}>
-                      <Text
-                        style={[styles.queueEyebrow, { color: colors.primary }]}
-                      >
-                        Agenda
-                      </Text>
-                      <Text style={[styles.queueTitle, { color: colors.text }]}>
-                        {item.title}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[styles.queueStatus, { color: colors.primary }]}
+          {filteredQueue.length ? (
+            filteredQueue.map((item) => {
+              const accentColor = getQueueAccentColor(item, colors);
+
+              return (
+                <View
+                  key={item.key}
+                  style={[
+                    styles.queueRow,
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <View style={styles.queueCopy}>
+                    <View
+                      style={[
+                        styles.queueHeader,
+                        { borderBottomColor: colors.border },
+                      ]}
                     >
-                      {item.status}
+                      <View style={styles.queueHeaderCopy}>
+                        <Text
+                          style={[styles.queueEyebrow, { color: accentColor }]}
+                        >
+                          Agenda
+                        </Text>
+                        <Text
+                          style={[styles.queueTitle, { color: colors.text }]}
+                        >
+                          {item.title}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.queuePlate,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {item.plate}
+                        </Text>
+                      </View>
+                      <View
+                        style={[
+                          styles.queueStatusBadge,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: accentColor,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[styles.queueStatus, { color: accentColor }]}
+                        >
+                          {item.status}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.queueCaseTag, { color: accentColor }]}>
+                      {item.detail}
                     </Text>
                   </View>
-                  <Text
-                    style={[
-                      styles.queueDetail,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {item.detail}
-                  </Text>
                 </View>
-              </View>
-            ))
+              );
+            })
           ) : (
             <View
               style={[
@@ -300,7 +498,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
                 <Text
                   style={[styles.queueDetail, { color: colors.textSecondary }]}
                 >
-                  Aun no hay diagnosticos ni ordenes recientes para mostrar en
+                  No hay coincidencias con los filtros actuales para mostrar en
                   el home.
                 </Text>
               </View>
@@ -362,6 +560,36 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.sm,
   },
+  filtersBlock: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: rf(14),
+    fontWeight: "600",
+  },
+  filterGroup: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  filterChip: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  filterChipCompact: {
+    paddingHorizontal: spacing.sm,
+  },
+  filterChipText: {
+    fontSize: rf(12),
+    fontWeight: "800",
+  },
   panelEyebrow: {
     fontSize: rf(12),
     fontWeight: "800",
@@ -373,6 +601,7 @@ const styles = StyleSheet.create({
   listWrap: {
     backgroundColor: "transparent",
     paddingTop: spacing.xs,
+    gap: spacing.sm,
   },
   queueRow: {
     borderWidth: 1,
@@ -396,6 +625,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   queueTitle: { fontSize: rf(16), fontWeight: "800" },
+  queuePlate: { fontSize: rf(16), fontWeight: "600" },
+  queueStatusBadge: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  queueStatus: { fontSize: rf(14), fontWeight: "900", textAlign: "right" },
+  queueCaseTag: { fontSize: rf(15), fontWeight: "900", lineHeight: rf(20) },
   queueDetail: { fontSize: rf(13), lineHeight: rf(18) },
-  queueStatus: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
 });
