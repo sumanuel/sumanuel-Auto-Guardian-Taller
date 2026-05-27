@@ -1210,6 +1210,7 @@ export default function WorkOrdersScreen({
                         {[
                           { key: "received", label: "Recibido" },
                           { key: "installed", label: "Instalado" },
+                          { key: "returned", label: "Devuelto" },
                         ].map((statusOption) => {
                           const selected = selectedStatus === statusOption.key;
 

@@ -21,6 +21,7 @@ import {
   listWorkOrders,
   workOrderStatusOptions,
 } from "../services/workOrders/workOrderService";
+import { firestoreCollections } from "../services/firestore/collections";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
 const roleLabels = {
@@ -47,6 +48,28 @@ function getVehicleKey(vehicle) {
 
 function getRecordKey(record) {
   return record?.refId || record?.id || "";
+}
+
+function formatOperationalCode(record, collectionConfig) {
+  const sequentialId = Number(record?.sequentialId);
+  const fallbackId = getRecordKey(record);
+
+  if (
+    fallbackId &&
+    typeof fallbackId === "string" &&
+    fallbackId.startsWith(collectionConfig.prefix)
+  ) {
+    return fallbackId;
+  }
+
+  if (Number.isFinite(sequentialId) && sequentialId > 0) {
+    return `${collectionConfig.prefix}${String(sequentialId).padStart(
+      collectionConfig.padding,
+      "0",
+    )}`;
+  }
+
+  return fallbackId || "Sin codigo";
 }
 
 function getQueueAccentColor(item, colors) {
@@ -116,6 +139,25 @@ export default function WorkshopHomeScreen({ userProfile }) {
     loadDashboard();
   }, []);
 
+  useEffect(() => {
+    if (selectedType === "all") {
+      return;
+    }
+
+    const isStatusAvailable =
+      selectedType === "diagnostic"
+        ? diagnosticStatusOptions.some(
+            (option) => option.key === selectedStatus,
+          )
+        : workOrderStatusOptions.some(
+            (option) => option.key === selectedStatus,
+          );
+
+    if (!isStatusAvailable) {
+      setSelectedStatus("all");
+    }
+  }, [selectedStatus, selectedType]);
+
   const queue = useMemo(() => {
     const vehicleLookup = vehicles.reduce((accumulator, vehicle) => {
       const vehicleKey = getVehicleKey(vehicle);
@@ -129,8 +171,10 @@ export default function WorkshopHomeScreen({ userProfile }) {
 
     const latestDiagnostics = diagnostics.slice(0, 2).map((diagnostic) => {
       const vehicle = vehicleLookup[diagnostic.vehicleId];
-      const sequentialCode =
-        diagnostic.sequentialId || getRecordKey(diagnostic);
+      const sequentialCode = formatOperationalCode(
+        diagnostic,
+        firestoreCollections.diagnostics,
+      );
 
       return {
         key: `diagnostic-${getRecordKey(diagnostic) || sequentialCode}`,
@@ -143,7 +187,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
           diagnostic.vehicleId ||
           sequentialCode,
         plate: vehicle?.plate || "Sin placa",
-        detail: `Diagnostico ${sequentialCode}`,
+        detail: sequentialCode,
         statusKey: diagnostic.status || "",
         status:
           diagnosticStatusOptions.find((item) => item.key === diagnostic.status)
@@ -155,7 +199,10 @@ export default function WorkshopHomeScreen({ userProfile }) {
 
     const latestWorkOrders = workOrders.slice(0, 2).map((workOrder) => {
       const vehicle = vehicleLookup[workOrder.vehicleId];
-      const sequentialCode = workOrder.sequentialId || getRecordKey(workOrder);
+      const sequentialCode = formatOperationalCode(
+        workOrder,
+        firestoreCollections.workOrders,
+      );
 
       return {
         key: `work-order-${getRecordKey(workOrder) || sequentialCode}`,
@@ -168,7 +215,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
           workOrder.vehicleId ||
           sequentialCode,
         plate: vehicle?.plate || "Sin placa",
-        detail: `Orden ${sequentialCode}`,
+        detail: sequentialCode,
         statusKey: workOrder.status || "",
         status:
           workOrderStatusOptions.find((item) => item.key === workOrder.status)
@@ -181,14 +228,43 @@ export default function WorkshopHomeScreen({ userProfile }) {
     return [...latestDiagnostics, ...latestWorkOrders].slice(0, 3);
   }, [diagnostics, vehicles, workOrders]);
 
-  const statusFilterOptions = useMemo(
-    () => [
-      { key: "all", label: "Todos los estados" },
-      ...diagnosticStatusOptions,
-      ...workOrderStatusOptions,
-    ],
-    [],
-  );
+  const statusFilterOptions = useMemo(() => {
+    if (selectedType === "diagnostic") {
+      return [
+        { id: "all", value: "all", label: "Todos los estados" },
+        ...diagnosticStatusOptions.map((option) => ({
+          id: `diagnostic-${option.key}`,
+          value: option.key,
+          label: option.label,
+        })),
+      ];
+    }
+
+    if (selectedType === "work-order") {
+      return [
+        { id: "all", value: "all", label: "Todos los estados" },
+        ...workOrderStatusOptions.map((option) => ({
+          id: `work-order-${option.key}`,
+          value: option.key,
+          label: option.label,
+        })),
+      ];
+    }
+
+    return [
+      { id: "all", value: "all", label: "Todos los estados" },
+      ...diagnosticStatusOptions.map((option) => ({
+        id: `diagnostic-${option.key}`,
+        value: option.key,
+        label: `Diag. ${option.label}`,
+      })),
+      ...workOrderStatusOptions.map((option) => ({
+        id: `work-order-${option.key}`,
+        value: option.key,
+        label: `Ord. ${option.label}`,
+      })),
+    ];
+  }, [selectedType]);
 
   const filteredQueue = useMemo(() => {
     const normalizedPlateQuery = normalizeSearchValue(plateQuery);
@@ -379,12 +455,12 @@ export default function WorkshopHomeScreen({ userProfile }) {
 
             <View style={styles.filterGroup}>
               {statusFilterOptions.map((option) => {
-                const isActive = option.key === selectedStatus;
+                const isActive = option.value === selectedStatus;
 
                 return (
                   <Pressable
-                    key={option.key}
-                    onPress={() => setSelectedStatus(option.key)}
+                    key={option.id}
+                    onPress={() => setSelectedStatus(option.value)}
                     style={[
                       styles.filterChip,
                       styles.filterChipCompact,
