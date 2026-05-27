@@ -3,6 +3,7 @@ import { firestore } from "../firebase/config";
 import {
   createEntityRecord,
   deleteEntityRecord,
+  getEntityRecord,
   patchEntityRecord,
 } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
@@ -26,7 +27,14 @@ export const sparePartStatusOptions = [
   { key: "requested", label: "Solicitado" },
   { key: "received", label: "Recibido" },
   { key: "installed", label: "Instalado" },
+  { key: "returned", label: "Devuelto" },
 ];
+
+export const deletableSparePartStatuses = ["requested", "received", "returned"];
+
+export function canDeleteSparePartStatus(status) {
+  return deletableSparePartStatuses.includes(normalizeOptional(status));
+}
 
 export async function listSpareParts() {
   const collectionRef = collection(firestore, sparePartsCollection.name);
@@ -73,6 +81,18 @@ export async function updateSparePart(sparePartId, payload) {
 }
 
 export async function deleteSparePart(sparePartId) {
+  const currentSparePart = await getEntityRecord("spareParts", sparePartId);
+
+  if (!currentSparePart) {
+    throw new Error("No se encontro el repuesto a eliminar.");
+  }
+
+  if (!canDeleteSparePartStatus(currentSparePart.status)) {
+    throw new Error(
+      "Solo se pueden eliminar repuestos en estado Solicitado, Recibido o Devuelto.",
+    );
+  }
+
   await deleteEntityRecord("spareParts", sparePartId);
 }
 

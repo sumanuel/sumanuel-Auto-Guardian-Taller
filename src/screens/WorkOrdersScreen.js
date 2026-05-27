@@ -126,8 +126,8 @@ function rgbToHex({ red, green, blue }) {
 }
 
 function getProgressMeterColor(progressPercent, colors) {
-  const start = hexToRgb(colors.success);
-  const end = hexToRgb(colors.danger);
+  const start = hexToRgb(colors.danger);
+  const end = hexToRgb(colors.success);
   const clampedProgress =
     Math.max(0, Math.min(100, Number(progressPercent) || 0)) / 100;
 
@@ -786,25 +786,6 @@ export default function WorkOrdersScreen({
                       </Text>{" "}
                       {assignedMechanics || "Sin mecanicos asignados"}
                     </Text>
-                    <Pressable
-                      onPress={() => onOpenSpareParts?.(workOrder)}
-                      style={[
-                        styles.secondaryAction,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.secondaryActionText,
-                          { color: colors.accent },
-                        ]}
-                      >
-                        Abrir repuestos de esta orden
-                      </Text>
-                    </Pressable>
                   </View>
                 </Pressable>
 
@@ -1433,10 +1414,40 @@ export default function WorkOrdersScreen({
                       </Text>
                       {entry.type === "status" &&
                       entry.progressPercent !== null ? (
-                        <Text style={[styles.rowMeta, { color: palette.text }]}>
-                          Avance registrado:{" "}
-                          {Math.round(Number(entry.progressPercent) || 0)}%
-                        </Text>
+                        <View
+                          style={[
+                            styles.timelineProgressPanel,
+                            {
+                              backgroundColor: colors.cardBackground,
+                              borderColor: getProgressMeterColor(
+                                entry.progressPercent,
+                                colors,
+                              ),
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.timelineProgressValue,
+                              {
+                                color: getProgressMeterColor(
+                                  entry.progressPercent,
+                                  colors,
+                                ),
+                              },
+                            ]}
+                          >
+                            {Math.round(Number(entry.progressPercent) || 0)}%
+                          </Text>
+                          <Text
+                            style={[
+                              styles.timelineProgressLabel,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
+                            Avance registrado
+                          </Text>
+                        </View>
                       ) : null}
                       {entry.type === "parts" &&
                       entry.sparePartUpdates?.length ? (
@@ -1723,6 +1734,16 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   timelineTypeChipText: { fontSize: rf(11), fontWeight: "800" },
+  timelineProgressPanel: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: 2,
+    alignSelf: "flex-start",
+  },
+  timelineProgressValue: { fontSize: rf(24), fontWeight: "900" },
+  timelineProgressLabel: { fontSize: rf(11), fontWeight: "700" },
   timelineNestedList: { gap: 2 },
   emptyStateCard: {
     borderWidth: 1,

@@ -14,7 +14,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listDiagnostics } from "../services/diagnostics/diagnosticService";
+import { createProgressEntry } from "../services/progressEntries/progressEntryService";
 import {
+  canDeleteSparePartStatus,
   deleteSparePart,
   listSpareParts,
   sparePartStatusOptions,
@@ -36,6 +38,7 @@ function buildLookup(items, field = "id") {
 export default function SparePartsScreen({
   onBack,
   onOpenSparePartForm,
+  userProfile,
   viewState,
 }) {
   const { colors } = useTheme();
@@ -126,6 +129,14 @@ export default function SparePartsScreen({
   };
 
   const handleDelete = (part) => {
+    if (!canDeleteSparePartStatus(part.status)) {
+      Alert.alert(
+        "Repuestos",
+        "Solo se pueden eliminar repuestos en estado Solicitado, Recibido o Devuelto.",
+      );
+      return;
+    }
+
     Alert.alert(
       "Eliminar repuesto",
       `Se eliminara ${part.name || part.id || "este repuesto"} del tablero operativo.`,
@@ -136,7 +147,23 @@ export default function SparePartsScreen({
           style: "destructive",
           onPress: async () => {
             try {
+              const relatedWorkOrder = workOrderLookup[part.workOrderId];
+
               await deleteSparePart(getEntityId(part));
+
+              if (relatedWorkOrder?.id) {
+                await createProgressEntry({
+                  workOrderId: relatedWorkOrder.id,
+                  diagnosticId:
+                    part.diagnosticId || relatedWorkOrder.diagnosticId || "",
+                  vehicleId: relatedWorkOrder.vehicleId || "",
+                  authorUid: userProfile?.uid,
+                  type: "parts",
+                  message: `Se elimino el repuesto ${part.name || part.id || "sin nombre"}.`,
+                  statusSnapshot: relatedWorkOrder.status || "",
+                });
+              }
+
               await refreshData();
             } catch (error) {
               Alert.alert(
@@ -214,25 +241,6 @@ export default function SparePartsScreen({
 
         <View
           style={[
-            styles.summaryCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text style={[styles.summaryValue, { color: colors.text }]}>
-            {spareParts.length}
-          </Text>
-          <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-            {selectedWorkOrder
-              ? "Repuestos de esta orden"
-              : "Repuestos en seguimiento"}
-          </Text>
-        </View>
-
-        <View
-          style={[
             styles.controlsPanel,
             {
               backgroundColor: colors.cardBackground,
@@ -299,6 +307,7 @@ export default function SparePartsScreen({
                 viewState?.selectedSparePartId === getEntityId(part);
               const relatedWorkOrder = workOrderLookup[part.workOrderId];
               const relatedDiagnostic = diagnosticLookup[part.diagnosticId];
+              const canDelete = canDeleteSparePartStatus(part.status);
 
               return (
                 <View
@@ -387,17 +396,21 @@ export default function SparePartsScreen({
                       />
                     </Pressable>
                     <Pressable
+                      disabled={!canDelete}
                       onPress={() => handleDelete(part)}
                       style={[
                         styles.iconAction,
                         {
                           backgroundColor: colors.cardBackground,
-                          borderColor: colors.danger,
+                          borderColor: canDelete
+                            ? colors.danger
+                            : colors.border,
+                          opacity: canDelete ? 1 : 0.45,
                         },
                       ]}
                     >
                       <Ionicons
-                        color={colors.danger}
+                        color={canDelete ? colors.danger : colors.textTertiary}
                         name="trash-outline"
                         size={rf(18)}
                       />
@@ -461,17 +474,6 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   primaryInlineActionText: { fontSize: rf(14), fontWeight: "800" },
-  summaryCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    gap: spacing.xs,
-    alignSelf: "flex-start",
-    minWidth: rf(132),
-  },
-  summaryValue: { fontSize: rf(28), fontWeight: "900" },
-  summaryLabel: { fontSize: rf(14), lineHeight: rf(20) },
   controlsPanel: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,

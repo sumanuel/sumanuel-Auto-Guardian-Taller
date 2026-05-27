@@ -497,6 +497,9 @@ function AppContent() {
         <WorkOrdersScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
           onOpenSpareParts={(workOrder) => {
+            setWorkOrdersViewState({
+              selectedWorkOrderId: workOrder?.id || null,
+            });
             setSparePartsViewState({
               selectedSparePartId: null,
               selectedWorkOrderId: workOrder?.id || null,
@@ -553,6 +556,7 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.SPARE_PART_FORM);
           }}
+          userProfile={userProfile}
           viewState={sparePartsViewState}
         />
       );
