@@ -24,8 +24,6 @@ function normalizeNumber(value) {
 
 export const sparePartStatusOptions = [
   { key: "requested", label: "Solicitado" },
-  { key: "approved", label: "Aprobado" },
-  { key: "ordered", label: "Pedido" },
   { key: "received", label: "Recibido" },
   { key: "installed", label: "Instalado" },
 ];

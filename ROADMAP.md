@@ -1,6 +1,6 @@
 # Roadmap Auto-Guardian-Taller
 
-Ultima actualizacion: 22-05-2026
+Ultima actualizacion: 27-05-2026
 
 ## Como se actualiza este roadmap
 
@@ -103,15 +103,15 @@ Ultima actualizacion: 22-05-2026
 
 ## Fase 6. Operacion necesaria para completar la app
 
-| ID   | Aspecto                                                            | Estado    | Prioridad | Dependencias     | Completado |
-| ---- | ------------------------------------------------------------------ | --------- | --------- | ---------------- | ---------- |
-| F6-1 | Inventario basico de repuestos vinculable a diagnosticos y ordenes | Pendiente | Media     | F4-3, F5-1       | -          |
-| F6-2 | Presupuestos y costos estimados por trabajo                        | Pendiente | Media     | F4-2, F4-3       | -          |
-| F6-3 | Registro de pagos, saldo pendiente y cierre administrativo         | Pendiente | Media     | F6-2, F5-5       | -          |
-| F6-4 | Notificaciones internas o por correo para cambios de estado        | Pendiente | Media     | F5-3, F0-2       | -          |
-| F6-5 | Adjuntos y evidencias: fotos, documentos, facturas                 | Pendiente | Media     | F4-1             | -          |
-| F6-6 | Auditoria minima de cambios importantes                            | Pendiente | Media     | F0-4             | -          |
-| F6-7 | Dashboard operativo del taller con indicadores clave               | Pendiente | Media     | F2-1, F4-1, F5-3 | -          |
+| ID   | Aspecto                                                            | Estado      | Prioridad | Dependencias     | Completado |
+| ---- | ------------------------------------------------------------------ | ----------- | --------- | ---------------- | ---------- |
+| F6-1 | Inventario basico de repuestos vinculable a diagnosticos y ordenes | Pendiente   | Media     | F4-3, F5-1       | -          |
+| F6-2 | Presupuestos y costos estimados por trabajo                        | En progreso | Media     | F4-2, F4-3       | -          |
+| F6-3 | Registro de pagos, saldo pendiente y cierre administrativo         | Pendiente   | Media     | F6-2, F5-5       | -          |
+| F6-4 | Notificaciones internas o por correo para cambios de estado        | Pendiente   | Media     | F5-3, F0-2       | -          |
+| F6-5 | Adjuntos y evidencias: fotos, documentos, facturas                 | Pendiente   | Media     | F4-1             | -          |
+| F6-6 | Auditoria minima de cambios importantes                            | Pendiente   | Media     | F0-4             | -          |
+| F6-7 | Dashboard operativo del taller con indicadores clave               | Pendiente   | Media     | F2-1, F4-1, F5-3 | -          |
 
 ## Fase 7. Diseno y consistencia de producto
 
@@ -150,6 +150,7 @@ Ultima actualizacion: 22-05-2026
 - 21-05-2026: las colaboraciones se alinean al modelo de tienda-app, detectando invitaciones pendientes despues del login en estado de acceso; ademas se abren las secciones iniciales de diagnosticos, ordenes y repuestos con lista operativa, formulario dedicado y regreso a la lista.
 - 21-05-2026: diagnosticos y ordenes pasan a asignar mecanicos reales desde userProfiles, y las ordenes ganan detalle operativo con registro de avances y cronologia visible por orden.
 - 22-05-2026: clientes agrega campo de identificacion, la busqueda se limita a identificacion o nombre, la lista principal expone vehiculos asociados y la ficha del cliente abre diagnosticos por vehiculo sin volver a seleccionar cliente ni unidad.
+- 27-05-2026: el formulario de diagnosticos gana ayudas visuales, costo estimado y mejor resumen para edicion; ademas, ordenes ahora abre la lista de repuestos filtrada por orden y el modulo de repuestos queda reducido a los estados solicitado, recibido e instalado.
 
 ## Decisiones base cerradas
 

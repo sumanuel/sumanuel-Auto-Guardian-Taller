@@ -20,6 +20,15 @@ function normalizeOptional(value) {
   return value?.trim() || "";
 }
 
+function normalizeNumber(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue) ? parsedValue : null;
+}
+
 function normalizeListInput(value) {
   return String(value || "")
     .split(/\n|,/)
@@ -85,6 +94,7 @@ export async function createDiagnostic({
   concerns,
   serviceItemsText,
   sparePartsText,
+  quoteCost,
   notes,
 }) {
   const existingActiveDiagnostic =
@@ -105,6 +115,7 @@ export async function createDiagnostic({
     concerns: normalizeOptional(concerns),
     serviceItems: normalizeListInput(serviceItemsText),
     spareParts: normalizeListInput(sparePartsText),
+    quoteCost: normalizeNumber(quoteCost),
     notes: normalizeOptional(notes),
     photos: [],
   });
@@ -140,6 +151,7 @@ export async function updateDiagnostic(diagnosticId, payload) {
     concerns: normalizeOptional(payload.concerns),
     serviceItems: normalizeListInput(payload.serviceItemsText),
     spareParts: normalizeListInput(payload.sparePartsText),
+    quoteCost: normalizeNumber(payload.quoteCost),
     notes: normalizeOptional(payload.notes),
   });
 }
@@ -174,6 +186,10 @@ export function createEmptyDiagnosticForm(initialValues = {}) {
     sparePartsText: Array.isArray(initialValues.spareParts)
       ? initialValues.spareParts.join("\n")
       : initialValues.sparePartsText || "",
+    quoteCost:
+      initialValues.quoteCost === null || initialValues.quoteCost === undefined
+        ? ""
+        : String(initialValues.quoteCost),
     notes: initialValues.notes || "",
   };
 }

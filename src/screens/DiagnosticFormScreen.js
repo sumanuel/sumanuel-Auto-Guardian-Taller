@@ -28,6 +28,13 @@ function getDiagnosticId(diagnostic) {
   return diagnostic?.refId || diagnostic?.id || null;
 }
 
+const FIELD_HELP_TEXT = {
+  concerns: "Sintomas, hallazgo inicial o solicitud exacta del cliente.",
+  serviceItemsText: "Una linea por servicio para ordenar la cotizacion.",
+  sparePartsText: "Una linea por repuesto previsto o detectado.",
+  quoteCost: "Costo estimado total para apoyar la cotizacion.",
+};
+
 export default function DiagnosticFormScreen({
   initialDiagnostic,
   initialDraft,
@@ -105,6 +112,10 @@ export default function DiagnosticFormScreen({
     [form.vehicleId, vehicles],
   );
 
+  const shouldRenderSelectionSummary = Boolean(
+    selectedClient || selectedVehicle,
+  );
+
   const handleSubmit = async () => {
     if (isClosedDiagnostic) {
       Alert.alert(
@@ -164,6 +175,7 @@ export default function DiagnosticFormScreen({
                 .split(/\n|,/)
                 .map((item) => item.trim())
                 .filter(Boolean),
+              quoteCost: form.quoteCost,
             },
             client: selectedClient,
             vehicle: selectedVehicle,
@@ -412,6 +424,100 @@ export default function DiagnosticFormScreen({
                   })}
                 </View>
               </View>
+
+              {shouldRenderSelectionSummary ? (
+                <View style={styles.selectionSummary}>
+                  <Text
+                    style={[
+                      styles.selectionLine,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.selectionLineLabel,
+                        { color: colors.text },
+                      ]}
+                    >
+                      Cliente:
+                    </Text>{" "}
+                    {selectedClient?.fullName || form.clientId || "Sin cliente"}
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.vehicleSummaryLabel,
+                      { color: colors.accent },
+                    ]}
+                  >
+                    vehiculo:
+                  </Text>
+                  <View
+                    style={[
+                      styles.seededVehicleCard,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.selectionValue, { color: colors.text }]}
+                    >
+                      {[
+                        selectedVehicle?.brand,
+                        selectedVehicle?.model,
+                        selectedVehicle?.year,
+                      ]
+                        .filter(Boolean)
+                        .join(" ") ||
+                        selectedVehicle?.plate ||
+                        form.vehicleId ||
+                        "Sin vehiculo"}
+                    </Text>
+                    <View
+                      style={[
+                        styles.seededVehicleDivider,
+                        { backgroundColor: colors.border },
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.selectionMeta,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.selectionMetaLabel,
+                          { color: colors.text },
+                        ]}
+                      >
+                        Placa:
+                      </Text>{" "}
+                      {selectedVehicle?.plate || "Sin placa"}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.selectionMeta,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.selectionMetaLabel,
+                          { color: colors.text },
+                        ]}
+                      >
+                        Kilometraje:
+                      </Text>{" "}
+                      {selectedVehicle?.mileage
+                        ? `${selectedVehicle.mileage} km`
+                        : "Sin kilometraje"}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
             </>
           )}
 
@@ -520,6 +626,9 @@ export default function DiagnosticFormScreen({
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
               Motivo de ingreso
             </Text>
+            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
+              {FIELD_HELP_TEXT.concerns}
+            </Text>
             <TextInput
               multiline
               numberOfLines={4}
@@ -544,6 +653,9 @@ export default function DiagnosticFormScreen({
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
               Servicios sugeridos
+            </Text>
+            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
+              {FIELD_HELP_TEXT.serviceItemsText}
             </Text>
             <TextInput
               multiline
@@ -570,6 +682,9 @@ export default function DiagnosticFormScreen({
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
               Repuestos detectados
             </Text>
+            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
+              {FIELD_HELP_TEXT.sparePartsText}
+            </Text>
             <TextInput
               multiline
               numberOfLines={4}
@@ -588,6 +703,32 @@ export default function DiagnosticFormScreen({
               ]}
               textAlignVertical="top"
               value={form.sparePartsText}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Costo
+            </Text>
+            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
+              {FIELD_HELP_TEXT.quoteCost}
+            </Text>
+            <TextInput
+              keyboardType="decimal-pad"
+              onChangeText={(value) =>
+                setForm((current) => ({ ...current, quoteCost: value }))
+              }
+              placeholder="0.00"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={form.quoteCost}
             />
           </View>
 
@@ -690,6 +831,7 @@ const styles = StyleSheet.create({
   },
   optionText: { fontSize: rf(13), fontWeight: "700" },
   helperText: { fontSize: rf(14), lineHeight: rf(20) },
+  fieldHint: { fontSize: rf(13), lineHeight: rf(19) },
   selectionSummary: { gap: spacing.xs },
   selectionLine: { fontSize: rf(14), lineHeight: rf(21) },
   selectionLineLabel: { fontSize: rf(14), fontWeight: "800" },
@@ -721,6 +863,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     minHeight: rf(88),
+    fontSize: rf(15),
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     fontSize: rf(15),
   },
   primaryAction: {

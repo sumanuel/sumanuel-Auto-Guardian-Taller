@@ -90,6 +90,8 @@ function AppContent() {
   });
   const [sparePartsViewState, setSparePartsViewState] = useState({
     selectedSparePartId: null,
+    selectedWorkOrderId: null,
+    returnTo: APP_SCREENS.MORE,
   });
 
   const activeTab = useMemo(() => {
@@ -153,6 +155,8 @@ function AppContent() {
     });
     setSparePartsViewState({
       selectedSparePartId: null,
+      selectedWorkOrderId: null,
+      returnTo: APP_SCREENS.MORE,
     });
   }, [authUser?.uid]);
 
@@ -212,7 +216,7 @@ function AppContent() {
         }
 
         if (activeScreen === APP_SCREENS.SPARE_PARTS) {
-          setActiveScreen(APP_SCREENS.MORE);
+          setActiveScreen(sparePartsViewState.returnTo || APP_SCREENS.MORE);
           return true;
         }
 
@@ -244,6 +248,7 @@ function AppContent() {
     userProfile,
     diagnosticFormContext.clientId,
     diagnosticFormContext.returnTo,
+    sparePartsViewState.returnTo,
     vehicleFormContext.client,
   ]);
 
@@ -304,6 +309,11 @@ function AppContent() {
       return;
     }
 
+    setSparePartsViewState({
+      selectedSparePartId: null,
+      selectedWorkOrderId: null,
+      returnTo: APP_SCREENS.MORE,
+    });
     setActiveScreen(APP_SCREENS.MORE);
   };
 
@@ -486,6 +496,14 @@ function AppContent() {
       return (
         <WorkOrdersScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onOpenSpareParts={(workOrder) => {
+            setSparePartsViewState({
+              selectedSparePartId: null,
+              selectedWorkOrderId: workOrder?.id || null,
+              returnTo: APP_SCREENS.WORK_ORDERS,
+            });
+            setActiveScreen(APP_SCREENS.SPARE_PARTS);
+          }}
           onOpenSparePartForm={(sparePart, options = {}) => {
             setSparePartFormContext({
               sparePart: sparePart || null,
@@ -525,7 +543,9 @@ function AppContent() {
     if (activeScreen === APP_SCREENS.SPARE_PARTS) {
       return (
         <SparePartsScreen
-          onBack={() => setActiveScreen(APP_SCREENS.MORE)}
+          onBack={() =>
+            setActiveScreen(sparePartsViewState.returnTo || APP_SCREENS.MORE)
+          }
           onOpenSparePartForm={(sparePart, options = {}) => {
             setSparePartFormContext({
               sparePart: sparePart || null,
@@ -545,9 +565,10 @@ function AppContent() {
           initialSparePart={sparePartFormContext.sparePart}
           onBack={() => setActiveScreen(APP_SCREENS.SPARE_PARTS)}
           onSaved={(savedSparePartId) => {
-            setSparePartsViewState({
+            setSparePartsViewState((current) => ({
+              ...current,
               selectedSparePartId: savedSparePartId,
-            });
+            }));
             setActiveScreen(APP_SCREENS.SPARE_PARTS);
           }}
         />
@@ -567,7 +588,14 @@ function AppContent() {
       return (
         <WorkshopMoreScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
-          onOpenSpareParts={() => setActiveScreen(APP_SCREENS.SPARE_PARTS)}
+          onOpenSpareParts={() => {
+            setSparePartsViewState({
+              selectedSparePartId: null,
+              selectedWorkOrderId: null,
+              returnTo: APP_SCREENS.MORE,
+            });
+            setActiveScreen(APP_SCREENS.SPARE_PARTS);
+          }}
           onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.TEAM_ACCESS)}
           onSignOut={signOutUser}
           onToggleTheme={toggleTheme}
@@ -582,7 +610,14 @@ function AppContent() {
       <WorkshopHomeScreen
         onOpenClients={() => setActiveScreen(APP_SCREENS.CLIENTS)}
         onOpenDiagnostics={() => setActiveScreen(APP_SCREENS.DIAGNOSTICS)}
-        onOpenSpareParts={() => setActiveScreen(APP_SCREENS.SPARE_PARTS)}
+        onOpenSpareParts={() => {
+          setSparePartsViewState({
+            selectedSparePartId: null,
+            selectedWorkOrderId: null,
+            returnTo: APP_SCREENS.MORE,
+          });
+          setActiveScreen(APP_SCREENS.SPARE_PARTS);
+        }}
         onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.TEAM_ACCESS)}
         onOpenWorkOrders={() => setActiveScreen(APP_SCREENS.WORK_ORDERS)}
         onSignOut={signOutUser}

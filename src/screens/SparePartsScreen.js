@@ -51,6 +51,10 @@ export default function SparePartsScreen({
     () => buildLookup(diagnostics),
     [diagnostics],
   );
+  const selectedWorkOrderId = viewState?.selectedWorkOrderId || "";
+  const selectedWorkOrder = selectedWorkOrderId
+    ? workOrderLookup[selectedWorkOrderId]
+    : null;
 
   const refreshData = async () => {
     setLoading(true);
@@ -83,6 +87,10 @@ export default function SparePartsScreen({
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
     return spareParts.filter((part) => {
+      if (selectedWorkOrderId && part.workOrderId !== selectedWorkOrderId) {
+        return false;
+      }
+
       if (activeFilter !== "all" && part.status !== activeFilter) {
         return false;
       }
@@ -104,7 +112,18 @@ export default function SparePartsScreen({
 
       return searchableText.includes(normalizedQuery);
     });
-  }, [activeFilter, searchQuery, spareParts]);
+  }, [activeFilter, searchQuery, selectedWorkOrderId, spareParts]);
+
+  const handleCreateForCurrentContext = () => {
+    onOpenSparePartForm?.(null, {
+      seedData: selectedWorkOrder
+        ? {
+            workOrderId: selectedWorkOrder.id,
+            diagnosticId: selectedWorkOrder.diagnosticId,
+          }
+        : {},
+    });
+  };
 
   const handleDelete = (part) => {
     Alert.alert(
@@ -143,9 +162,55 @@ export default function SparePartsScreen({
         <WorkshopScreenHeader
           onBack={onBack}
           section="Costos"
-          subtitle="Registra piezas en una ficha dedicada y vuelve a la lista para revisar estado, costo y relacion con la orden."
-          title="Repuestos"
+          subtitle={
+            selectedWorkOrder
+              ? "Consulta los repuestos solicitados para esta orden y agrega nuevas piezas sin salir del flujo operativo."
+              : "Registra piezas en una ficha dedicada y vuelve a la lista para revisar estado, costo y relacion con la orden."
+          }
+          title={selectedWorkOrder ? "Repuestos solicitados" : "Repuestos"}
         />
+
+        {selectedWorkOrder ? (
+          <View
+            style={[
+              styles.orderScopeCard,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.scopeEyebrow, { color: colors.accent }]}>
+              Orden activa
+            </Text>
+            <Text style={[styles.scopeTitle, { color: colors.text }]}>
+              {selectedWorkOrder.id}
+            </Text>
+            <Text style={[styles.scopeMeta, { color: colors.textSecondary }]}>
+              Diagnostico: {selectedWorkOrder.diagnosticId || "Sin diagnostico"}
+            </Text>
+          </View>
+        ) : null}
+
+        <Pressable
+          onPress={handleCreateForCurrentContext}
+          style={[
+            styles.primaryInlineAction,
+            {
+              backgroundColor: colors.primary,
+              borderColor: colors.primary,
+            },
+          ]}
+        >
+          <Ionicons color={colors.white} name="add" size={rf(18)} />
+          <Text
+            style={[styles.primaryInlineActionText, { color: colors.white }]}
+          >
+            {selectedWorkOrder
+              ? "Agregar repuesto a esta orden"
+              : "Agregar repuesto"}
+          </Text>
+        </Pressable>
 
         <View
           style={[
@@ -160,7 +225,9 @@ export default function SparePartsScreen({
             {spareParts.length}
           </Text>
           <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
-            Repuestos en seguimiento
+            {selectedWorkOrder
+              ? "Repuestos de esta orden"
+              : "Repuestos en seguimiento"}
           </Text>
         </View>
 
@@ -354,22 +421,13 @@ export default function SparePartsScreen({
               Costos
             </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No hay repuestos para el filtro actual. Cambia el estado o carga
-              la primera pieza para seguir el costo del servicio.
+              {selectedWorkOrder
+                ? "Esta orden todavia no tiene repuestos registrados. Agrega la primera pieza para seguir la solicitud y la instalacion."
+                : "No hay repuestos para el filtro actual. Cambia el estado o carga la primera pieza para seguir el costo del servicio."}
             </Text>
           </View>
         )}
       </ScrollView>
-
-      <Pressable
-        onPress={() => onOpenSparePartForm?.(null)}
-        style={[
-          styles.fab,
-          { backgroundColor: colors.primary, shadowColor: colors.shadow },
-        ]}
-      >
-        <Ionicons color={colors.white} name="add" size={rf(24)} />
-      </Pressable>
     </SafeAreaView>
   );
 }
@@ -377,7 +435,32 @@ export default function SparePartsScreen({
 const styles = StyleSheet.create({
   safeArea: { flex: 1, position: "relative" },
   scrollContent: { padding: spacing.lg, gap: spacing.xl },
-  scrollWithFab: { paddingBottom: spacing.xxl * 2.6 },
+  scrollWithFab: { paddingBottom: spacing.xxl },
+  orderScopeCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  scopeEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  scopeTitle: { fontSize: rf(18), fontWeight: "800" },
+  scopeMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  primaryInlineAction: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+  },
+  primaryInlineActionText: { fontSize: rf(14), fontWeight: "800" },
   summaryCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -462,15 +545,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   emptyText: { fontSize: rf(14), lineHeight: rf(21) },
-  fab: {
-    position: "absolute",
-    right: spacing.lg,
-    bottom: spacing.xl,
-    width: rf(58),
-    height: rf(58),
-    borderRadius: borderRadius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 6,
-  },
 });

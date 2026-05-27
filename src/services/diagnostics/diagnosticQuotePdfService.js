@@ -28,6 +28,19 @@ function formatDate(value = new Date()) {
   }).format(new Date(value));
 }
 
+function formatCurrency(value) {
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue)) {
+    return "Sin costo estimado";
+  }
+
+  return new Intl.NumberFormat("es-VE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(parsedValue);
+}
+
 function buildLogoDataUri() {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none">
@@ -247,6 +260,7 @@ function buildDiagnosticQuoteHtml({
               <p class="line"><strong>Asesor:</strong> ${escapeHtml(advisorName)}</p>
               <p class="line"><strong>Contacto taller:</strong> ${escapeHtml(advisorPhone)}</p>
               <p class="line"><strong>Correo:</strong> ${escapeHtml(advisorEmail)}</p>
+              <p class="line"><strong>Costo estimado:</strong> ${escapeHtml(formatCurrency(diagnostic.quoteCost))}</p>
             </div>
             <div class="card">
               <h3>Motivo y observaciones</h3>

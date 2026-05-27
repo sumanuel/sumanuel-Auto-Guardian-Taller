@@ -58,6 +58,7 @@ function formatDateTime(value) {
 
 export default function WorkOrdersScreen({
   onBack,
+  onOpenSpareParts,
   onOpenSparePartForm,
   onOpenWorkOrderForm,
   userProfile,
@@ -539,14 +540,7 @@ export default function WorkOrdersScreen({
                       {assignedMechanics || "Sin mecanicos asignados"}
                     </Text>
                     <Pressable
-                      onPress={() =>
-                        onOpenSparePartForm?.(null, {
-                          seedData: {
-                            workOrderId: workOrder.id,
-                            diagnosticId: workOrder.diagnosticId,
-                          },
-                        })
-                      }
+                      onPress={() => onOpenSpareParts?.(workOrder)}
                       style={[
                         styles.secondaryAction,
                         {
@@ -797,14 +791,7 @@ export default function WorkOrdersScreen({
               </Text>
             </Pressable>
             <Pressable
-              onPress={() =>
-                onOpenSparePartForm?.(null, {
-                  seedData: {
-                    workOrderId: selectedWorkOrder.id,
-                    diagnosticId: selectedWorkOrder.diagnosticId,
-                  },
-                })
-              }
+              onPress={() => onOpenSpareParts?.(selectedWorkOrder)}
               style={[
                 styles.secondaryAction,
                 {
@@ -816,7 +803,7 @@ export default function WorkOrdersScreen({
               <Text
                 style={[styles.secondaryActionText, { color: colors.accent }]}
               >
-                Agregar repuesto
+                Abrir repuestos de esta orden
               </Text>
             </Pressable>
           </View>
