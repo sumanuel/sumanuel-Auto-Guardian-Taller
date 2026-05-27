@@ -960,7 +960,19 @@ export default function WorkOrdersScreen({
               <Text style={[styles.detailLineLabel, { color: colors.text }]}>
                 Avance:
               </Text>{" "}
-              {Math.round(Number(selectedWorkOrder?.progressPercent) || 0)}%
+              <Text
+                style={[
+                  styles.detailProgressValue,
+                  {
+                    color: getProgressMeterColor(
+                      selectedWorkOrder?.progressPercent,
+                      colors,
+                    ),
+                  },
+                ]}
+              >
+                {Math.round(Number(selectedWorkOrder?.progressPercent) || 0)}%
+              </Text>
             </Text>
           </View>
 
@@ -1414,40 +1426,20 @@ export default function WorkOrdersScreen({
                       </Text>
                       {entry.type === "status" &&
                       entry.progressPercent !== null ? (
-                        <View
+                        <Text
                           style={[
-                            styles.timelineProgressPanel,
+                            styles.timelineProgressText,
                             {
-                              backgroundColor: colors.cardBackground,
-                              borderColor: getProgressMeterColor(
+                              color: getProgressMeterColor(
                                 entry.progressPercent,
                                 colors,
                               ),
                             },
                           ]}
                         >
-                          <Text
-                            style={[
-                              styles.timelineProgressValue,
-                              {
-                                color: getProgressMeterColor(
-                                  entry.progressPercent,
-                                  colors,
-                                ),
-                              },
-                            ]}
-                          >
-                            {Math.round(Number(entry.progressPercent) || 0)}%
-                          </Text>
-                          <Text
-                            style={[
-                              styles.timelineProgressLabel,
-                              { color: colors.textSecondary },
-                            ]}
-                          >
-                            Avance registrado
-                          </Text>
-                        </View>
+                          Avance registrado:{" "}
+                          {Math.round(Number(entry.progressPercent) || 0)}%
+                        </Text>
                       ) : null}
                       {entry.type === "parts" &&
                       entry.sparePartUpdates?.length ? (
@@ -1630,6 +1622,7 @@ const styles = StyleSheet.create({
   detailLines: { gap: spacing.xs },
   detailLine: { fontSize: rf(14), lineHeight: rf(22) },
   detailLineLabel: { fontSize: rf(14), fontWeight: "800" },
+  detailProgressValue: { fontSize: rf(18), fontWeight: "900" },
   vehicleCard: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
@@ -1734,16 +1727,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   timelineTypeChipText: { fontSize: rf(11), fontWeight: "800" },
-  timelineProgressPanel: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: 2,
-    alignSelf: "flex-start",
-  },
-  timelineProgressValue: { fontSize: rf(24), fontWeight: "900" },
-  timelineProgressLabel: { fontSize: rf(11), fontWeight: "700" },
+  timelineProgressText: { fontSize: rf(18), fontWeight: "900" },
   timelineNestedList: { gap: 2 },
   emptyStateCard: {
     borderWidth: 1,
