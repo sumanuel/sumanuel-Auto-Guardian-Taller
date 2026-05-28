@@ -394,7 +394,9 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                 },
               ]}
             >
-              <Text style={[styles.workshopBadgeText, { color: colors.primary }]}>
+              <Text
+                style={[styles.workshopBadgeText, { color: colors.primary }]}
+              >
                 {activeWorkshop?.name || "Sin taller activo"}
               </Text>
             </View>
@@ -419,18 +421,24 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                     <Text style={[styles.rowTitle, { color: colors.text }]}>
                       {membership.workshopName || membership.workshopId}
                     </Text>
-                    <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    >
                       {roleLabels[membership.role] || membership.role}
                     </Text>
                   </View>
 
                   <Pressable
-                    disabled={selected || switchingWorkshopId === membership.workshopId}
+                    disabled={
+                      selected || switchingWorkshopId === membership.workshopId
+                    }
                     onPress={() => handleSwitchWorkshop(membership.workshopId)}
                     style={[
                       styles.secondaryAction,
                       {
-                        borderColor: selected ? colors.primary : colors.borderStrong,
+                        borderColor: selected
+                          ? colors.primary
+                          : colors.borderStrong,
                         backgroundColor: selected
                           ? colors.primary
                           : colors.cardBackground,
@@ -470,14 +478,13 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
               Invitacion entrante
             </Text>
             <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-              Tienes una invitacion pendiente para unirte a
-              {" "}
+              Tienes una invitacion pendiente para unirte a{" "}
               {pendingInvitation.workshopName || "otro taller"}.
             </Text>
-            <Text style={[styles.rowMeta, { color: colors.textSecondary }]}> 
+            <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
               Rol {roleLabels[pendingInvitation.role] || pendingInvitation.role}
             </Text>
-            <Text style={[styles.rowMeta, { color: colors.textTertiary }]}> 
+            <Text style={[styles.rowMeta, { color: colors.textTertiary }]}>
               Codigo {pendingInvitation.id || pendingInvitation.invitationCode}
             </Text>
             <Pressable
@@ -488,7 +495,7 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                 { backgroundColor: colors.primary },
               ]}
             >
-              <Text style={[styles.primaryActionText, { color: colors.white }]}> 
+              <Text style={[styles.primaryActionText, { color: colors.white }]}>
                 {acceptingIncomingInvitation
                   ? "Aceptando invitacion..."
                   : "Aceptar invitacion"}

@@ -88,14 +88,16 @@ async function listProfilesForActiveWorkshop() {
   );
 
   return sortProfiles(
-    profiles.filter(Boolean).filter((profile) =>
-      [
-        USER_ROLES.OWNER,
-        USER_ROLES.ADMINISTRATOR,
-        USER_ROLES.RECEPTION,
-        USER_ROLES.MECHANIC,
-      ].includes(profile.role),
-    ),
+    profiles
+      .filter(Boolean)
+      .filter((profile) =>
+        [
+          USER_ROLES.OWNER,
+          USER_ROLES.ADMINISTRATOR,
+          USER_ROLES.RECEPTION,
+          USER_ROLES.MECHANIC,
+        ].includes(profile.role),
+      ),
   );
 }
 
@@ -110,7 +112,9 @@ export async function createStaffInvitation({
   const normalizedEmail = normalizeEmail(email);
 
   if (!workshopId) {
-    throw new Error("Selecciona un taller activo antes de invitar colaboradores.");
+    throw new Error(
+      "Selecciona un taller activo antes de invitar colaboradores.",
+    );
   }
 
   const invitationRef = doc(
@@ -268,7 +272,10 @@ export async function updateStaffProfile(uid, payload) {
   await updateDoc(documentRef, profilePayload);
 
   if (payload.role !== undefined) {
-    const currentMembership = await getWorkshopMembership(activeWorkshopId, uid);
+    const currentMembership = await getWorkshopMembership(
+      activeWorkshopId,
+      uid,
+    );
 
     if (!currentMembership) {
       throw new Error("La membresia del colaborador no existe en este taller.");

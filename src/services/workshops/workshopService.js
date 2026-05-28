@@ -22,7 +22,9 @@ function normalizeOptional(value) {
 
 function sortByWorkshopName(items) {
   return [...items].sort((left, right) =>
-    String(left.workshopName || left.name || left.workshopId || "").localeCompare(
+    String(
+      left.workshopName || left.name || left.workshopId || "",
+    ).localeCompare(
       String(right.workshopName || right.name || right.workshopId || ""),
       "es",
     ),
@@ -50,7 +52,11 @@ export async function getWorkshopById(workshopId) {
     return null;
   }
 
-  const documentRef = doc(firestore, workshopCollection.name, normalizedWorkshopId);
+  const documentRef = doc(
+    firestore,
+    workshopCollection.name,
+    normalizedWorkshopId,
+  );
   const snapshot = await getDoc(documentRef);
 
   if (!snapshot.exists()) {
