@@ -6,6 +6,8 @@ import admin from "firebase-admin";
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "";
 const projectId = process.env.FIREBASE_PROJECT_ID || "auto-guardian-t";
 const dryRun = process.argv.includes("--dry-run");
+const MIGRATION_VERSION = "multi-workshop-v1";
+const BATCH_SIZE = 200;
 
 if (!serviceAccountPath) {
   console.error(
@@ -40,6 +42,61 @@ function buildMembershipId(workshopId, userUid) {
   return `${normalizeOptional(workshopId)}__${normalizeOptional(userUid)}`;
 }
 
+function buildMigrationMeta(source, extra = {}) {
+  return {
+    migrationMeta: {
+      multiWorkshop: {
+        version: MIGRATION_VERSION,
+        source,
+        projectId,
+        ...extra,
+      },
+    },
+  };
+}
+
+function createBatchWriter() {
+  let batch = firestore.batch();
+  let pendingWrites = 0;
+  let committedBatches = 0;
+  let preparedWrites = 0;
+
+  const flush = async () => {
+    if (!pendingWrites) {
+      return;
+    }
+
+    if (!dryRun) {
+      await batch.commit();
+      committedBatches += 1;
+    }
+
+    batch = firestore.batch();
+    pendingWrites = 0;
+  };
+
+  const set = async (documentRef, payload, options = { merge: true }) => {
+    batch.set(documentRef, payload, options);
+    pendingWrites += 1;
+    preparedWrites += 1;
+
+    if (pendingWrites >= BATCH_SIZE) {
+      await flush();
+    }
+  };
+
+  return {
+    flush,
+    getStats() {
+      return {
+        committedBatches,
+        preparedWrites,
+      };
+    },
+    set,
+  };
+}
+
 function buildDefaultWorkshopName(profileDoc) {
   const profile = profileDoc.data();
   return `Taller de ${profile.fullName || profile.email || profileDoc.id}`;
@@ -47,6 +104,7 @@ function buildDefaultWorkshopName(profileDoc) {
 
 async function ensureWorkshopForProfile(profileDoc) {
   const profile = profileDoc.data();
+  const profileUid = normalizeOptional(profile.uid || profileDoc.id);
   const defaultWorkshopId = normalizeOptional(profile.defaultWorkshopId);
 
   if (defaultWorkshopId) {
@@ -56,6 +114,16 @@ async function ensureWorkshopForProfile(profileDoc) {
       .get();
 
     if (existingWorkshop.exists) {
+      if (!dryRun) {
+        await existingWorkshop.ref.set(
+          buildMigrationMeta("profile-default-workshop", {
+            profileUid,
+            migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }),
+          { merge: true },
+        );
+      }
+
       return existingWorkshop.id;
     }
   }
@@ -65,13 +133,17 @@ async function ensureWorkshopForProfile(profileDoc) {
     id: workshopRef.id,
     sequentialId: null,
     name: buildDefaultWorkshopName(profileDoc),
-    ownerUserUid: profile.uid,
+    ownerUserUid: profileUid,
     status: "active",
     phone: profile.phone || "",
     email: profile.email || "",
     address: "",
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    ...buildMigrationMeta("owner-workshop-bootstrap", {
+      profileUid,
+      migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }),
   };
 
   if (!dryRun) {
@@ -83,7 +155,8 @@ async function ensureWorkshopForProfile(profileDoc) {
 
 async function ensureMembership(profileDoc, workshopId) {
   const profile = profileDoc.data();
-  const membershipId = buildMembershipId(workshopId, profile.uid);
+  const profileUid = normalizeOptional(profile.uid || profileDoc.id);
+  const membershipId = buildMembershipId(workshopId, profileUid);
   const membershipRef = firestore
     .collection("workshopMemberships")
     .doc(membershipId);
@@ -91,7 +164,7 @@ async function ensureMembership(profileDoc, workshopId) {
     id: membershipId,
     workshopId,
     workshopName: buildDefaultWorkshopName(profileDoc),
-    userUid: profile.uid,
+    userUid: profileUid,
     role: profile.role || "administrator",
     status: profile.status || "active",
     invitationId: profile.invitationId || null,
@@ -99,6 +172,10 @@ async function ensureMembership(profileDoc, workshopId) {
     acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    ...buildMigrationMeta("owner-membership-bootstrap", {
+      profileUid,
+      migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }),
   };
 
   if (!dryRun) {
@@ -107,6 +184,10 @@ async function ensureMembership(profileDoc, workshopId) {
       {
         defaultWorkshopId: workshopId,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        ...buildMigrationMeta("profile-workshop-context", {
+          workshopId,
+          migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
       },
       { merge: true },
     );
@@ -120,7 +201,14 @@ async function backfillOperationalCollection(
   workshopIdByUserUid,
 ) {
   const snapshot = await firestore.collection(collectionName).get();
-  let updated = 0;
+  const summary = {
+    collectionName,
+    scanned: snapshot.size,
+    alreadyScoped: 0,
+    prepared: 0,
+    unresolved: 0,
+  };
+  const batchWriter = createBatchWriter();
 
   const getDocument = (() => {
     const cache = new Map();
@@ -194,42 +282,57 @@ async function backfillOperationalCollection(
     const data = document.data();
 
     if (normalizeOptional(data.workshopId)) {
+      summary.alreadyScoped += 1;
       continue;
     }
 
     const workshopId = await resolveWorkshopId(data);
 
     if (!workshopId) {
+      summary.unresolved += 1;
       console.warn(
         `No se pudo inferir workshopId para ${collectionName}/${document.id}`,
       );
       continue;
     }
 
-    updated += 1;
+    summary.prepared += 1;
 
-    if (!dryRun) {
-      await document.ref.set(
-        {
+    await batchWriter.set(
+      document.ref,
+      {
+        workshopId,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        ...buildMigrationMeta(`backfill-${collectionName}`, {
           workshopId,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true },
-      );
-    }
+          migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+      },
+      { merge: true },
+    );
   }
 
-  return updated;
+  await batchWriter.flush();
+
+  return {
+    ...summary,
+    ...batchWriter.getStats(),
+  };
 }
 
 async function main() {
   const profilesSnapshot = await firestore.collection("userProfiles").get();
   const workshopIdByUserUid = new Map();
+  const profileSummary = {
+    scanned: profilesSnapshot.size,
+    prepared: 0,
+  };
 
   for (const profileDoc of profilesSnapshot.docs) {
     const workshopId = await ensureWorkshopForProfile(profileDoc);
     await ensureMembership(profileDoc, workshopId);
     workshopIdByUserUid.set(profileDoc.id, workshopId);
+    profileSummary.prepared += 1;
   }
 
   const collections = [
@@ -242,12 +345,18 @@ async function main() {
   ];
 
   for (const collectionName of collections) {
-    const updated = await backfillOperationalCollection(
+    const summary = await backfillOperationalCollection(
       collectionName,
       workshopIdByUserUid,
     );
-    console.log(`${collectionName}: ${updated} documentos preparados.`);
+    console.log(
+      `${collectionName}: ${summary.prepared} preparados, ${summary.alreadyScoped} ya segmentados, ${summary.unresolved} sin resolver, ${summary.preparedWrites} escrituras en ${summary.committedBatches} lotes.`,
+    );
   }
+
+  console.log(
+    `userProfiles: ${profileSummary.prepared} perfiles reconciliados de ${profileSummary.scanned}.`,
+  );
 
   console.log(
     dryRun ? "Migracion en modo dry-run finalizada." : "Migracion finalizada.",

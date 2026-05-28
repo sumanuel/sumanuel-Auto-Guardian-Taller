@@ -28,6 +28,7 @@ node .\scripts\migrate-multi-workshop.mjs --dry-run
 ```
 
 2. Revisar los warnings de documentos que no pudieron inferir `workshopId`.
+   El script tambien imprime un resumen por coleccion con documentos preparados, ya segmentados, sin resolver y cantidad de escrituras agrupadas.
 
 3. Ejecutar la migracion real:
 
@@ -43,6 +44,7 @@ node .\scripts\migrate-multi-workshop.mjs
   - `openedByUid`
   - `authorUid`
   - `invitedByUid`
+- Cada documento que el script toca deja un marcador en `migrationMeta.multiWorkshop` para poder auditar el backfill y reintentos posteriores.
 - Si un documento no tiene ninguno de esos campos o no se puede relacionar con un usuario existente, el script lo reporta para revision manual.
 - El script crea talleres sin consecutivo visible porque esta pensado para backfill seguro, no para replicar la estrategia transaccional del cliente movil.
 

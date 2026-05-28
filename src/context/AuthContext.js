@@ -21,9 +21,8 @@ import {
 } from "../services/workshops/workshopSession";
 import {
   ensurePersonalWorkshopForUser,
-  getWorkshopById,
-  listUserWorkshopMemberships,
   renameWorkshop,
+  resolveUserWorkshopContext,
   upsertWorkshopMembership,
   createWorkshop as createWorkshopRecord,
 } from "../services/workshops/workshopService";
@@ -59,41 +58,35 @@ export function AuthProvider({ children }) {
     }
 
     let resolvedProfile = profile;
-    let nextMemberships = await listUserWorkshopMemberships(nextUser.uid);
 
-    if (!nextMemberships.length) {
+    let nextContext = await resolveUserWorkshopContext({
+      uid: nextUser.uid,
+      fullName: profile.fullName,
+      email: profile.email,
+      phone: profile.phone,
+      preferredWorkshopId,
+      defaultWorkshopId: profile.defaultWorkshopId,
+      membershipStatus: profile.status,
+    });
+
+    if (!nextContext.memberships.length) {
       const bootstrapResult = await ensurePersonalWorkshopForUser({
         uid: nextUser.uid,
         fullName: profile.fullName,
         email: profile.email,
       });
 
-      nextMemberships = [bootstrapResult.membership];
-      await updateUserProfileWorkshopContext(nextUser.uid, {
-        defaultWorkshopId: bootstrapResult.workshop?.id || null,
-        role: bootstrapResult.membership?.role || profile.role,
-      });
-      resolvedProfile = {
-        ...resolvedProfile,
-        defaultWorkshopId: bootstrapResult.workshop?.id || null,
-        role: bootstrapResult.membership?.role || profile.role,
+      nextContext = {
+        memberships: [bootstrapResult.membership],
+        activeMembership: bootstrapResult.membership,
+        activeWorkshop: bootstrapResult.workshop,
       };
     }
 
-    const selectedMembership =
-      nextMemberships.find(
-        (membership) => membership.workshopId === preferredWorkshopId,
-      ) ||
-      nextMemberships.find(
-        (membership) =>
-          membership.workshopId === resolvedProfile.defaultWorkshopId,
-      ) ||
-      nextMemberships[0] ||
-      null;
-
-    const nextWorkshop = selectedMembership
-      ? await getWorkshopById(selectedMembership.workshopId)
-      : null;
+    const {
+      activeMembership: selectedMembership,
+      activeWorkshop: nextWorkshop,
+    } = nextContext;
 
     if (
       selectedMembership &&
@@ -111,7 +104,7 @@ export function AuthProvider({ children }) {
       };
     }
 
-    setMemberships(nextMemberships);
+    setMemberships(nextContext.memberships);
     setActiveWorkshopId(selectedMembership?.workshopId || null);
     setActiveWorkshop(nextWorkshop);
     setActiveWorkshopSession(
@@ -126,7 +119,7 @@ export function AuthProvider({ children }) {
 
     return {
       profile: resolvedProfile,
-      memberships: nextMemberships,
+      memberships: nextContext.memberships,
       activeWorkshopId: selectedMembership?.workshopId || null,
       activeWorkshop: nextWorkshop,
     };
