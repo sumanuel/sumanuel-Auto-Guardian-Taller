@@ -42,7 +42,12 @@ function getPrimaryMembership(memberships, activeWorkshopId) {
   );
 }
 
-function resolveActionState(itemKey, userProfile, memberships, activeWorkshopId) {
+function resolveActionState(
+  itemKey,
+  userProfile,
+  memberships,
+  activeWorkshopId,
+) {
   const currentRole =
     memberships.find((item) => item.workshopId === activeWorkshopId)?.role ||
     userProfile?.role ||

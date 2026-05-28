@@ -26,7 +26,9 @@ function getEntityId(entity) {
 }
 
 function getItemTypeLabel(itemType) {
-  return stockItemTypeOptions.find((item) => item.key === itemType)?.label || "Item";
+  return (
+    stockItemTypeOptions.find((item) => item.key === itemType)?.label || "Item"
+  );
 }
 
 function getInventoryState(item) {
@@ -67,7 +69,10 @@ export default function StockItemsScreen({
   const [stockItems, setStockItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
-  const canManageInventory = hasPermission(userProfile?.role, "inventory.manage");
+  const canManageInventory = hasPermission(
+    userProfile?.role,
+    "inventory.manage",
+  );
 
   const refreshData = async () => {
     setLoading(true);
@@ -101,7 +106,10 @@ export default function StockItemsScreen({
         if (item.itemType === "tool") {
           accumulator.tools += 1;
         }
-        if (inventoryState.tone === "warning" || inventoryState.tone === "danger") {
+        if (
+          inventoryState.tone === "warning" ||
+          inventoryState.tone === "danger"
+        ) {
           accumulator.attention += 1;
         }
 
@@ -188,10 +196,17 @@ export default function StockItemsScreen({
             },
           ]}
         >
-          <Text style={[styles.summaryEyebrow, { color: colors.primary }]}>Inventario</Text>
-          <Text style={[styles.summaryTitle, { color: colors.text }]}>Tablero del taller</Text>
-          <Text style={[styles.summarySubtitle, { color: colors.textSecondary }]}> 
-            Visualiza repuestos generales, herramientas registradas y elementos que requieren reposicion.
+          <Text style={[styles.summaryEyebrow, { color: colors.primary }]}>
+            Inventario
+          </Text>
+          <Text style={[styles.summaryTitle, { color: colors.text }]}>
+            Tablero del taller
+          </Text>
+          <Text
+            style={[styles.summarySubtitle, { color: colors.textSecondary }]}
+          >
+            Visualiza repuestos generales, herramientas registradas y elementos
+            que requieren reposicion.
           </Text>
 
           <View style={styles.statsRow}>
@@ -211,8 +226,12 @@ export default function StockItemsScreen({
                   },
                 ]}
               >
-                <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
-                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {stat.value}
+                </Text>
+                <Text
+                  style={[styles.statLabel, { color: colors.textSecondary }]}
+                >
                   {stat.label}
                 </Text>
               </View>
@@ -226,7 +245,9 @@ export default function StockItemsScreen({
           style={[
             styles.primaryInlineAction,
             {
-              backgroundColor: canManageInventory ? colors.primary : colors.cardMuted,
+              backgroundColor: canManageInventory
+                ? colors.primary
+                : colors.cardMuted,
               borderColor: canManageInventory ? colors.primary : colors.border,
             },
           ]}
@@ -239,7 +260,9 @@ export default function StockItemsScreen({
           <Text
             style={[
               styles.primaryInlineActionText,
-              { color: canManageInventory ? colors.white : colors.textSecondary },
+              {
+                color: canManageInventory ? colors.white : colors.textSecondary,
+              },
             ]}
           >
             Agregar item al inventario
@@ -247,8 +270,9 @@ export default function StockItemsScreen({
         </Pressable>
 
         {!canManageInventory ? (
-          <Text style={[styles.helperText, { color: colors.textSecondary }]}> 
-            Tu rol puede consultar el inventario, pero no crear ni editar registros.
+          <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+            Tu rol puede consultar el inventario, pero no crear ni editar
+            registros.
           </Text>
         ) : null}
 
@@ -278,32 +302,36 @@ export default function StockItemsScreen({
           />
 
           <View style={styles.filterRow}>
-            {[{ key: "all", label: "Todos" }, ...stockItemTypeOptions].map((filter) => {
-              const selected = activeFilter === filter.key;
+            {[{ key: "all", label: "Todos" }, ...stockItemTypeOptions].map(
+              (filter) => {
+                const selected = activeFilter === filter.key;
 
-              return (
-                <Pressable
-                  key={filter.key}
-                  onPress={() => setActiveFilter(filter.key)}
-                  style={[
-                    styles.filterChip,
-                    {
-                      backgroundColor: selected ? colors.primary : colors.cardMuted,
-                      borderColor: selected ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Text
+                return (
+                  <Pressable
+                    key={filter.key}
+                    onPress={() => setActiveFilter(filter.key)}
                     style={[
-                      styles.filterChipText,
-                      { color: selected ? colors.white : colors.text },
+                      styles.filterChip,
+                      {
+                        backgroundColor: selected
+                          ? colors.primary
+                          : colors.cardMuted,
+                        borderColor: selected ? colors.primary : colors.border,
+                      },
                     ]}
                   >
-                    {filter.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        { color: selected ? colors.white : colors.text },
+                      ]}
+                    >
+                      {filter.label}
+                    </Text>
+                  </Pressable>
+                );
+              },
+            )}
           </View>
         </View>
 
@@ -313,7 +341,8 @@ export default function StockItemsScreen({
           <View style={styles.listBody}>
             {filteredItems.map((item) => {
               const inventoryState = getInventoryState(item);
-              const isSelected = viewState?.selectedStockItemId === getEntityId(item);
+              const isSelected =
+                viewState?.selectedStockItemId === getEntityId(item);
 
               return (
                 <View
@@ -334,29 +363,53 @@ export default function StockItemsScreen({
                       ]}
                     >
                       <View style={styles.cardHeaderCopy}>
-                        <Text style={[styles.cardEyebrow, { color: colors.primary }]}> 
+                        <Text
+                          style={[
+                            styles.cardEyebrow,
+                            { color: colors.primary },
+                          ]}
+                        >
                           {getItemTypeLabel(item.itemType)}
                         </Text>
                         <Text style={[styles.rowTitle, { color: colors.text }]}>
                           {item.name}
                         </Text>
                       </View>
-                      <Text style={[styles.cardTag, { color: colors[inventoryState.tone] }]}> 
+                      <Text
+                        style={[
+                          styles.cardTag,
+                          { color: colors[inventoryState.tone] },
+                        ]}
+                      >
                         {inventoryState.label}
                       </Text>
                     </View>
 
                     <View style={styles.cardBody}>
-                      <Text style={[styles.rowMeta, { color: colors.textSecondary }]}> 
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
                         {item.id} · Cant. {item.quantity || 0}
-                        {item.minimumQuantity !== null && item.minimumQuantity !== undefined
+                        {item.minimumQuantity !== null &&
+                        item.minimumQuantity !== undefined
                           ? ` · Min. ${item.minimumQuantity}`
                           : ""}
                       </Text>
-                      <Text style={[styles.rowMeta, { color: colors.textSecondary }]}> 
-                        Costo {item.unitCost || 0} · {item.location || "Sin ubicacion"}
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Costo {item.unitCost || 0} ·{" "}
+                        {item.location || "Sin ubicacion"}
                       </Text>
-                      <Text style={[styles.rowMeta, { color: colors.textTertiary }]}> 
+                      <Text
+                        style={[styles.rowMeta, { color: colors.textTertiary }]}
+                      >
                         {item.supplier || "Sin proveedor"}
                       </Text>
                     </View>
@@ -370,13 +423,19 @@ export default function StockItemsScreen({
                         styles.iconAction,
                         {
                           backgroundColor: colors.cardBackground,
-                          borderColor: canManageInventory ? colors.primary : colors.border,
+                          borderColor: canManageInventory
+                            ? colors.primary
+                            : colors.border,
                           opacity: canManageInventory ? 1 : 0.45,
                         },
                       ]}
                     >
                       <Ionicons
-                        color={canManageInventory ? colors.primary : colors.textTertiary}
+                        color={
+                          canManageInventory
+                            ? colors.primary
+                            : colors.textTertiary
+                        }
                         name="create-outline"
                         size={rf(18)}
                       />
@@ -388,13 +447,19 @@ export default function StockItemsScreen({
                         styles.iconAction,
                         {
                           backgroundColor: colors.cardBackground,
-                          borderColor: canManageInventory ? colors.danger : colors.border,
+                          borderColor: canManageInventory
+                            ? colors.danger
+                            : colors.border,
                           opacity: canManageInventory ? 1 : 0.45,
                         },
                       ]}
                     >
                       <Ionicons
-                        color={canManageInventory ? colors.danger : colors.textTertiary}
+                        color={
+                          canManageInventory
+                            ? colors.danger
+                            : colors.textTertiary
+                        }
                         name="trash-outline"
                         size={rf(18)}
                       />
@@ -414,12 +479,17 @@ export default function StockItemsScreen({
               },
             ]}
           >
-            <Ionicons color={colors.primary} name="cube-outline" size={rf(28)} />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}> 
+            <Ionicons
+              color={colors.primary}
+              name="cube-outline"
+              size={rf(28)}
+            />
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
               No hay items registrados
             </Text>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}> 
-              Crea el primer repuesto general o herramienta del taller para empezar a controlar disponibilidad y reposicion.
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              Crea el primer repuesto general o herramienta del taller para
+              empezar a controlar disponibilidad y reposicion.
             </Text>
           </View>
         )}

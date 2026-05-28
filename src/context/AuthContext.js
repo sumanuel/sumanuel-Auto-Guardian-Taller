@@ -279,8 +279,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const createWorkshop = async ({
-  } = {}) => {
+  const createWorkshop = async ({} = {}) => {
     throw new Error(
       "Esta version opera con un solo taller y ya no permite crear talleres nuevos.",
     );

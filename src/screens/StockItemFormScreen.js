@@ -112,8 +112,12 @@ export default function StockItemFormScreen({
             style={[styles.cardHeader, { borderBottomColor: colors.border }]}
           >
             <View style={styles.cardHeaderCopy}>
-              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>Inventario</Text>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Ficha del item</Text>
+              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
+                Inventario
+              </Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>
+                Ficha del item
+              </Text>
             </View>
             <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
               {editingStockItemId ? "Revision" : "Nuevo registro"}
@@ -121,7 +125,9 @@ export default function StockItemFormScreen({
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Tipo</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Tipo
+            </Text>
             <View style={styles.optionWrap}>
               {stockItemTypeOptions.map((itemTypeOption) => {
                 const selected = form.itemType === itemTypeOption.key;
@@ -138,7 +144,9 @@ export default function StockItemFormScreen({
                     style={[
                       styles.optionChip,
                       {
-                        backgroundColor: selected ? colors.primary : colors.cardMuted,
+                        backgroundColor: selected
+                          ? colors.primary
+                          : colors.cardMuted,
                         borderColor: selected ? colors.primary : colors.border,
                       },
                     ]}
@@ -158,7 +166,9 @@ export default function StockItemFormScreen({
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Nombre</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Nombre
+            </Text>
             <TextInput
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, name: value }))
@@ -179,7 +189,9 @@ export default function StockItemFormScreen({
 
           <View style={styles.gridRow}>
             <View style={[styles.formGroup, styles.gridItem]}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Cantidad</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Cantidad
+              </Text>
               <TextInput
                 keyboardType="number-pad"
                 onChangeText={(value) =>
@@ -199,7 +211,9 @@ export default function StockItemFormScreen({
               />
             </View>
             <View style={[styles.formGroup, styles.gridItem]}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Minimo</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Minimo
+              </Text>
               <TextInput
                 keyboardType="number-pad"
                 onChangeText={(value) =>
@@ -221,7 +235,9 @@ export default function StockItemFormScreen({
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Costo unitario</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Costo unitario
+            </Text>
             <TextInput
               keyboardType="decimal-pad"
               onChangeText={(value) =>
@@ -243,7 +259,9 @@ export default function StockItemFormScreen({
 
           <View style={styles.gridRow}>
             <View style={[styles.formGroup, styles.gridItem]}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Proveedor</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Proveedor
+              </Text>
               <TextInput
                 onChangeText={(value) =>
                   setForm((current) => ({ ...current, supplier: value }))
@@ -262,7 +280,9 @@ export default function StockItemFormScreen({
               />
             </View>
             <View style={[styles.formGroup, styles.gridItem]}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>Ubicacion</Text>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Ubicacion
+              </Text>
               <TextInput
                 onChangeText={(value) =>
                   setForm((current) => ({ ...current, location: value }))
@@ -283,7 +303,9 @@ export default function StockItemFormScreen({
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>Notas</Text>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Notas
+            </Text>
             <TextInput
               multiline
               numberOfLines={4}
