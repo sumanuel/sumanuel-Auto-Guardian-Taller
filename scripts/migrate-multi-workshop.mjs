@@ -115,7 +115,9 @@ async function ensureWorkshopForProfile(profileDoc, options = {}) {
   const defaultWorkshopId = normalizeOptional(profile.defaultWorkshopId);
   const preferredWorkshopName =
     normalizeOptional(options.name) || buildDefaultWorkshopName(profileDoc);
-  const preferredOwnerUid = normalizeOptional(options.ownerUserUid || profileUid);
+  const preferredOwnerUid = normalizeOptional(
+    options.ownerUserUid || profileUid,
+  );
 
   if (defaultWorkshopId) {
     const existingWorkshop = await firestore
@@ -173,10 +175,13 @@ async function ensureMembership(profileDoc, workshopId, options = {}) {
   const profile = profileDoc.data();
   const profileUid = normalizeOptional(profile.uid || profileDoc.id);
   const membershipId = buildMembershipId(workshopId, profileUid);
-  const nextRole = normalizeOptional(options.role || profile.role) || "administrator";
-  const nextStatus = normalizeOptional(options.status || profile.status) || "active";
+  const nextRole =
+    normalizeOptional(options.role || profile.role) || "administrator";
+  const nextStatus =
+    normalizeOptional(options.status || profile.status) || "active";
   const nextWorkshopName =
-    normalizeOptional(options.workshopName) || buildDefaultWorkshopName(profileDoc);
+    normalizeOptional(options.workshopName) ||
+    buildDefaultWorkshopName(profileDoc);
   const membershipRef = firestore
     .collection("workshopMemberships")
     .doc(membershipId);
@@ -382,7 +387,9 @@ async function main() {
     const ownerProfileDoc = choosePrimaryWorkshopOwner(profileDocs);
 
     if (!ownerProfileDoc) {
-      throw new Error("No hay perfiles disponibles para crear el taller inicial.");
+      throw new Error(
+        "No hay perfiles disponibles para crear el taller inicial.",
+      );
     }
 
     const ownerProfile = ownerProfileDoc.data();
@@ -399,7 +406,8 @@ async function main() {
     );
 
     for (const profileDoc of profileDocs) {
-      const nextRole = profileDoc.id === ownerProfileDoc.id ? "owner" : profileDoc.data().role;
+      const nextRole =
+        profileDoc.id === ownerProfileDoc.id ? "owner" : profileDoc.data().role;
       await ensureMembership(profileDoc, fallbackWorkshopId, {
         role: nextRole,
         workshopName: resolvedWorkshopName,

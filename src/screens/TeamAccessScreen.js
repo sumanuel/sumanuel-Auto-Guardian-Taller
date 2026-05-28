@@ -563,11 +563,12 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
             Gestion del taller activo
           </Text>
           <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-            Ajusta nombre, contacto y direccion del taller activo o crea uno nuevo sin salir de la app.
+            Ajusta nombre, contacto y direccion del taller activo o crea uno
+            nuevo sin salir de la app.
           </Text>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}> 
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
               Datos del taller activo
             </Text>
             {canManageWorkshop ? (
@@ -667,13 +668,16 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                       { color: colors.text },
                     ]}
                   >
-                    {workshopSubmitting ? "Guardando..." : "Guardar datos del taller"}
+                    {workshopSubmitting
+                      ? "Guardando..."
+                      : "Guardar datos del taller"}
                   </Text>
                 </Pressable>
               </>
             ) : (
               <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-                Solo el propietario puede cambiar la identidad y contacto del taller, igual que en tienda-app.
+                Solo el propietario puede cambiar la identidad y contacto del
+                taller, igual que en tienda-app.
               </Text>
             )}
           </View>
@@ -775,7 +779,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
             </Pressable>
             {!canManageWorkshop ? (
               <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
-                Solo el propietario puede abrir nuevos talleres desde esta seccion.
+                Solo el propietario puede abrir nuevos talleres desde esta
+                seccion.
               </Text>
             ) : null}
           </View>
