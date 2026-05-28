@@ -146,7 +146,6 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     activeWorkshop,
     activeWorkshopId,
     authBusy,
-    createWorkshop,
     memberships,
     pendingInvitation,
     switchWorkshop,
@@ -169,8 +168,6 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     useState(false);
   const [workshopSubmitting, setWorkshopSubmitting] = useState(false);
   const [activeWorkshopForm, setActiveWorkshopForm] =
-    useState(buildWorkshopForm());
-  const [createWorkshopForm, setCreateWorkshopForm] =
     useState(buildWorkshopForm());
   const [invitationForm, setInvitationForm] = useState({
     email: "",
@@ -284,36 +281,6 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     }
   };
 
-  const handleCreateWorkshop = async () => {
-    if (!createWorkshopForm.name.trim()) {
-      Alert.alert("Talleres", "Ingresa el nombre del nuevo taller.");
-      return;
-    }
-
-    try {
-      setWorkshopSubmitting(true);
-      const workshop = await createWorkshop({
-        name: createWorkshopForm.name.trim(),
-        phone: createWorkshopForm.phone.trim(),
-        email: createWorkshopForm.email.trim().toLowerCase(),
-        address: createWorkshopForm.address.trim(),
-        rif: createWorkshopForm.rif.trim(),
-        logoUrl: createWorkshopForm.logoUrl.trim(),
-        commercialNotes: createWorkshopForm.commercialNotes.trim(),
-      });
-      setCreateWorkshopForm(buildWorkshopForm());
-      await refreshAdminData();
-      Alert.alert(
-        "Talleres",
-        `${workshop.name} fue creado y quedo como taller disponible en tu sesion.`,
-      );
-    } catch (error) {
-      Alert.alert("Talleres", error?.message || "No se pudo crear el taller.");
-    } finally {
-      setWorkshopSubmitting(false);
-    }
-  };
-
   const handleUpdateWorkshop = async () => {
     if (!activeWorkshopForm.name.trim()) {
       Alert.alert("Talleres", "Ingresa el nombre del taller activo.");
@@ -366,35 +333,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     }
   };
 
-  const handlePickCreateWorkshopLogo = async () => {
-    try {
-      const nextLogo = await pickWorkshopLogo();
-
-      if (!nextLogo) {
-        return;
-      }
-
-      setCreateWorkshopForm((current) => ({
-        ...current,
-        logoUrl: nextLogo,
-      }));
-    } catch (error) {
-      Alert.alert(
-        "Talleres",
-        error?.message || "No se pudo seleccionar el logo del taller.",
-      );
-    }
-  };
-
   const handleClearActiveWorkshopLogo = () => {
     setActiveWorkshopForm((current) => ({
-      ...current,
-      logoUrl: "",
-    }));
-  };
-
-  const handleClearCreateWorkshopLogo = () => {
-    setCreateWorkshopForm((current) => ({
       ...current,
       logoUrl: "",
     }));
@@ -661,7 +601,7 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
           </Text>
           <Text style={[styles.panelText, { color: colors.textSecondary }]}>
             Ajusta identidad fiscal, contacto, logo y notas comerciales del
-            taller activo o crea uno nuevo sin salir de la app.
+            taller activo dentro del esquema de taller unico.
           </Text>
 
           <View style={styles.formGroup}>
@@ -896,214 +836,19 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
             )}
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Crear nuevo taller
+          <View
+            style={[
+              styles.summaryPanel,
+              {
+                backgroundColor: colors.cardMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.summaryText, { color: colors.text }]}>
+              Esta implementacion opera con un solo taller. La seccion ya no
+              permite crear talleres adicionales.
             </Text>
-            <TextInput
-              onChangeText={(value) =>
-                setCreateWorkshopForm((current) => ({
-                  ...current,
-                  name: value,
-                }))
-              }
-              placeholder="Nombre del nuevo taller"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={createWorkshopForm.name}
-            />
-            <TextInput
-              onChangeText={(value) =>
-                setCreateWorkshopForm((current) => ({
-                  ...current,
-                  phone: value,
-                }))
-              }
-              placeholder="Telefono del taller"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={createWorkshopForm.phone}
-            />
-            <TextInput
-              autoCapitalize="none"
-              keyboardType="email-address"
-              onChangeText={(value) =>
-                setCreateWorkshopForm((current) => ({
-                  ...current,
-                  email: value,
-                }))
-              }
-              placeholder="Correo del taller"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={createWorkshopForm.email}
-            />
-            <TextInput
-              onChangeText={(value) =>
-                setCreateWorkshopForm((current) => ({
-                  ...current,
-                  address: value,
-                }))
-              }
-              placeholder="Direccion del taller"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={createWorkshopForm.address}
-            />
-            <TextInput
-              onChangeText={(value) =>
-                setCreateWorkshopForm((current) => ({
-                  ...current,
-                  rif: value,
-                }))
-              }
-              placeholder="RIF o identificacion fiscal"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={createWorkshopForm.rif}
-            />
-            <View style={styles.logoActionsRow}>
-              <Pressable
-                onPress={handlePickCreateWorkshopLogo}
-                style={[
-                  styles.secondaryFilledAction,
-                  styles.logoActionButton,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.secondaryFilledActionText,
-                    { color: colors.text },
-                  ]}
-                >
-                  Seleccionar logo
-                </Text>
-              </Pressable>
-              <Pressable
-                disabled={!createWorkshopForm.logoUrl}
-                onPress={handleClearCreateWorkshopLogo}
-                style={[
-                  styles.secondaryAction,
-                  styles.logoActionButton,
-                  {
-                    borderColor: colors.borderStrong,
-                    backgroundColor: colors.cardBackground,
-                  },
-                  !createWorkshopForm.logoUrl ? styles.disabledAction : null,
-                ]}
-              >
-                <Text
-                  style={[styles.secondaryActionText, { color: colors.text }]}
-                >
-                  Quitar logo
-                </Text>
-              </Pressable>
-            </View>
-            {createWorkshopForm.logoUrl ? (
-              <View
-                style={[
-                  styles.logoPreviewCard,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Image
-                  source={{ uri: createWorkshopForm.logoUrl }}
-                  style={styles.logoPreviewImage}
-                />
-                <Text
-                  style={[
-                    styles.logoPreviewText,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  Logo listo para el nuevo taller.
-                </Text>
-              </View>
-            ) : null}
-            <TextInput
-              multiline
-              numberOfLines={4}
-              onChangeText={(value) =>
-                setCreateWorkshopForm((current) => ({
-                  ...current,
-                  commercialNotes: value,
-                }))
-              }
-              placeholder="Notas comerciales del nuevo taller"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                styles.notesInput,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical="top"
-              value={createWorkshopForm.commercialNotes}
-            />
-            <Pressable
-              disabled={workshopSubmitting || authBusy || !canManageWorkshop}
-              onPress={handleCreateWorkshop}
-              style={[
-                styles.primaryAction,
-                { backgroundColor: colors.primary },
-                !canManageWorkshop ? styles.disabledAction : null,
-              ]}
-            >
-              <Text style={[styles.primaryActionText, { color: colors.white }]}>
-                {workshopSubmitting ? "Creando taller..." : "Crear taller"}
-              </Text>
-            </Pressable>
-            {!canManageWorkshop ? (
-              <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
-                Solo el propietario puede abrir nuevos talleres desde esta
-                seccion.
-              </Text>
-            ) : null}
           </View>
         </View>
 

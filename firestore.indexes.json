@@ -57,6 +57,14 @@
       ]
     },
     {
+      "collectionGroup": "stockItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "workshopId", "order": "ASCENDING" },
+        { "fieldPath": "sequentialId", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "staffInvitations",
       "queryScope": "COLLECTION",
       "fields": [

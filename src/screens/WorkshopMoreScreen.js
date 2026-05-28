@@ -2,26 +2,34 @@ import { Ionicons } from "@expo/vector-icons";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { hasPermission } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
 const operationalItems = [
   {
-    key: "spare-parts",
-    title: "Repuestos",
-    subtitle: "Seguimiento de piezas, costos y abastecimiento.",
-    icon: "construct-outline",
+    key: "stock-tools",
+    title: "Stock y herramientas",
+    subtitle: "Inventario general del taller con altas, edicion y bajas.",
+    icon: "cube-outline",
     eyebrow: "Operacion",
   },
 ];
 
 const administrativeItems = [
   {
+    key: "workshop-settings",
+    title: "Datos del taller",
+    subtitle: "Identidad comercial, logo, contacto y notas operativas.",
+    icon: "business-outline",
+    eyebrow: "Administracion",
+  },
+  {
     key: "team",
-    title: "Taller y colaboradores",
-    subtitle: "Datos del taller, invitaciones, roles y control de accesos.",
-    icon: "shield-checkmark-outline",
+    title: "Colaboradores",
+    subtitle: "Invitaciones, roles, estados y control de accesos.",
+    icon: "people-outline",
     eyebrow: "Administracion",
   },
 ];
@@ -34,7 +42,68 @@ function getPrimaryMembership(memberships, activeWorkshopId) {
   );
 }
 
-function renderActionRow({ item, colors, onPress }) {
+function resolveActionState(itemKey, userProfile, memberships, activeWorkshopId) {
+  const currentRole =
+    memberships.find((item) => item.workshopId === activeWorkshopId)?.role ||
+    userProfile?.role ||
+    "";
+
+  if (itemKey === "workshop-settings") {
+    return hasPermission(currentRole, "workshop.manage")
+      ? {
+          iconColor: "primary",
+          stateLabel: "Editable",
+          stateTone: "primary",
+        }
+      : {
+          iconColor: "textSecondary",
+          stateLabel: "Solo lectura",
+          stateTone: "textSecondary",
+        };
+  }
+
+  if (itemKey === "stock-tools") {
+    return hasPermission(currentRole, "inventory.manage")
+      ? {
+          iconColor: "accent",
+          stateLabel: "CRUD habilitado",
+          stateTone: "accent",
+        }
+      : {
+          iconColor: "warning",
+          stateLabel: "Solo consulta",
+          stateTone: "warning",
+        };
+  }
+
+  return hasPermission(currentRole, "invitations.manage")
+    ? {
+        iconColor: "accent",
+        stateLabel: "Gestion activa",
+        stateTone: "accent",
+      }
+    : {
+        iconColor: "warning",
+        stateLabel: "Vista limitada",
+        stateTone: "warning",
+      };
+}
+
+function renderActionRow({
+  item,
+  colors,
+  onPress,
+  userProfile,
+  memberships,
+  activeWorkshopId,
+}) {
+  const actionState = resolveActionState(
+    item.key,
+    userProfile,
+    memberships,
+    activeWorkshopId,
+  );
+
   return (
     <Pressable
       key={item.key}
@@ -50,13 +119,37 @@ function renderActionRow({ item, colors, onPress }) {
       <View
         style={[styles.iconBadge, { backgroundColor: colors.cardBackground }]}
       >
-        <Ionicons color={colors.primary} name={item.icon} size={rf(20)} />
+        <Ionicons
+          color={colors[actionState.iconColor]}
+          name={item.icon}
+          size={rf(20)}
+        />
       </View>
 
       <View style={styles.rowCopy}>
-        <Text style={[styles.rowEyebrow, { color: colors.primary }]}>
-          {item.eyebrow}
-        </Text>
+        <View style={styles.rowTopMeta}>
+          <Text style={[styles.rowEyebrow, { color: colors.primary }]}>
+            {item.eyebrow}
+          </Text>
+          <View
+            style={[
+              styles.stateBadge,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.stateBadgeText,
+                { color: colors[actionState.stateTone] },
+              ]}
+            >
+              {actionState.stateLabel}
+            </Text>
+          </View>
+        </View>
         <Text style={[styles.rowTitle, { color: colors.text }]}>
           {item.title}
         </Text>
@@ -76,7 +169,7 @@ function renderActionRow({ item, colors, onPress }) {
 
 export default function WorkshopMoreScreen({
   onBack,
-  onOpenSpareParts,
+  onOpenStockItems,
   onOpenTeamAccess,
   onSignOut,
   onToggleTheme,
@@ -214,7 +307,10 @@ export default function WorkshopMoreScreen({
               renderActionRow({
                 item,
                 colors,
-                onPress: onOpenSpareParts,
+                onPress: onOpenStockItems,
+                userProfile,
+                memberships,
+                activeWorkshopId,
               }),
             )}
           </View>
@@ -243,6 +339,9 @@ export default function WorkshopMoreScreen({
                 item,
                 colors,
                 onPress: onOpenTeamAccess,
+                userProfile,
+                memberships,
+                activeWorkshopId,
               }),
             )}
           </View>
@@ -409,11 +508,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   rowCopy: { flex: 1, gap: spacing.xs },
+  rowTopMeta: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   rowEyebrow: {
     fontSize: rf(10),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
+  },
+  stateBadge: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+  },
+  stateBadgeText: {
+    fontSize: rf(10),
+    fontWeight: "800",
   },
   rowTitle: { fontSize: rf(15), fontWeight: "800" },
   rowSubtitle: { fontSize: rf(12), lineHeight: rf(18) },

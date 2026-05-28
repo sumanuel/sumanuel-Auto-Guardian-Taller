@@ -200,6 +200,7 @@ service cloud.firestore {
           || (counterId == 'vehicles' && canManageOperations())
           || (counterId == 'diagnostics' && canManageOperations())
           || (counterId == 'workOrders' && canManageOperations())
+          || (counterId == 'stockItems' && canManageOperations())
           || (counterId == 'spareParts' && canManageOperations())
           || (counterId == 'progressEntries' && (canManageOperations() || isMechanic()))
         );
@@ -297,6 +298,12 @@ service cloud.firestore {
     }
 
     match /spareParts/{sparePartId} {
+      allow read: if canReadWorkshopEntity(resource.data.workshopId);
+      allow create: if canManageWorkshopEntity(request.resource.data.workshopId);
+      allow update, delete: if canManageWorkshopEntity(resource.data.workshopId);
+    }
+
+    match /stockItems/{stockItemId} {
       allow read: if canReadWorkshopEntity(resource.data.workshopId);
       allow create: if canManageWorkshopEntity(request.resource.data.workshopId);
       allow update, delete: if canManageWorkshopEntity(resource.data.workshopId);

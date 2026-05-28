@@ -9,6 +9,8 @@ import DiagnosticFormScreen from "./src/screens/DiagnosticFormScreen";
 import DiagnosticsScreen from "./src/screens/DiagnosticsScreen";
 import SparePartFormScreen from "./src/screens/SparePartFormScreen";
 import SparePartsScreen from "./src/screens/SparePartsScreen";
+import StockItemFormScreen from "./src/screens/StockItemFormScreen";
+import StockItemsScreen from "./src/screens/StockItemsScreen";
 import TeamAccessScreen from "./src/screens/TeamAccessScreen";
 import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
 import AccessStatusScreen from "./src/screens/AccessStatusScreen";
@@ -33,6 +35,8 @@ const APP_SCREENS = {
   WORK_ORDER_FORM: "work-order-form",
   SPARE_PARTS: "spare-parts",
   SPARE_PART_FORM: "spare-part-form",
+  STOCK_ITEMS: "stock-items",
+  STOCK_ITEM_FORM: "stock-item-form",
   TEAM_ACCESS: "team-access",
   MORE: "more",
 };
@@ -93,6 +97,13 @@ function AppContent() {
     selectedWorkOrderId: null,
     returnTo: APP_SCREENS.MORE,
   });
+  const [stockItemFormContext, setStockItemFormContext] = useState({
+    stockItem: null,
+    draft: null,
+  });
+  const [stockItemsViewState, setStockItemsViewState] = useState({
+    selectedStockItemId: null,
+  });
 
   const activeTab = useMemo(() => {
     if (ROOT_TABS.has(activeScreen)) {
@@ -112,6 +123,10 @@ function AppContent() {
 
     if (activeScreen === APP_SCREENS.WORK_ORDER_FORM) {
       return APP_SCREENS.WORK_ORDERS;
+    }
+
+    if (activeScreen === APP_SCREENS.STOCK_ITEM_FORM) {
+      return APP_SCREENS.MORE;
     }
 
     return APP_SCREENS.MORE;
@@ -157,6 +172,13 @@ function AppContent() {
       selectedSparePartId: null,
       selectedWorkOrderId: null,
       returnTo: APP_SCREENS.MORE,
+    });
+    setStockItemFormContext({
+      stockItem: null,
+      draft: null,
+    });
+    setStockItemsViewState({
+      selectedStockItemId: null,
     });
   }, [authUser?.uid]);
 
@@ -210,6 +232,11 @@ function AppContent() {
           return true;
         }
 
+        if (activeScreen === APP_SCREENS.STOCK_ITEM_FORM) {
+          setActiveScreen(APP_SCREENS.STOCK_ITEMS);
+          return true;
+        }
+
         if (activeScreen === APP_SCREENS.TEAM_ACCESS) {
           setActiveScreen(APP_SCREENS.MORE);
           return true;
@@ -217,6 +244,11 @@ function AppContent() {
 
         if (activeScreen === APP_SCREENS.SPARE_PARTS) {
           setActiveScreen(sparePartsViewState.returnTo || APP_SCREENS.MORE);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.STOCK_ITEMS) {
+          setActiveScreen(APP_SCREENS.MORE);
           return true;
         }
 
@@ -579,6 +611,39 @@ function AppContent() {
       );
     }
 
+    if (activeScreen === APP_SCREENS.STOCK_ITEMS) {
+      return (
+        <StockItemsScreen
+          onBack={() => setActiveScreen(APP_SCREENS.MORE)}
+          onOpenStockItemForm={(stockItem, options = {}) => {
+            setStockItemFormContext({
+              stockItem: stockItem || null,
+              draft: options.seedData || null,
+            });
+            setActiveScreen(APP_SCREENS.STOCK_ITEM_FORM);
+          }}
+          userProfile={userProfile}
+          viewState={stockItemsViewState}
+        />
+      );
+    }
+
+    if (activeScreen === APP_SCREENS.STOCK_ITEM_FORM) {
+      return (
+        <StockItemFormScreen
+          initialDraft={stockItemFormContext.draft}
+          initialStockItem={stockItemFormContext.stockItem}
+          onBack={() => setActiveScreen(APP_SCREENS.STOCK_ITEMS)}
+          onSaved={(savedStockItemId) => {
+            setStockItemsViewState({
+              selectedStockItemId: savedStockItemId,
+            });
+            setActiveScreen(APP_SCREENS.STOCK_ITEMS);
+          }}
+        />
+      );
+    }
+
     if (activeScreen === APP_SCREENS.TEAM_ACCESS) {
       return (
         <TeamAccessScreen
@@ -592,13 +657,11 @@ function AppContent() {
       return (
         <WorkshopMoreScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
-          onOpenSpareParts={() => {
-            setSparePartsViewState({
-              selectedSparePartId: null,
-              selectedWorkOrderId: null,
-              returnTo: APP_SCREENS.MORE,
+          onOpenStockItems={() => {
+            setStockItemsViewState({
+              selectedStockItemId: null,
             });
-            setActiveScreen(APP_SCREENS.SPARE_PARTS);
+            setActiveScreen(APP_SCREENS.STOCK_ITEMS);
           }}
           onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.TEAM_ACCESS)}
           onSignOut={signOutUser}

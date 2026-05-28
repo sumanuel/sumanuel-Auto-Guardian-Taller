@@ -33,6 +33,7 @@ export const ROLE_PERMISSIONS = {
   [USER_ROLES.OWNER]: [
     "users.manage",
     "invitations.manage",
+    "inventory.manage",
     "clients.manage",
     "vehicles.manage",
     "diagnostics.manage",
@@ -47,6 +48,7 @@ export const ROLE_PERMISSIONS = {
   [USER_ROLES.ADMINISTRATOR]: [
     "users.manage",
     "invitations.manage",
+    "inventory.manage",
     "clients.manage",
     "vehicles.manage",
     "diagnostics.manage",
@@ -58,6 +60,7 @@ export const ROLE_PERMISSIONS = {
     "settings.manage",
   ],
   [USER_ROLES.RECEPTION]: [
+    "inventory.manage",
     "clients.manage",
     "vehicles.manage",
     "diagnostics.manage",

@@ -24,8 +24,6 @@ import {
   renameWorkshop,
   resolveUserWorkshopContext,
   updateWorkshop,
-  upsertWorkshopMembership,
-  createWorkshop as createWorkshopRecord,
 } from "../services/workshops/workshopService";
 
 const AuthContext = createContext();
@@ -282,46 +280,10 @@ export function AuthProvider({ children }) {
   };
 
   const createWorkshop = async ({
-    name,
-    phone,
-    email,
-    address,
-    rif,
-    logoUrl,
-    commercialNotes,
   } = {}) => {
-    if (!auth.currentUser?.uid || !userProfile) {
-      throw new Error("Debes iniciar sesion para crear un taller.");
-    }
-
-    setAuthBusy(true);
-
-    try {
-      const workshop = await createWorkshopRecord({
-        name,
-        phone,
-        email: email || userProfile.email,
-        address,
-        rif,
-        logoUrl,
-        commercialNotes,
-        ownerUserUid: auth.currentUser.uid,
-      });
-
-      await upsertWorkshopMembership({
-        workshopId: workshop.id,
-        userUid: auth.currentUser.uid,
-        role: "owner",
-        status: userProfile.status,
-        invitedByUid: auth.currentUser.uid,
-      });
-
-      await refreshWorkshopContext(workshop.id);
-
-      return workshop;
-    } finally {
-      setAuthBusy(false);
-    }
+    throw new Error(
+      "Esta version opera con un solo taller y ya no permite crear talleres nuevos.",
+    );
   };
 
   const renameActiveWorkshop = async (name) => {
