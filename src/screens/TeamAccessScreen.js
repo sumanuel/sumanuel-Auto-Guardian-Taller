@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -65,6 +66,18 @@ function buildStaffForm(profile) {
   };
 }
 
+function buildWorkshopForm(workshop) {
+  return {
+    name: workshop?.name || "",
+    phone: workshop?.phone || "",
+    email: workshop?.email || "",
+    address: workshop?.address || "",
+    rif: workshop?.rif || "",
+    logoUrl: workshop?.logoUrl || "",
+    commercialNotes: workshop?.commercialNotes || "",
+  };
+}
+
 function formatShortDate(value) {
   const resolvedDate = value?.toDate ? value.toDate() : value;
 
@@ -123,35 +136,27 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
   const [acceptingIncomingInvitation, setAcceptingIncomingInvitation] =
     useState(false);
   const [workshopSubmitting, setWorkshopSubmitting] = useState(false);
-  const [activeWorkshopForm, setActiveWorkshopForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
-  });
-  const [createWorkshopForm, setCreateWorkshopForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
-  });
+  const [activeWorkshopForm, setActiveWorkshopForm] =
+    useState(buildWorkshopForm());
+  const [createWorkshopForm, setCreateWorkshopForm] =
+    useState(buildWorkshopForm());
   const [invitationForm, setInvitationForm] = useState({
     email: "",
     role: USER_ROLES.MECHANIC,
   });
 
+  const activeWorkshopLogoPreview = activeWorkshopForm.logoUrl.trim();
+
   useEffect(() => {
-    setActiveWorkshopForm({
-      name: activeWorkshop?.name || "",
-      phone: activeWorkshop?.phone || "",
-      email: activeWorkshop?.email || "",
-      address: activeWorkshop?.address || "",
-    });
+    setActiveWorkshopForm(buildWorkshopForm(activeWorkshop));
   }, [
     activeWorkshop?.address,
+    activeWorkshop?.commercialNotes,
     activeWorkshop?.email,
+    activeWorkshop?.logoUrl,
     activeWorkshop?.name,
     activeWorkshop?.phone,
+    activeWorkshop?.rif,
   ]);
 
   const refreshAdminData = async () => {
@@ -260,8 +265,11 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
         phone: createWorkshopForm.phone.trim(),
         email: createWorkshopForm.email.trim().toLowerCase(),
         address: createWorkshopForm.address.trim(),
+        rif: createWorkshopForm.rif.trim(),
+        logoUrl: createWorkshopForm.logoUrl.trim(),
+        commercialNotes: createWorkshopForm.commercialNotes.trim(),
       });
-      setCreateWorkshopForm({ name: "", phone: "", email: "", address: "" });
+      setCreateWorkshopForm(buildWorkshopForm());
       await refreshAdminData();
       Alert.alert(
         "Talleres",
@@ -287,6 +295,9 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
         phone: activeWorkshopForm.phone.trim(),
         email: activeWorkshopForm.email.trim().toLowerCase(),
         address: activeWorkshopForm.address.trim(),
+        rif: activeWorkshopForm.rif.trim(),
+        logoUrl: activeWorkshopForm.logoUrl.trim(),
+        commercialNotes: activeWorkshopForm.commercialNotes.trim(),
       });
       await refreshAdminData();
       Alert.alert(
@@ -563,8 +574,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
             Gestion del taller activo
           </Text>
           <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-            Ajusta nombre, contacto y direccion del taller activo o crea uno
-            nuevo sin salir de la app.
+            Ajusta identidad fiscal, contacto, logo y notas comerciales del
+            taller activo o crea uno nuevo sin salir de la app.
           </Text>
 
           <View style={styles.formGroup}>
@@ -650,6 +661,99 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                     },
                   ]}
                   value={activeWorkshopForm.address}
+                />
+                <TextInput
+                  onChangeText={(value) =>
+                    setActiveWorkshopForm((current) => ({
+                      ...current,
+                      rif: value,
+                    }))
+                  }
+                  placeholder="RIF o identificacion fiscal"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={activeWorkshopForm.rif}
+                />
+                <TextInput
+                  autoCapitalize="none"
+                  onChangeText={(value) =>
+                    setActiveWorkshopForm((current) => ({
+                      ...current,
+                      logoUrl: value,
+                    }))
+                  }
+                  placeholder="Logo del taller por URL"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={activeWorkshopForm.logoUrl}
+                />
+                {activeWorkshopLogoPreview ? (
+                  <View
+                    style={[
+                      styles.logoPreviewCard,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: activeWorkshopLogoPreview }}
+                      style={styles.logoPreviewImage}
+                    />
+                    <Text
+                      style={[
+                        styles.logoPreviewText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      Vista previa del logo comercial del taller.
+                    </Text>
+                  </View>
+                ) : (
+                  <Text
+                    style={[styles.rowMeta, { color: colors.textSecondary }]}
+                  >
+                    Puedes pegar una URL publica de imagen para usarla como logo
+                    del taller.
+                  </Text>
+                )}
+                <TextInput
+                  multiline
+                  numberOfLines={4}
+                  onChangeText={(value) =>
+                    setActiveWorkshopForm((current) => ({
+                      ...current,
+                      commercialNotes: value,
+                    }))
+                  }
+                  placeholder="Notas comerciales, slogan o texto breve para documentos"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    styles.notesInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  textAlignVertical="top"
+                  value={activeWorkshopForm.commercialNotes}
                 />
                 <Pressable
                   disabled={workshopSubmitting || authBusy || !activeWorkshopId}
@@ -763,6 +867,68 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                 },
               ]}
               value={createWorkshopForm.address}
+            />
+            <TextInput
+              onChangeText={(value) =>
+                setCreateWorkshopForm((current) => ({
+                  ...current,
+                  rif: value,
+                }))
+              }
+              placeholder="RIF o identificacion fiscal"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={createWorkshopForm.rif}
+            />
+            <TextInput
+              autoCapitalize="none"
+              onChangeText={(value) =>
+                setCreateWorkshopForm((current) => ({
+                  ...current,
+                  logoUrl: value,
+                }))
+              }
+              placeholder="Logo del taller por URL"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={createWorkshopForm.logoUrl}
+            />
+            <TextInput
+              multiline
+              numberOfLines={4}
+              onChangeText={(value) =>
+                setCreateWorkshopForm((current) => ({
+                  ...current,
+                  commercialNotes: value,
+                }))
+              }
+              placeholder="Notas comerciales del nuevo taller"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                styles.notesInput,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              textAlignVertical="top"
+              value={createWorkshopForm.commercialNotes}
             />
             <Pressable
               disabled={workshopSubmitting || authBusy || !canManageWorkshop}
@@ -1772,6 +1938,27 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     fontSize: rf(14),
+  },
+  notesInput: {
+    minHeight: rf(92),
+  },
+  logoPreviewCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+    alignItems: "center",
+  },
+  logoPreviewImage: {
+    width: rf(96),
+    height: rf(96),
+    borderRadius: borderRadius.md,
+    resizeMode: "contain",
+  },
+  logoPreviewText: {
+    fontSize: rf(12),
+    lineHeight: rf(17),
+    textAlign: "center",
   },
   roleOptionRow: {
     flexDirection: "row",

@@ -277,6 +277,9 @@ export async function createWorkshop({
   phone,
   email,
   address,
+  rif,
+  logoUrl,
+  commercialNotes,
 }) {
   return createEntityRecord("workshops", {
     name: normalizeOptional(name) || "Mi taller",
@@ -285,6 +288,9 @@ export async function createWorkshop({
     phone: normalizeOptional(phone),
     email: normalizeOptional(email).toLowerCase(),
     address: normalizeOptional(address),
+    rif: normalizeOptional(rif),
+    logoUrl: normalizeOptional(logoUrl),
+    commercialNotes: normalizeOptional(commercialNotes),
   });
 }
 
@@ -312,6 +318,9 @@ export async function updateWorkshop(workshopId, changes = {}) {
     phone: normalizeOptional(changes.phone),
     email: normalizeOptional(changes.email).toLowerCase(),
     address: normalizeOptional(changes.address),
+    rif: normalizeOptional(changes.rif),
+    logoUrl: normalizeOptional(changes.logoUrl),
+    commercialNotes: normalizeOptional(changes.commercialNotes),
     updatedAt: serverTimestamp(),
   });
 

@@ -281,7 +281,15 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const createWorkshop = async ({ name, phone, email, address } = {}) => {
+  const createWorkshop = async ({
+    name,
+    phone,
+    email,
+    address,
+    rif,
+    logoUrl,
+    commercialNotes,
+  } = {}) => {
     if (!auth.currentUser?.uid || !userProfile) {
       throw new Error("Debes iniciar sesion para crear un taller.");
     }
@@ -294,6 +302,9 @@ export function AuthProvider({ children }) {
         phone,
         email: email || userProfile.email,
         address,
+        rif,
+        logoUrl,
+        commercialNotes,
         ownerUserUid: auth.currentUser.uid,
       });
 
@@ -329,7 +340,15 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const updateActiveWorkshop = async ({ name, phone, email, address } = {}) => {
+  const updateActiveWorkshop = async ({
+    name,
+    phone,
+    email,
+    address,
+    rif,
+    logoUrl,
+    commercialNotes,
+  } = {}) => {
     if (!activeWorkshopId) {
       throw new Error("No hay un taller activo para actualizar.");
     }
@@ -342,6 +361,9 @@ export function AuthProvider({ children }) {
         phone,
         email,
         address,
+        rif,
+        logoUrl,
+        commercialNotes,
       });
       await refreshWorkshopContext(activeWorkshopId);
       return workshop;

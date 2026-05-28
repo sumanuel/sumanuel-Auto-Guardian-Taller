@@ -156,6 +156,9 @@ async function ensureWorkshopForProfile(profileDoc, options = {}) {
     phone: profile.phone || "",
     email: profile.email || "",
     address: "",
+    rif: "",
+    logoUrl: "",
+    commercialNotes: "",
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     ...buildMigrationMeta("owner-workshop-bootstrap", {

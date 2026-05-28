@@ -4,7 +4,7 @@ Ultima actualizacion: 28-05-2026
 
 ## Objetivo
 
-- Crear un taller base por usuario existente.
+- Crear un taller base por usuario existente o consolidar todo en un taller inicial compartido.
 - Crear o reactivar una membresia por usuario.
 - Backfillear `workshopId` en clientes, vehiculos, diagnosticos, ordenes, avances y repuestos.
 
@@ -17,6 +17,7 @@ Ultima actualizacion: 28-05-2026
 1. Tener una service account con acceso de administrador a Firestore.
 2. Definir `FIREBASE_SERVICE_ACCOUNT_PATH` apuntando al JSON.
 3. Opcionalmente definir `FIREBASE_PROJECT_ID`.
+4. Para el modo de taller unico, definir `PRIMARY_WORKSHOP_NAME` y opcionalmente `PRIMARY_WORKSHOP_OWNER_UID`.
 
 ## Ejecucion recomendada
 
@@ -36,6 +37,31 @@ node .\scripts\migrate-multi-workshop.mjs --dry-run
 $env:FIREBASE_SERVICE_ACCOUNT_PATH="C:\ruta\service-account.json"
 node .\scripts\migrate-multi-workshop.mjs
 ```
+
+## Comando exacto del modo single-workshop
+
+El comando usado para consolidar el proyecto actual en un solo taller fue este, cambiando solo la ruta local del JSON cuando haga falta:
+
+```powershell
+$env:FIREBASE_SERVICE_ACCOUNT_PATH="C:\ruta\service-account.json"
+$env:FIREBASE_PROJECT_ID="auto-guardian-t"
+$env:PRIMARY_WORKSHOP_NAME="Taller el suma"
+node .\scripts\migrate-multi-workshop.mjs --dry-run --single-workshop
+```
+
+Luego de validar el dry-run, la ejecucion real usa el mismo contexto sin `--dry-run`:
+
+```powershell
+$env:FIREBASE_SERVICE_ACCOUNT_PATH="C:\ruta\service-account.json"
+$env:FIREBASE_PROJECT_ID="auto-guardian-t"
+$env:PRIMARY_WORKSHOP_NAME="Taller el suma"
+node .\scripts\migrate-multi-workshop.mjs --single-workshop
+```
+
+Notas:
+
+- `PRIMARY_WORKSHOP_OWNER_UID` es opcional. Si no se define, el script prioriza un perfil activo con rol `administrator` para convertirlo en `owner`.
+- En modo `--single-workshop`, todos los perfiles y documentos operativos convergen al mismo `workshopId`.
 
 ## Limitaciones actuales
 
