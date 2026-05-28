@@ -6,8 +6,15 @@ import admin from "firebase-admin";
 const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "";
 const projectId = process.env.FIREBASE_PROJECT_ID || "auto-guardian-t";
 const dryRun = process.argv.includes("--dry-run");
+const singleWorkshopMode = process.argv.includes("--single-workshop");
 const MIGRATION_VERSION = "multi-workshop-v1";
 const BATCH_SIZE = 200;
+const primaryWorkshopName = normalizeOptional(
+  process.env.PRIMARY_WORKSHOP_NAME,
+);
+const primaryWorkshopOwnerUid = normalizeOptional(
+  process.env.PRIMARY_WORKSHOP_OWNER_UID,
+);
 
 if (!serviceAccountPath) {
   console.error(
@@ -102,10 +109,13 @@ function buildDefaultWorkshopName(profileDoc) {
   return `Taller de ${profile.fullName || profile.email || profileDoc.id}`;
 }
 
-async function ensureWorkshopForProfile(profileDoc) {
+async function ensureWorkshopForProfile(profileDoc, options = {}) {
   const profile = profileDoc.data();
   const profileUid = normalizeOptional(profile.uid || profileDoc.id);
   const defaultWorkshopId = normalizeOptional(profile.defaultWorkshopId);
+  const preferredWorkshopName =
+    normalizeOptional(options.name) || buildDefaultWorkshopName(profileDoc);
+  const preferredOwnerUid = normalizeOptional(options.ownerUserUid || profileUid);
 
   if (defaultWorkshopId) {
     const existingWorkshop = await firestore
@@ -116,10 +126,16 @@ async function ensureWorkshopForProfile(profileDoc) {
     if (existingWorkshop.exists) {
       if (!dryRun) {
         await existingWorkshop.ref.set(
-          buildMigrationMeta("profile-default-workshop", {
-            profileUid,
-            migratedAt: admin.firestore.FieldValue.serverTimestamp(),
-          }),
+          {
+            name: preferredWorkshopName,
+            ownerUserUid: preferredOwnerUid,
+            status: "active",
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            ...buildMigrationMeta("profile-default-workshop", {
+              profileUid,
+              migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }),
+          },
           { merge: true },
         );
       }
@@ -132,8 +148,8 @@ async function ensureWorkshopForProfile(profileDoc) {
   const workshopPayload = {
     id: workshopRef.id,
     sequentialId: null,
-    name: buildDefaultWorkshopName(profileDoc),
-    ownerUserUid: profileUid,
+    name: preferredWorkshopName,
+    ownerUserUid: preferredOwnerUid,
     status: "active",
     phone: profile.phone || "",
     email: profile.email || "",
@@ -153,20 +169,24 @@ async function ensureWorkshopForProfile(profileDoc) {
   return workshopRef.id;
 }
 
-async function ensureMembership(profileDoc, workshopId) {
+async function ensureMembership(profileDoc, workshopId, options = {}) {
   const profile = profileDoc.data();
   const profileUid = normalizeOptional(profile.uid || profileDoc.id);
   const membershipId = buildMembershipId(workshopId, profileUid);
+  const nextRole = normalizeOptional(options.role || profile.role) || "administrator";
+  const nextStatus = normalizeOptional(options.status || profile.status) || "active";
+  const nextWorkshopName =
+    normalizeOptional(options.workshopName) || buildDefaultWorkshopName(profileDoc);
   const membershipRef = firestore
     .collection("workshopMemberships")
     .doc(membershipId);
   const membershipPayload = {
     id: membershipId,
     workshopId,
-    workshopName: buildDefaultWorkshopName(profileDoc),
+    workshopName: nextWorkshopName,
     userUid: profileUid,
-    role: profile.role || "administrator",
-    status: profile.status || "active",
+    role: nextRole,
+    status: nextStatus,
     invitationId: profile.invitationId || null,
     invitedByUid: null,
     acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -183,6 +203,7 @@ async function ensureMembership(profileDoc, workshopId) {
     await profileDoc.ref.set(
       {
         defaultWorkshopId: workshopId,
+        role: nextRole,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         ...buildMigrationMeta("profile-workshop-context", {
           workshopId,
@@ -196,9 +217,35 @@ async function ensureMembership(profileDoc, workshopId) {
   return membershipId;
 }
 
+function choosePrimaryWorkshopOwner(profileDocs) {
+  if (!profileDocs.length) {
+    return null;
+  }
+
+  if (primaryWorkshopOwnerUid) {
+    const explicitOwner = profileDocs.find(
+      (profileDoc) => profileDoc.id === primaryWorkshopOwnerUid,
+    );
+
+    if (explicitOwner) {
+      return explicitOwner;
+    }
+  }
+
+  return (
+    profileDocs.find((profileDoc) => {
+      const profile = profileDoc.data();
+      return profile.status === "active" && profile.role === "administrator";
+    }) ||
+    profileDocs.find((profileDoc) => profileDoc.data().status === "active") ||
+    profileDocs[0]
+  );
+}
+
 async function backfillOperationalCollection(
   collectionName,
   workshopIdByUserUid,
+  fallbackWorkshopId = "",
 ) {
   const snapshot = await firestore.collection(collectionName).get();
   const summary = {
@@ -275,7 +322,7 @@ async function backfillOperationalCollection(
       }
     }
 
-    return null;
+    return normalizeOptional(fallbackWorkshopId) || null;
   };
 
   for (const document of snapshot.docs) {
@@ -322,17 +369,51 @@ async function backfillOperationalCollection(
 
 async function main() {
   const profilesSnapshot = await firestore.collection("userProfiles").get();
+  const profileDocs = profilesSnapshot.docs;
   const workshopIdByUserUid = new Map();
   const profileSummary = {
     scanned: profilesSnapshot.size,
     prepared: 0,
   };
 
-  for (const profileDoc of profilesSnapshot.docs) {
-    const workshopId = await ensureWorkshopForProfile(profileDoc);
-    await ensureMembership(profileDoc, workshopId);
-    workshopIdByUserUid.set(profileDoc.id, workshopId);
-    profileSummary.prepared += 1;
+  let fallbackWorkshopId = "";
+
+  if (singleWorkshopMode) {
+    const ownerProfileDoc = choosePrimaryWorkshopOwner(profileDocs);
+
+    if (!ownerProfileDoc) {
+      throw new Error("No hay perfiles disponibles para crear el taller inicial.");
+    }
+
+    const ownerProfile = ownerProfileDoc.data();
+    const resolvedWorkshopName =
+      primaryWorkshopName || ownerProfile.workshopName || "Taller principal";
+
+    fallbackWorkshopId = await ensureWorkshopForProfile(ownerProfileDoc, {
+      name: resolvedWorkshopName,
+      ownerUserUid: ownerProfileDoc.id,
+    });
+
+    console.log(
+      `Modo single-workshop: ${resolvedWorkshopName} (${fallbackWorkshopId}) con owner ${ownerProfile.email || ownerProfile.fullName || ownerProfileDoc.id}.`,
+    );
+
+    for (const profileDoc of profileDocs) {
+      const nextRole = profileDoc.id === ownerProfileDoc.id ? "owner" : profileDoc.data().role;
+      await ensureMembership(profileDoc, fallbackWorkshopId, {
+        role: nextRole,
+        workshopName: resolvedWorkshopName,
+      });
+      workshopIdByUserUid.set(profileDoc.id, fallbackWorkshopId);
+      profileSummary.prepared += 1;
+    }
+  } else {
+    for (const profileDoc of profileDocs) {
+      const workshopId = await ensureWorkshopForProfile(profileDoc);
+      await ensureMembership(profileDoc, workshopId);
+      workshopIdByUserUid.set(profileDoc.id, workshopId);
+      profileSummary.prepared += 1;
+    }
   }
 
   const collections = [
@@ -348,6 +429,7 @@ async function main() {
     const summary = await backfillOperationalCollection(
       collectionName,
       workshopIdByUserUid,
+      fallbackWorkshopId,
     );
     console.log(
       `${collectionName}: ${summary.prepared} preparados, ${summary.alreadyScoped} ya segmentados, ${summary.unresolved} sin resolver, ${summary.preparedWrites} escrituras en ${summary.committedBatches} lotes.`,

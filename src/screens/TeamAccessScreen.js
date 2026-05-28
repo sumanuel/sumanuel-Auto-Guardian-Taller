@@ -104,13 +104,14 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     createWorkshop,
     memberships,
     pendingInvitation,
-    renameActiveWorkshop,
     switchWorkshop,
+    updateActiveWorkshop,
   } = useAuth();
   const canManageCollaborators = hasPermission(
     userProfile?.role,
     "invitations.manage",
   );
+  const canManageWorkshop = hasPermission(userProfile?.role, "workshop.manage");
   const [adminRefreshing, setAdminRefreshing] = useState(false);
   const [adminSubmitting, setAdminSubmitting] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState([]);
@@ -122,20 +123,36 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
   const [acceptingIncomingInvitation, setAcceptingIncomingInvitation] =
     useState(false);
   const [workshopSubmitting, setWorkshopSubmitting] = useState(false);
+  const [activeWorkshopForm, setActiveWorkshopForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    address: "",
+  });
   const [createWorkshopForm, setCreateWorkshopForm] = useState({
     name: "",
     phone: "",
+    email: "",
     address: "",
   });
-  const [renameWorkshopName, setRenameWorkshopName] = useState("");
   const [invitationForm, setInvitationForm] = useState({
     email: "",
     role: USER_ROLES.MECHANIC,
   });
 
   useEffect(() => {
-    setRenameWorkshopName(activeWorkshop?.name || "");
-  }, [activeWorkshop?.name]);
+    setActiveWorkshopForm({
+      name: activeWorkshop?.name || "",
+      phone: activeWorkshop?.phone || "",
+      email: activeWorkshop?.email || "",
+      address: activeWorkshop?.address || "",
+    });
+  }, [
+    activeWorkshop?.address,
+    activeWorkshop?.email,
+    activeWorkshop?.name,
+    activeWorkshop?.phone,
+  ]);
 
   const refreshAdminData = async () => {
     if (!canManageCollaborators || !activeWorkshopId) {
@@ -241,9 +258,10 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
       const workshop = await createWorkshop({
         name: createWorkshopForm.name.trim(),
         phone: createWorkshopForm.phone.trim(),
+        email: createWorkshopForm.email.trim().toLowerCase(),
         address: createWorkshopForm.address.trim(),
       });
-      setCreateWorkshopForm({ name: "", phone: "", address: "" });
+      setCreateWorkshopForm({ name: "", phone: "", email: "", address: "" });
       await refreshAdminData();
       Alert.alert(
         "Talleres",
@@ -256,24 +274,29 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     }
   };
 
-  const handleRenameWorkshop = async () => {
-    if (!renameWorkshopName.trim()) {
+  const handleUpdateWorkshop = async () => {
+    if (!activeWorkshopForm.name.trim()) {
       Alert.alert("Talleres", "Ingresa el nombre del taller activo.");
       return;
     }
 
     try {
       setWorkshopSubmitting(true);
-      const workshop = await renameActiveWorkshop(renameWorkshopName.trim());
+      const workshop = await updateActiveWorkshop({
+        name: activeWorkshopForm.name.trim(),
+        phone: activeWorkshopForm.phone.trim(),
+        email: activeWorkshopForm.email.trim().toLowerCase(),
+        address: activeWorkshopForm.address.trim(),
+      });
       await refreshAdminData();
       Alert.alert(
         "Talleres",
-        `El taller activo ahora se llama ${workshop.name}.`,
+        `Los datos de ${workshop.name} fueron actualizados.`,
       );
     } catch (error) {
       Alert.alert(
         "Talleres",
-        error?.message || "No se pudo renombrar el taller activo.",
+        error?.message || "No se pudo actualizar el taller activo.",
       );
     } finally {
       setWorkshopSubmitting(false);
@@ -540,47 +563,119 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
             Gestion del taller activo
           </Text>
           <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-            Renombra el taller actual o crea uno nuevo sin salir de la app.
+            Ajusta nombre, contacto y direccion del taller activo o crea uno nuevo sin salir de la app.
           </Text>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Renombrar taller activo
+            <Text style={[styles.fieldLabel, { color: colors.text }]}> 
+              Datos del taller activo
             </Text>
-            <TextInput
-              onChangeText={setRenameWorkshopName}
-              placeholder="Nombre del taller activo"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={renameWorkshopName}
-            />
-            <Pressable
-              disabled={workshopSubmitting || authBusy || !activeWorkshopId}
-              onPress={handleRenameWorkshop}
-              style={[
-                styles.secondaryFilledAction,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.secondaryFilledActionText,
-                  { color: colors.text },
-                ]}
-              >
-                {workshopSubmitting ? "Guardando..." : "Renombrar taller"}
+            {canManageWorkshop ? (
+              <>
+                <TextInput
+                  onChangeText={(value) =>
+                    setActiveWorkshopForm((current) => ({
+                      ...current,
+                      name: value,
+                    }))
+                  }
+                  placeholder="Nombre del taller activo"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={activeWorkshopForm.name}
+                />
+                <TextInput
+                  onChangeText={(value) =>
+                    setActiveWorkshopForm((current) => ({
+                      ...current,
+                      phone: value,
+                    }))
+                  }
+                  placeholder="Telefono del taller"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={activeWorkshopForm.phone}
+                />
+                <TextInput
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  onChangeText={(value) =>
+                    setActiveWorkshopForm((current) => ({
+                      ...current,
+                      email: value,
+                    }))
+                  }
+                  placeholder="Correo del taller"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={activeWorkshopForm.email}
+                />
+                <TextInput
+                  onChangeText={(value) =>
+                    setActiveWorkshopForm((current) => ({
+                      ...current,
+                      address: value,
+                    }))
+                  }
+                  placeholder="Direccion del taller"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                  ]}
+                  value={activeWorkshopForm.address}
+                />
+                <Pressable
+                  disabled={workshopSubmitting || authBusy || !activeWorkshopId}
+                  onPress={handleUpdateWorkshop}
+                  style={[
+                    styles.secondaryFilledAction,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.secondaryFilledActionText,
+                      { color: colors.text },
+                    ]}
+                  >
+                    {workshopSubmitting ? "Guardando..." : "Guardar datos del taller"}
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+                Solo el propietario puede cambiar la identidad y contacto del taller, igual que en tienda-app.
               </Text>
-            </Pressable>
+            )}
           </View>
 
           <View style={styles.formGroup}>
@@ -626,6 +721,27 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
               value={createWorkshopForm.phone}
             />
             <TextInput
+              autoCapitalize="none"
+              keyboardType="email-address"
+              onChangeText={(value) =>
+                setCreateWorkshopForm((current) => ({
+                  ...current,
+                  email: value,
+                }))
+              }
+              placeholder="Correo del taller"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={createWorkshopForm.email}
+            />
+            <TextInput
               onChangeText={(value) =>
                 setCreateWorkshopForm((current) => ({
                   ...current,
@@ -645,17 +761,23 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
               value={createWorkshopForm.address}
             />
             <Pressable
-              disabled={workshopSubmitting || authBusy}
+              disabled={workshopSubmitting || authBusy || !canManageWorkshop}
               onPress={handleCreateWorkshop}
               style={[
                 styles.primaryAction,
                 { backgroundColor: colors.primary },
+                !canManageWorkshop ? styles.disabledAction : null,
               ]}
             >
               <Text style={[styles.primaryActionText, { color: colors.white }]}>
                 {workshopSubmitting ? "Creando taller..." : "Crear taller"}
               </Text>
             </Pressable>
+            {!canManageWorkshop ? (
+              <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+                Solo el propietario puede abrir nuevos talleres desde esta seccion.
+              </Text>
+            ) : null}
           </View>
         </View>
 
@@ -1762,6 +1884,9 @@ const styles = StyleSheet.create({
   secondaryFilledActionText: {
     fontSize: rf(13),
     fontWeight: "800",
+  },
+  disabledAction: {
+    opacity: 0.55,
   },
   approveAction: {
     borderWidth: 1,

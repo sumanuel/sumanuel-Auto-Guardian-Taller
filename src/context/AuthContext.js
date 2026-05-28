@@ -23,6 +23,7 @@ import {
   ensurePersonalWorkshopForUser,
   renameWorkshop,
   resolveUserWorkshopContext,
+  updateWorkshop,
   upsertWorkshopMembership,
   createWorkshop as createWorkshopRecord,
 } from "../services/workshops/workshopService";
@@ -328,6 +329,27 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateActiveWorkshop = async ({ name, phone, email, address } = {}) => {
+    if (!activeWorkshopId) {
+      throw new Error("No hay un taller activo para actualizar.");
+    }
+
+    setAuthBusy(true);
+
+    try {
+      const workshop = await updateWorkshop(activeWorkshopId, {
+        name,
+        phone,
+        email,
+        address,
+      });
+      await refreshWorkshopContext(activeWorkshopId);
+      return workshop;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
   const signOutUser = async () => {
     setAuthBusy(true);
     try {
@@ -351,6 +373,7 @@ export function AuthProvider({ children }) {
       createWorkshop,
       refreshWorkshopContext,
       renameActiveWorkshop,
+      updateActiveWorkshop,
       recoverPassword,
       signIn,
       signUp,

@@ -288,17 +288,19 @@ export async function createWorkshop({
   });
 }
 
-export async function renameWorkshop(workshopId, nextName) {
+export async function updateWorkshop(workshopId, changes = {}) {
   const normalizedWorkshopId = normalizeOptional(workshopId);
-  const normalizedName = normalizeOptional(nextName);
+  const normalizedName = normalizeOptional(changes.name);
 
   if (!normalizedWorkshopId) {
-    throw new Error("No se encontro el taller a renombrar.");
+    throw new Error("No se encontro el taller a actualizar.");
   }
 
   if (!normalizedName) {
     throw new Error("Ingresa el nombre del taller.");
   }
+
+  const currentWorkshop = await getWorkshopById(normalizedWorkshopId);
 
   const workshopRef = doc(
     firestore,
@@ -307,20 +309,29 @@ export async function renameWorkshop(workshopId, nextName) {
   );
   await updateDoc(workshopRef, {
     name: normalizedName,
+    phone: normalizeOptional(changes.phone),
+    email: normalizeOptional(changes.email).toLowerCase(),
+    address: normalizeOptional(changes.address),
     updatedAt: serverTimestamp(),
   });
 
-  const memberships = await listWorkshopMemberships(normalizedWorkshopId);
-  await Promise.all(
-    memberships.map((membership) =>
-      updateDoc(doc(firestore, membershipCollection.name, membership.refId), {
-        workshopName: normalizedName,
-        updatedAt: serverTimestamp(),
-      }),
-    ),
-  );
+  if (currentWorkshop?.name !== normalizedName) {
+    const memberships = await listWorkshopMemberships(normalizedWorkshopId);
+    await Promise.all(
+      memberships.map((membership) =>
+        updateDoc(doc(firestore, membershipCollection.name, membership.refId), {
+          workshopName: normalizedName,
+          updatedAt: serverTimestamp(),
+        }),
+      ),
+    );
+  }
 
   return getWorkshopById(normalizedWorkshopId);
+}
+
+export async function renameWorkshop(workshopId, nextName) {
+  return updateWorkshop(workshopId, { name: nextName });
 }
 
 export async function upsertWorkshopMembership({
