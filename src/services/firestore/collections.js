@@ -77,4 +77,11 @@ export const firestoreCollections = {
     padding: 6,
     idStrategy: "sequential-doc-id",
   },
+  stockMovements: {
+    name: "stockMovements",
+    counterKey: "stockMovements",
+    prefix: "MOV-",
+    padding: 6,
+    idStrategy: "sequential-doc-id",
+  },
 };

@@ -9,6 +9,7 @@ import DiagnosticFormScreen from "./src/screens/DiagnosticFormScreen";
 import DiagnosticsScreen from "./src/screens/DiagnosticsScreen";
 import SparePartFormScreen from "./src/screens/SparePartFormScreen";
 import SparePartsScreen from "./src/screens/SparePartsScreen";
+import StockMovementFormScreen from "./src/screens/StockMovementFormScreen";
 import StockItemFormScreen from "./src/screens/StockItemFormScreen";
 import StockItemsScreen from "./src/screens/StockItemsScreen";
 import TeamAccessScreen from "./src/screens/TeamAccessScreen";
@@ -37,6 +38,7 @@ const APP_SCREENS = {
   SPARE_PART_FORM: "spare-part-form",
   STOCK_ITEMS: "stock-items",
   STOCK_ITEM_FORM: "stock-item-form",
+  STOCK_MOVEMENT_FORM: "stock-movement-form",
   TEAM_ACCESS: "team-access",
   MORE: "more",
 };
@@ -101,6 +103,10 @@ function AppContent() {
     stockItem: null,
     draft: null,
   });
+  const [stockMovementFormContext, setStockMovementFormContext] = useState({
+    stockItem: null,
+    movementType: "in",
+  });
   const [stockItemsViewState, setStockItemsViewState] = useState({
     selectedStockItemId: null,
   });
@@ -126,6 +132,10 @@ function AppContent() {
     }
 
     if (activeScreen === APP_SCREENS.STOCK_ITEM_FORM) {
+      return APP_SCREENS.MORE;
+    }
+
+    if (activeScreen === APP_SCREENS.STOCK_MOVEMENT_FORM) {
       return APP_SCREENS.MORE;
     }
 
@@ -176,6 +186,10 @@ function AppContent() {
     setStockItemFormContext({
       stockItem: null,
       draft: null,
+    });
+    setStockMovementFormContext({
+      stockItem: null,
+      movementType: "in",
     });
     setStockItemsViewState({
       selectedStockItemId: null,
@@ -233,6 +247,11 @@ function AppContent() {
         }
 
         if (activeScreen === APP_SCREENS.STOCK_ITEM_FORM) {
+          setActiveScreen(APP_SCREENS.STOCK_ITEMS);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.STOCK_MOVEMENT_FORM) {
           setActiveScreen(APP_SCREENS.STOCK_ITEMS);
           return true;
         }
@@ -622,6 +641,13 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.STOCK_ITEM_FORM);
           }}
+          onOpenStockMovementForm={(stockItem, options = {}) => {
+            setStockMovementFormContext({
+              stockItem: stockItem || null,
+              movementType: options.movementType || "in",
+            });
+            setActiveScreen(APP_SCREENS.STOCK_MOVEMENT_FORM);
+          }}
           userProfile={userProfile}
           viewState={stockItemsViewState}
         />
@@ -633,6 +659,22 @@ function AppContent() {
         <StockItemFormScreen
           initialDraft={stockItemFormContext.draft}
           initialStockItem={stockItemFormContext.stockItem}
+          onBack={() => setActiveScreen(APP_SCREENS.STOCK_ITEMS)}
+          onSaved={(savedStockItemId) => {
+            setStockItemsViewState({
+              selectedStockItemId: savedStockItemId,
+            });
+            setActiveScreen(APP_SCREENS.STOCK_ITEMS);
+          }}
+        />
+      );
+    }
+
+    if (activeScreen === APP_SCREENS.STOCK_MOVEMENT_FORM) {
+      return (
+        <StockMovementFormScreen
+          initialMovementType={stockMovementFormContext.movementType}
+          initialStockItem={stockMovementFormContext.stockItem}
           onBack={() => setActiveScreen(APP_SCREENS.STOCK_ITEMS)}
           onSaved={(savedStockItemId) => {
             setStockItemsViewState({

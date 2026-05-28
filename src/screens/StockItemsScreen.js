@@ -58,9 +58,30 @@ function getInventoryState(item) {
   };
 }
 
+function getMovementLabel(movementType) {
+  return movementType === "out" ? "Salida" : "Entrada";
+}
+
+function formatMovementTimestamp(timestamp) {
+  const date = timestamp?.toDate ? timestamp.toDate() : null;
+
+  if (!date || Number.isNaN(date.getTime())) {
+    return "Sin registro";
+  }
+
+  return `${date.toLocaleDateString("es-VE")} ${date.toLocaleTimeString(
+    "es-VE",
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+  )}`;
+}
+
 export default function StockItemsScreen({
   onBack,
   onOpenStockItemForm,
+  onOpenStockMovementForm,
   userProfile,
   viewState,
 }) {
@@ -412,6 +433,82 @@ export default function StockItemsScreen({
                       >
                         {item.supplier || "Sin proveedor"}
                       </Text>
+                      {item.lastMovementType ? (
+                        <Text
+                          style={[
+                            styles.rowMeta,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          Ultimo movimiento:{" "}
+                          {getMovementLabel(item.lastMovementType)} de{" "}
+                          {item.lastMovementQuantity || 0} ·{" "}
+                          {formatMovementTimestamp(item.lastMovementAt)}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    <View style={styles.movementActionRow}>
+                      <Pressable
+                        disabled={!canManageInventory}
+                        onPress={() =>
+                          onOpenStockMovementForm?.(item, {
+                            movementType: "in",
+                          })
+                        }
+                        style={[
+                          styles.movementAction,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.accent,
+                            opacity: canManageInventory ? 1 : 0.45,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          color={colors.accent}
+                          name="arrow-down-outline"
+                          size={rf(16)}
+                        />
+                        <Text
+                          style={[
+                            styles.movementActionText,
+                            { color: colors.text },
+                          ]}
+                        >
+                          Entrada
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        disabled={!canManageInventory}
+                        onPress={() =>
+                          onOpenStockMovementForm?.(item, {
+                            movementType: "out",
+                          })
+                        }
+                        style={[
+                          styles.movementAction,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.warning,
+                            opacity: canManageInventory ? 1 : 0.45,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          color={colors.warning}
+                          name="arrow-up-outline"
+                          size={rf(16)}
+                        />
+                        <Text
+                          style={[
+                            styles.movementActionText,
+                            { color: colors.text },
+                          ]}
+                        >
+                          Salida
+                        </Text>
+                      </Pressable>
                     </View>
                   </View>
 
@@ -642,6 +739,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     gap: spacing.sm,
+  },
+  movementActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  movementAction: {
+    minHeight: rf(38),
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  movementActionText: {
+    fontSize: rf(12),
+    fontWeight: "700",
   },
   iconAction: {
     width: rf(40),
