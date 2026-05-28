@@ -108,8 +108,10 @@ export async function createProgressEntry({
     workshopId,
     workOrderId: normalizedWorkOrderId,
     diagnosticId:
-      normalizeOptional(diagnosticId) || normalizeOptional(workOrder.diagnosticId),
-    vehicleId: normalizeOptional(vehicleId) || normalizeOptional(workOrder.vehicleId),
+      normalizeOptional(diagnosticId) ||
+      normalizeOptional(workOrder.diagnosticId),
+    vehicleId:
+      normalizeOptional(vehicleId) || normalizeOptional(workOrder.vehicleId),
     authorUid: normalizeOptional(authorUid),
     type: normalizeOptional(type) || "note",
     message: normalizeOptional(message),

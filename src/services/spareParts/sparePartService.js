@@ -37,22 +37,33 @@ export function canDeleteSparePartStatus(status) {
   return deletableSparePartStatuses.includes(normalizeOptional(status));
 }
 
-async function resolveSparePartContext({ diagnosticId, workOrderId }, workshopId) {
+async function resolveSparePartContext(
+  { diagnosticId, workOrderId },
+  workshopId,
+) {
   const normalizedDiagnosticId = normalizeOptional(diagnosticId);
   const normalizedWorkOrderId = normalizeOptional(workOrderId);
   let relatedDiagnostic = null;
   let relatedWorkOrder = null;
 
   if (normalizedDiagnosticId) {
-    relatedDiagnostic = await getEntityRecord("diagnostics", normalizedDiagnosticId);
+    relatedDiagnostic = await getEntityRecord(
+      "diagnostics",
+      normalizedDiagnosticId,
+    );
 
     if (!relatedDiagnostic || relatedDiagnostic.workshopId !== workshopId) {
-      throw new Error("El diagnostico del repuesto no pertenece al taller activo.");
+      throw new Error(
+        "El diagnostico del repuesto no pertenece al taller activo.",
+      );
     }
   }
 
   if (normalizedWorkOrderId) {
-    relatedWorkOrder = await getEntityRecord("workOrders", normalizedWorkOrderId);
+    relatedWorkOrder = await getEntityRecord(
+      "workOrders",
+      normalizedWorkOrderId,
+    );
 
     if (!relatedWorkOrder || relatedWorkOrder.workshopId !== workshopId) {
       throw new Error("La orden del repuesto no pertenece al taller activo.");
@@ -68,7 +79,9 @@ async function resolveSparePartContext({ diagnosticId, workOrderId }, workshopId
   }
 
   return {
-    diagnosticId: normalizedDiagnosticId || normalizeOptional(relatedWorkOrder?.diagnosticId),
+    diagnosticId:
+      normalizedDiagnosticId ||
+      normalizeOptional(relatedWorkOrder?.diagnosticId),
     workOrderId: normalizedWorkOrderId,
   };
 }
