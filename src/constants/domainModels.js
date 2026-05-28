@@ -17,6 +17,7 @@ export const userProfileModel = {
     "role",
     "status",
     "invitationId",
+    "defaultWorkshopId",
     "createdAt",
     "updatedAt",
     "lastLoginAt",
@@ -34,6 +35,8 @@ export const staffInvitationModel = {
     "id",
     "invitationCode",
     "sequentialId",
+    "workshopId",
+    "workshopName",
     "email",
     "emailNormalized",
     "role",
@@ -47,6 +50,44 @@ export const staffInvitationModel = {
   ],
   defaults: {
     status: INVITATION_STATUSES.PENDING,
+  },
+};
+
+export const workshopModel = {
+  collection: "workshops",
+  documentId: "sequential",
+  fields: [
+    "id",
+    "sequentialId",
+    "name",
+    "ownerUserUid",
+    "status",
+    "phone",
+    "email",
+    "address",
+    "createdAt",
+    "updatedAt",
+  ],
+};
+
+export const workshopMembershipModel = {
+  collection: "workshopMemberships",
+  documentId: "workshopId__userUid",
+  fields: [
+    "id",
+    "workshopId",
+    "userUid",
+    "role",
+    "status",
+    "invitationId",
+    "invitedByUid",
+    "acceptedAt",
+    "createdAt",
+    "updatedAt",
+  ],
+  defaults: {
+    role: USER_ROLES.MECHANIC,
+    status: USER_STATUSES.ACTIVE,
   },
 };
 

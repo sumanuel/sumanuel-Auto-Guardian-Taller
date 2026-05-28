@@ -38,6 +38,7 @@ export async function createUserProfileFromInvitation({
   phone,
   role,
   invitationId,
+  defaultWorkshopId,
 }) {
   const userCodeReservation = await reserveSequentialId(
     userProfileCollection.counterKey,
@@ -61,6 +62,7 @@ export async function createUserProfileFromInvitation({
     role,
     status: nextStatus,
     invitationId,
+    defaultWorkshopId: defaultWorkshopId || null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
@@ -82,6 +84,47 @@ export async function touchUserProfileLogin(uid) {
   });
 }
 
+export async function updateUserProfileBasicInfo(uid, payload) {
+  const documentRef = doc(firestore, userProfileCollection.name, uid);
+  const nextPayload = {
+    updatedAt: serverTimestamp(),
+  };
+
+  if (payload.fullName !== undefined) {
+    nextPayload.fullName = payload.fullName;
+  }
+
+  if (payload.phone !== undefined) {
+    nextPayload.phone = payload.phone;
+  }
+
+  if (payload.status !== undefined) {
+    nextPayload.status = payload.status;
+  }
+
+  await updateDoc(documentRef, nextPayload);
+}
+
+export async function updateUserProfileWorkshopContext(
+  uid,
+  { defaultWorkshopId, role },
+) {
+  const documentRef = doc(firestore, userProfileCollection.name, uid);
+  const nextPayload = {
+    updatedAt: serverTimestamp(),
+  };
+
+  if (defaultWorkshopId !== undefined) {
+    nextPayload.defaultWorkshopId = defaultWorkshopId || null;
+  }
+
+  if (role !== undefined) {
+    nextPayload.role = role;
+  }
+
+  await updateDoc(documentRef, nextPayload);
+}
+
 export async function promoteSelfProfileToAdministrator(uid) {
   const documentRef = doc(firestore, userProfileCollection.name, uid);
   await updateDoc(documentRef, {
@@ -97,6 +140,7 @@ export async function createManualUserProfile({
   phone,
   role,
   status,
+  defaultWorkshopId,
 }) {
   const resolvedStatus =
     status ||
@@ -115,6 +159,7 @@ export async function createManualUserProfile({
 
   return createUserProfileFromInvitation({
     ...profilePayload,
+    defaultWorkshopId: defaultWorkshopId || null,
     invitationId: null,
   });
 }

@@ -37,6 +37,7 @@ Ultima actualizacion: 27-05-2026
 - Completado: asociacion de uno o varios vehiculos por cliente y CRUD base de vehiculos desde la pantalla de clientes.
 - Completado: vista de detalle real por cliente con acciones rapidas, vehiculos asociados, acceso directo a diagnostico por vehiculo y boton flotante para alta.
 - Completado: directorio formal de personal tecnico con ficha editable de nombre, telefono, rol y estado desde la pantalla de equipo.
+- Pendiente: evolucionar el modelo actual de taller unico a arquitectura multi-taller con membresias, taller activo e invitaciones por taller.
 - Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
 
 ## Fase 0. Fundacion tecnica
@@ -54,13 +55,25 @@ Ultima actualizacion: 27-05-2026
 
 ## Fase 1. Acceso y cuentas
 
-| ID   | Aspecto                                                  | Estado     | Prioridad | Dependencias     | Completado |
-| ---- | -------------------------------------------------------- | ---------- | --------- | ---------------- | ---------- |
-| F1-1 | Login de usuarios                                        | Completado | Alta      | F0-2, F0-3       | 30-04-2026 |
-| F1-2 | Registro de usuarios autorizados                         | Completado | Alta      | F0-2, F0-3       | 21-05-2026 |
-| F1-3 | Recuperacion de contrasena                               | Completado | Alta      | F0-2             | 30-04-2026 |
-| F1-4 | Persistencia de sesion y cierre de sesion                | Completado | Alta      | F1-1             | 30-04-2026 |
-| F1-5 | Validaciones, mensajes de error y estados vacios de auth | Completado | Media     | F1-1, F1-2, F1-3 | 30-04-2026 |
+| ID   | Aspecto                                                                                | Estado     | Prioridad | Dependencias     | Completado |
+| ---- | -------------------------------------------------------------------------------------- | ---------- | --------- | ---------------- | ---------- |
+| F1-1 | Login de usuarios                                                                      | Completado | Alta      | F0-2, F0-3       | 30-04-2026 |
+| F1-2 | Registro de usuarios autorizados                                                       | Completado | Alta      | F0-2, F0-3       | 21-05-2026 |
+| F1-3 | Recuperacion de contrasena                                                             | Completado | Alta      | F0-2             | 30-04-2026 |
+| F1-4 | Persistencia de sesion y cierre de sesion                                              | Completado | Alta      | F1-1             | 30-04-2026 |
+| F1-5 | Validaciones, mensajes de error y estados vacios de auth                               | Completado | Media     | F1-1, F1-2, F1-3 | 30-04-2026 |
+| F1-6 | Evolucionar sesion y perfil hacia contexto multi-taller con taller activo y membresias | Pendiente  | Alta      | F1-1, F1-4       | -          |
+
+## Fase 1B. Multi-taller
+
+| ID    | Aspecto                                                                 | Estado    | Prioridad | Dependencias | Completado |
+| ----- | ----------------------------------------------------------------------- | --------- | --------- | ------------ | ---------- |
+| F1B-1 | Crear modelo de workshops y workshopMemberships                         | Pendiente | Alta      | F0-4, F1-6   | -          |
+| F1B-2 | Adaptar invitaciones para asociarlas a un taller                        | Pendiente | Alta      | F0-5, F1B-1  | -          |
+| F1B-3 | Agregar selector de taller activo y gestion de talleres y colaboradores | Pendiente | Alta      | F1B-1, F1B-2 | -          |
+| F1B-4 | Particionar entidades operativas por workshopId                         | Pendiente | Alta      | F1B-1        | -          |
+| F1B-5 | Migrar datos existentes al modelo multi-taller                          | Pendiente | Alta      | F1B-1, F1B-4 | -          |
+| F1B-6 | Endurecer reglas de Firestore para el modelo multi-taller               | Pendiente | Alta      | F1B-2, F1B-4 | -          |
 
 ## Fase 2. Clientes y vehiculos
 
@@ -151,6 +164,7 @@ Ultima actualizacion: 27-05-2026
 - 21-05-2026: diagnosticos y ordenes pasan a asignar mecanicos reales desde userProfiles, y las ordenes ganan detalle operativo con registro de avances y cronologia visible por orden.
 - 22-05-2026: clientes agrega campo de identificacion, la busqueda se limita a identificacion o nombre, la lista principal expone vehiculos asociados y la ficha del cliente abre diagnosticos por vehiculo sin volver a seleccionar cliente ni unidad.
 - 27-05-2026: el formulario de diagnosticos gana ayudas visuales, costo estimado y mejor resumen para edicion; ademas, ordenes ahora abre la lista de repuestos filtrada por orden y el modulo de repuestos queda reducido a los estados solicitado, recibido e instalado.
+- 28-05-2026: se documenta la arquitectura objetivo para evolucionar de taller unico a multi-taller, con talleres, membresias, taller activo, invitaciones por taller y migracion de datos operativos.
 
 ## Decisiones base cerradas
 

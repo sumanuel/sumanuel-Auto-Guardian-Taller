@@ -25,6 +25,7 @@ import { firestoreCollections } from "../services/firestore/collections";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
 const roleLabels = {
+  owner: "Dueno",
   administrator: "Administrador",
   reception: "Recepcion",
   mechanic: "Mecanico",

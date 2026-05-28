@@ -1,4 +1,5 @@
 export const USER_ROLES = {
+  OWNER: "owner",
   ADMINISTRATOR: "administrator",
   RECEPTION: "reception",
   MECHANIC: "mechanic",
@@ -29,6 +30,20 @@ export const REGISTRATION_POLICY = {
 };
 
 export const ROLE_PERMISSIONS = {
+  [USER_ROLES.OWNER]: [
+    "users.manage",
+    "invitations.manage",
+    "clients.manage",
+    "vehicles.manage",
+    "diagnostics.manage",
+    "workOrders.manage",
+    "progress.manage",
+    "spareParts.manage",
+    "payments.manage",
+    "dashboard.view",
+    "settings.manage",
+    "workshop.manage",
+  ],
   [USER_ROLES.ADMINISTRATOR]: [
     "users.manage",
     "invitations.manage",

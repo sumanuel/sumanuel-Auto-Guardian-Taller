@@ -7,6 +7,20 @@ export const firestoreCollections = {
     idStrategy: "auth-uid",
     sequentialField: "userCode",
   },
+  workshops: {
+    name: "workshops",
+    counterKey: "workshops",
+    prefix: "TAL-",
+    padding: 6,
+    idStrategy: "sequential-doc-id",
+  },
+  workshopMemberships: {
+    name: "workshopMemberships",
+    counterKey: "workshopMemberships",
+    prefix: "MEM-",
+    padding: 6,
+    idStrategy: "manual-doc-id",
+  },
   staffInvitations: {
     name: "staffInvitations",
     counterKey: "staffInvitations",

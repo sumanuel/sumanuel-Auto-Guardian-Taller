@@ -20,6 +20,13 @@ import { firestore } from "../firebase/config";
 import { patchEntityRecord } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
 import { reserveSequentialId } from "../firestore/sequentialIds";
+import { getActiveWorkshopId } from "../workshops/workshopSession";
+import {
+  getWorkshopMembership,
+  listWorkshopMemberships,
+  upsertWorkshopMembership,
+} from "../workshops/workshopService";
+import { getUserProfileByUid } from "../auth/userProfiles";
 
 const invitationCollection = firestoreCollections.staffInvitations;
 const userProfileCollection = firestoreCollections.userProfiles;
@@ -55,13 +62,57 @@ function sortProfiles(items) {
   });
 }
 
+async function listProfilesForActiveWorkshop() {
+  const activeWorkshopId = getActiveWorkshopId();
+
+  if (!activeWorkshopId) {
+    return [];
+  }
+
+  const memberships = await listWorkshopMemberships(activeWorkshopId);
+  const profiles = await Promise.all(
+    memberships.map(async (membership) => {
+      const profile = await getUserProfileByUid(membership.userUid);
+
+      if (!profile) {
+        return null;
+      }
+
+      return {
+        ...profile,
+        role: membership.role || profile.role,
+        membershipStatus: membership.status,
+        workshopId: membership.workshopId,
+      };
+    }),
+  );
+
+  return sortProfiles(
+    profiles.filter(Boolean).filter((profile) =>
+      [
+        USER_ROLES.OWNER,
+        USER_ROLES.ADMINISTRATOR,
+        USER_ROLES.RECEPTION,
+        USER_ROLES.MECHANIC,
+      ].includes(profile.role),
+    ),
+  );
+}
+
 export async function createStaffInvitation({
   email,
   role,
   invitedByUid,
+  workshopId,
+  workshopName,
   expiresInDays = 7,
 }) {
   const normalizedEmail = normalizeEmail(email);
+
+  if (!workshopId) {
+    throw new Error("Selecciona un taller activo antes de invitar colaboradores.");
+  }
+
   const invitationRef = doc(
     firestore,
     invitationCollection.name,
@@ -93,6 +144,8 @@ export async function createStaffInvitation({
       id: invitationCode,
       invitationCode,
       sequentialId: invitationReservation.sequence,
+      workshopId,
+      workshopName: workshopName || "Taller",
       email: normalizedEmail,
       emailNormalized: normalizedEmail,
       role,
@@ -112,6 +165,8 @@ export async function createStaffInvitation({
     id: invitationCode,
     invitationCode,
     sequentialId: invitationReservation.sequence,
+    workshopId,
+    workshopName: workshopName || "Taller",
     email: normalizedEmail,
     emailNormalized: normalizedEmail,
     role,
@@ -124,10 +179,17 @@ export async function createStaffInvitation({
 }
 
 export async function listPendingInvitations(pageSize = 10) {
+  const activeWorkshopId = getActiveWorkshopId();
+
+  if (!activeWorkshopId) {
+    return [];
+  }
+
   const collectionRef = collection(firestore, invitationCollection.name);
   const snapshot = await getDocs(
     query(
       collectionRef,
+      where("workshopId", "==", activeWorkshopId),
       where("status", "==", INVITATION_STATUSES.PENDING),
       limit(pageSize),
     ),
@@ -148,21 +210,11 @@ export async function cancelStaffInvitation(invitationId) {
 }
 
 export async function listPendingApprovals(pageSize = 10) {
-  const collectionRef = collection(firestore, userProfileCollection.name);
-  const snapshot = await getDocs(
-    query(
-      collectionRef,
-      where("status", "==", USER_STATUSES.PENDING_APPROVAL),
-      limit(pageSize),
-    ),
-  );
+  const profiles = await listProfilesForActiveWorkshop();
 
-  return sortByCreatedAtDesc(
-    snapshot.docs.map((item) => ({
-      refId: item.id,
-      ...item.data(),
-    })),
-  );
+  return profiles
+    .filter((profile) => profile.status === USER_STATUSES.PENDING_APPROVAL)
+    .slice(0, pageSize);
 }
 
 export async function approveUserProfile(uid) {
@@ -174,23 +226,7 @@ export async function approveUserProfile(uid) {
 }
 
 export async function listStaffProfiles() {
-  const collectionRef = collection(firestore, userProfileCollection.name);
-  const snapshot = await getDocs(query(collectionRef, limit(100)));
-
-  return sortProfiles(
-    snapshot.docs
-      .map((item) => ({
-        refId: item.id,
-        ...item.data(),
-      }))
-      .filter((profile) =>
-        [
-          USER_ROLES.ADMINISTRATOR,
-          USER_ROLES.RECEPTION,
-          USER_ROLES.MECHANIC,
-        ].includes(profile.role),
-      ),
-  );
+  return listProfilesForActiveWorkshop();
 }
 
 export async function listMechanicProfiles() {
@@ -206,9 +242,46 @@ export async function listMechanicProfiles() {
 }
 
 export async function updateStaffProfile(uid, payload) {
+  const activeWorkshopId = getActiveWorkshopId();
+
+  if (!activeWorkshopId) {
+    throw new Error("No hay un taller activo para actualizar el colaborador.");
+  }
+
   const documentRef = doc(firestore, userProfileCollection.name, uid);
-  await updateDoc(documentRef, {
-    ...payload,
+  const profilePayload = {
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  if (payload.fullName !== undefined) {
+    profilePayload.fullName = payload.fullName;
+  }
+
+  if (payload.phone !== undefined) {
+    profilePayload.phone = payload.phone;
+  }
+
+  if (payload.status !== undefined) {
+    profilePayload.status = payload.status;
+  }
+
+  await updateDoc(documentRef, profilePayload);
+
+  if (payload.role !== undefined) {
+    const currentMembership = await getWorkshopMembership(activeWorkshopId, uid);
+
+    if (!currentMembership) {
+      throw new Error("La membresia del colaborador no existe en este taller.");
+    }
+
+    await upsertWorkshopMembership({
+      workshopId: activeWorkshopId,
+      userUid: uid,
+      role: payload.role,
+      status: currentMembership.status,
+      invitationId: currentMembership.invitationId,
+      invitedByUid: currentMembership.invitedByUid,
+      acceptedAt: currentMembership.acceptedAt,
+    });
+  }
 }

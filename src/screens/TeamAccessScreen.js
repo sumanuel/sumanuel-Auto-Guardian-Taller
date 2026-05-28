@@ -16,6 +16,7 @@ import {
   USER_ROLES,
   USER_STATUSES,
 } from "../constants/accessControl";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
   approveUserProfile,
@@ -29,6 +30,7 @@ import {
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
 const roleLabels = {
+  owner: "Dueno",
   administrator: "Administrador",
   reception: "Recepcion",
   mechanic: "Mecanico",
@@ -94,6 +96,15 @@ function formatDeliveryStatus(value) {
 
 export default function TeamAccessScreen({ onBack, userProfile }) {
   const { colors } = useTheme();
+  const {
+    acceptPendingInvitation,
+    activeWorkshop,
+    activeWorkshopId,
+    authBusy,
+    memberships,
+    pendingInvitation,
+    switchWorkshop,
+  } = useAuth();
   const canManageCollaborators = hasPermission(
     userProfile?.role,
     "invitations.manage",
@@ -105,13 +116,16 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
   const [staffProfiles, setStaffProfiles] = useState([]);
   const [editingStaffId, setEditingStaffId] = useState(null);
   const [staffForm, setStaffForm] = useState(buildStaffForm());
+  const [switchingWorkshopId, setSwitchingWorkshopId] = useState(null);
+  const [acceptingIncomingInvitation, setAcceptingIncomingInvitation] =
+    useState(false);
   const [invitationForm, setInvitationForm] = useState({
     email: "",
     role: USER_ROLES.MECHANIC,
   });
 
   const refreshAdminData = async () => {
-    if (!canManageCollaborators) {
+    if (!canManageCollaborators || !activeWorkshopId) {
       setPendingInvitations([]);
       setPendingApprovals([]);
       setStaffProfiles([]);
@@ -157,7 +171,51 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
 
   useEffect(() => {
     refreshAdminData();
-  }, [canManageCollaborators]);
+  }, [canManageCollaborators, activeWorkshopId]);
+
+  const handleSwitchWorkshop = async (workshopId) => {
+    try {
+      setSwitchingWorkshopId(workshopId);
+      await switchWorkshop(workshopId);
+      await refreshAdminData();
+      Alert.alert("Talleres", "El taller activo fue actualizado.");
+    } catch (error) {
+      Alert.alert(
+        "Talleres",
+        error?.message || "No se pudo cambiar el taller activo.",
+      );
+    } finally {
+      setSwitchingWorkshopId(null);
+    }
+  };
+
+  const handleAcceptIncomingInvitation = async () => {
+    if (!pendingInvitation) {
+      return;
+    }
+
+    try {
+      setAcceptingIncomingInvitation(true);
+      await acceptPendingInvitation({
+        fullName: userProfile?.fullName || "",
+        phone: userProfile?.phone || "",
+        invitationCode:
+          pendingInvitation.invitationCode || pendingInvitation.id || "",
+      });
+      await refreshAdminData();
+      Alert.alert(
+        "Talleres",
+        "La invitacion fue aceptada y puedes operar en ese taller.",
+      );
+    } catch (error) {
+      Alert.alert(
+        "Talleres",
+        error?.message || "No se pudo aceptar la invitacion pendiente.",
+      );
+    } finally {
+      setAcceptingIncomingInvitation(false);
+    }
+  };
 
   const handleCreateInvitation = async () => {
     const trimmedEmail = invitationForm.email.trim().toLowerCase();
@@ -179,6 +237,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
         email: trimmedEmail,
         role: invitationForm.role,
         invitedByUid: userProfile?.uid,
+        workshopId: activeWorkshopId,
+        workshopName: activeWorkshop?.name,
       });
 
       setInvitationForm((current) => ({
@@ -303,9 +363,139 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
         <WorkshopScreenHeader
           onBack={onBack}
           section="Control administrativo"
-          subtitle="Invitaciones, aprobaciones y fichas internas con una lectura mas tecnica y compacta."
-          title="Accesos e invitaciones"
+          subtitle="Taller activo, invitaciones y colaboradores con cambio de contexto dentro de la misma app."
+          title="Talleres y colaboradores"
         />
+
+        <View
+          style={[
+            styles.panel,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <View style={styles.panelHeader}>
+            <View style={styles.panelCopy}>
+              <Text style={[styles.panelTitle, { color: colors.text }]}>
+                Taller activo
+              </Text>
+              <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+                Selecciona desde que taller quieres trabajar en esta sesion.
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.workshopBadge,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.workshopBadgeText, { color: colors.primary }]}>
+                {activeWorkshop?.name || "Sin taller activo"}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.membershipList}>
+            {memberships.map((membership) => {
+              const selected = membership.workshopId === activeWorkshopId;
+
+              return (
+                <View
+                  key={membership.refId || membership.id}
+                  style={[
+                    styles.membershipRow,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: selected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <View style={styles.membershipCopy}>
+                    <Text style={[styles.rowTitle, { color: colors.text }]}>
+                      {membership.workshopName || membership.workshopId}
+                    </Text>
+                    <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+                      {roleLabels[membership.role] || membership.role}
+                    </Text>
+                  </View>
+
+                  <Pressable
+                    disabled={selected || switchingWorkshopId === membership.workshopId}
+                    onPress={() => handleSwitchWorkshop(membership.workshopId)}
+                    style={[
+                      styles.secondaryAction,
+                      {
+                        borderColor: selected ? colors.primary : colors.borderStrong,
+                        backgroundColor: selected
+                          ? colors.primary
+                          : colors.cardBackground,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.secondaryActionText,
+                        { color: selected ? colors.white : colors.text },
+                      ]}
+                    >
+                      {selected
+                        ? "Activo"
+                        : switchingWorkshopId === membership.workshopId
+                          ? "Cambiando..."
+                          : "Usar"}
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {pendingInvitation ? (
+          <View
+            style={[
+              styles.panel,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.panelTitle, { color: colors.text }]}>
+              Invitacion entrante
+            </Text>
+            <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+              Tienes una invitacion pendiente para unirte a
+              {" "}
+              {pendingInvitation.workshopName || "otro taller"}.
+            </Text>
+            <Text style={[styles.rowMeta, { color: colors.textSecondary }]}> 
+              Rol {roleLabels[pendingInvitation.role] || pendingInvitation.role}
+            </Text>
+            <Text style={[styles.rowMeta, { color: colors.textTertiary }]}> 
+              Codigo {pendingInvitation.id || pendingInvitation.invitationCode}
+            </Text>
+            <Pressable
+              disabled={acceptingIncomingInvitation || authBusy}
+              onPress={handleAcceptIncomingInvitation}
+              style={[
+                styles.primaryAction,
+                { backgroundColor: colors.primary },
+              ]}
+            >
+              <Text style={[styles.primaryActionText, { color: colors.white }]}> 
+                {acceptingIncomingInvitation
+                  ? "Aceptando invitacion..."
+                  : "Aceptar invitacion"}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {!canManageCollaborators && (
           <View
@@ -1169,6 +1359,22 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
   },
+  membershipList: {
+    gap: spacing.sm,
+  },
+  membershipRow: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  membershipCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
   accessNotice: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -1202,6 +1408,16 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     fontSize: rf(12),
     fontWeight: "700",
+  },
+  workshopBadge: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+  },
+  workshopBadgeText: {
+    fontSize: rf(12),
+    fontWeight: "800",
   },
   formGroup: {
     gap: spacing.sm,

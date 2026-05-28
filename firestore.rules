@@ -18,6 +18,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/staffInvitations/$(invitationId);
     }
 
+    function workshopMembershipPath(workshopId, uid) {
+      return /databases/$(database)/documents/workshopMemberships/$(workshopId)__$(uid);
+    }
+
     function workOrderPath(workOrderId) {
       return /databases/$(database)/documents/workOrders/$(workOrderId);
     }
@@ -46,6 +50,10 @@ service cloud.firestore {
       return isActiveProfile() && profileData().role == role;
     }
 
+    function isOwner() {
+      return hasRole('owner');
+    }
+
     function isAdmin() {
       return hasRole('administrator');
     }
@@ -59,7 +67,35 @@ service cloud.firestore {
     }
 
     function canManageOperations() {
-      return isAdmin() || isReception();
+      return isOwner() || isAdmin() || isReception();
+    }
+
+    function hasWorkshopMembership(workshopId) {
+      return signedIn()
+        && workshopId is string
+        && exists(workshopMembershipPath(workshopId, currentUid()));
+    }
+
+    function activeWorkshopMembershipRole(workshopId) {
+      return get(workshopMembershipPath(workshopId, currentUid())).data.role;
+    }
+
+    function isSelfWorkshopContextUpdate(uid) {
+      return isSelf(uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.userCode == resource.data.userCode
+        && request.resource.data.invitationId == resource.data.invitationId
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.defaultWorkshopId is string
+        && hasWorkshopMembership(request.resource.data.defaultWorkshopId)
+        && get(workshopMembershipPath(request.resource.data.defaultWorkshopId, currentUid())).data.status == 'active'
+        && request.resource.data.role == activeWorkshopMembershipRole(request.resource.data.defaultWorkshopId)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'role',
+          'defaultWorkshopId',
+          'updatedAt'
+        ]);
     }
 
     function isAssignedMechanicByUid(assignedUid) {
@@ -120,8 +156,6 @@ service cloud.firestore {
     function invitationAcceptanceUpdate(invitationId) {
       return signedIn()
         && hasProfile()
-        && profileData().invitationId == invitationId
-        && profileData().email == resource.data.email
         && resource.data.status == 'pending'
         && request.resource.data.status == 'accepted'
         && request.resource.data.acceptedByUid == currentUid()
@@ -140,7 +174,8 @@ service cloud.firestore {
       return signedIn()
         && (
           (counterId == 'userProfiles' && !hasProfile())
-          || (counterId == 'staffInvitations' && isAdmin())
+          || (counterId == 'workshops' && hasProfile())
+          || (counterId == 'staffInvitations' && (isAdmin() || isOwner()))
           || (counterId == 'clients' && canManageOperations())
           || (counterId == 'vehicles' && canManageOperations())
           || (counterId == 'diagnostics' && canManageOperations())
@@ -161,19 +196,33 @@ service cloud.firestore {
     }
 
     match /userProfiles/{uid} {
-      allow get: if signedIn() && (isSelf(uid) || isAdmin());
-      allow list: if isAdmin();
+      allow get: if signedIn() && (isSelf(uid) || isAdmin() || isOwner());
+      allow list: if isAdmin() || isOwner();
       allow create: if isPublicSignupCreate(uid) || isInvitationProfileCreate(uid) || isAdmin();
-      allow update: if isAdmin() || isSelfBootstrapAdminUpdate(uid) || (isSelf(uid) && onlyProfileSelfEditableFieldsChanged());
+      allow update: if isAdmin() || isOwner() || isSelfBootstrapAdminUpdate(uid) || isSelfWorkshopContextUpdate(uid) || (isSelf(uid) && onlyProfileSelfEditableFieldsChanged());
       allow delete: if isAdmin();
     }
 
+    match /workshops/{workshopId} {
+      allow get, list: if signedIn();
+      allow create: if hasProfile() && request.resource.data.ownerUserUid == currentUid();
+      allow update: if signedIn() && resource.data.ownerUserUid == currentUid();
+      allow delete: if false;
+    }
+
+    match /workshopMemberships/{membershipId} {
+      allow get, list: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if isOwner() || isAdmin();
+    }
+
     match /staffInvitations/{invitationId} {
-      allow get: if isAdmin() || resource.data.status == 'pending';
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if isAdmin() || invitationAcceptanceUpdate(invitationId);
-      allow delete: if isAdmin();
+      allow get: if isAdmin() || isOwner() || (signedIn() && request.auth.token.email == resource.data.email && resource.data.status == 'pending');
+      allow list: if isAdmin() || isOwner();
+      allow create: if isAdmin() || isOwner();
+      allow update: if isAdmin() || isOwner() || invitationAcceptanceUpdate(invitationId);
+      allow delete: if isAdmin() || isOwner();
     }
 
     match /clients/{clientId} {

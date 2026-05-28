@@ -16,7 +16,11 @@ import {
 import {
   createManualUserProfile,
   createUserProfileFromInvitation,
+  getUserProfileByUid,
+  updateUserProfileBasicInfo,
+  updateUserProfileWorkshopContext,
 } from "./userProfiles";
+import { upsertWorkshopMembership } from "../workshops/workshopService";
 
 export function normalizeEmail(email) {
   return email.trim().toLowerCase();
@@ -105,15 +109,44 @@ export async function acceptPendingInvitationForCurrentUser({
     throw new Error("Ingresa el nombre completo del colaborador.");
   }
 
-  const profile = await createUserProfileFromInvitation({
-    uid: currentUser.uid,
-    email: normalizedEmail,
-    fullName: resolvedName,
-    phone: phone?.trim() || "",
-    role: invitation.role,
-    invitationId: invitation.refId,
-    requiresInternalApproval: REGISTRATION_POLICY.requiresInternalApproval,
-  });
+  const existingProfile = await getUserProfileByUid(currentUser.uid);
+  const resolvedPhone = phone?.trim() || existingProfile?.phone || "";
+  let profile = existingProfile;
+
+  if (existingProfile) {
+    await updateUserProfileBasicInfo(currentUser.uid, {
+      fullName: resolvedName,
+      phone: resolvedPhone,
+    });
+    await updateUserProfileWorkshopContext(currentUser.uid, {
+      defaultWorkshopId:
+        invitation.workshopId || existingProfile.defaultWorkshopId || null,
+      role: invitation.role,
+    });
+    profile = await getUserProfileByUid(currentUser.uid);
+  } else {
+    profile = await createUserProfileFromInvitation({
+      uid: currentUser.uid,
+      email: normalizedEmail,
+      fullName: resolvedName,
+      phone: resolvedPhone,
+      role: invitation.role,
+      invitationId: invitation.refId,
+      defaultWorkshopId: invitation.workshopId || null,
+      requiresInternalApproval: REGISTRATION_POLICY.requiresInternalApproval,
+    });
+  }
+
+  const membership = invitation.workshopId
+    ? await upsertWorkshopMembership({
+        workshopId: invitation.workshopId,
+        userUid: currentUser.uid,
+        role: invitation.role,
+        status: profile.status,
+        invitationId: invitation.refId,
+        invitedByUid: invitation.invitedByUid,
+      })
+    : null;
 
   await updateProfile(currentUser, {
     displayName: resolvedName,
@@ -124,6 +157,7 @@ export async function acceptPendingInvitationForCurrentUser({
     user: currentUser,
     profile,
     invitation,
+    membership,
   };
 }
 
@@ -153,8 +187,19 @@ export async function registerUserFromInvitation({
       phone: phone?.trim() || "",
       role: invitation.role,
       invitationId: invitation.refId,
+      defaultWorkshopId: invitation.workshopId || null,
       requiresInternalApproval: REGISTRATION_POLICY.requiresInternalApproval,
     });
+    const membership = invitation.workshopId
+      ? await upsertWorkshopMembership({
+          workshopId: invitation.workshopId,
+          userUid: credential.user.uid,
+          role: invitation.role,
+          status: profile.status,
+          invitationId: invitation.refId,
+          invitedByUid: invitation.invitedByUid,
+        })
+      : null;
 
     await markInvitationAccepted(invitation.refId, credential.user.uid);
 
@@ -162,6 +207,7 @@ export async function registerUserFromInvitation({
       user: credential.user,
       profile,
       invitation,
+      membership,
     };
   } catch (error) {
     try {
