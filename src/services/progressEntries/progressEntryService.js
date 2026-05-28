@@ -2,6 +2,8 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { firestore } from "../firebase/config";
 import { createEntityRecord } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
+import { getEntityRecord } from "../firestore/repository";
+import { requireActiveWorkshopId } from "../workshops/workshopSession";
 
 const progressEntriesCollection = firestoreCollections.progressEntries;
 
@@ -56,9 +58,14 @@ export async function listProgressEntriesByWorkOrderId(workOrderId) {
     return [];
   }
 
+  const activeWorkshopId = requireActiveWorkshopId();
   const collectionRef = collection(firestore, progressEntriesCollection.name);
   const snapshot = await getDocs(
-    query(collectionRef, where("workOrderId", "==", workOrderId)),
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      where("workOrderId", "==", workOrderId),
+    ),
   );
 
   return snapshot.docs
@@ -84,10 +91,25 @@ export async function createProgressEntry({
   sparePartUpdates,
   deliveryClosedOrder,
 }) {
+  const workshopId = requireActiveWorkshopId();
+  const normalizedWorkOrderId = normalizeOptional(workOrderId);
+
+  if (!normalizedWorkOrderId) {
+    throw new Error("El avance debe estar asociado a una orden valida.");
+  }
+
+  const workOrder = await getEntityRecord("workOrders", normalizedWorkOrderId);
+
+  if (!workOrder || workOrder.workshopId !== workshopId) {
+    throw new Error("La orden del avance no pertenece al taller activo.");
+  }
+
   return createEntityRecord("progressEntries", {
-    workOrderId: normalizeOptional(workOrderId),
-    diagnosticId: normalizeOptional(diagnosticId),
-    vehicleId: normalizeOptional(vehicleId),
+    workshopId,
+    workOrderId: normalizedWorkOrderId,
+    diagnosticId:
+      normalizeOptional(diagnosticId) || normalizeOptional(workOrder.diagnosticId),
+    vehicleId: normalizeOptional(vehicleId) || normalizeOptional(workOrder.vehicleId),
     authorUid: normalizeOptional(authorUid),
     type: normalizeOptional(type) || "note",
     message: normalizeOptional(message),

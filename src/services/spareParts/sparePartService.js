@@ -1,4 +1,4 @@
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { firestore } from "../firebase/config";
 import {
   createEntityRecord,
@@ -7,6 +7,7 @@ import {
   patchEntityRecord,
 } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
+import { requireActiveWorkshopId } from "../workshops/workshopSession";
 
 const sparePartsCollection = firestoreCollections.spareParts;
 
@@ -36,10 +37,51 @@ export function canDeleteSparePartStatus(status) {
   return deletableSparePartStatuses.includes(normalizeOptional(status));
 }
 
+async function resolveSparePartContext({ diagnosticId, workOrderId }, workshopId) {
+  const normalizedDiagnosticId = normalizeOptional(diagnosticId);
+  const normalizedWorkOrderId = normalizeOptional(workOrderId);
+  let relatedDiagnostic = null;
+  let relatedWorkOrder = null;
+
+  if (normalizedDiagnosticId) {
+    relatedDiagnostic = await getEntityRecord("diagnostics", normalizedDiagnosticId);
+
+    if (!relatedDiagnostic || relatedDiagnostic.workshopId !== workshopId) {
+      throw new Error("El diagnostico del repuesto no pertenece al taller activo.");
+    }
+  }
+
+  if (normalizedWorkOrderId) {
+    relatedWorkOrder = await getEntityRecord("workOrders", normalizedWorkOrderId);
+
+    if (!relatedWorkOrder || relatedWorkOrder.workshopId !== workshopId) {
+      throw new Error("La orden del repuesto no pertenece al taller activo.");
+    }
+  }
+
+  if (
+    relatedDiagnostic?.id &&
+    relatedWorkOrder?.diagnosticId &&
+    relatedDiagnostic.id !== relatedWorkOrder.diagnosticId
+  ) {
+    throw new Error("La orden y el diagnostico del repuesto no coinciden.");
+  }
+
+  return {
+    diagnosticId: normalizedDiagnosticId || normalizeOptional(relatedWorkOrder?.diagnosticId),
+    workOrderId: normalizedWorkOrderId,
+  };
+}
+
 export async function listSpareParts() {
+  const activeWorkshopId = requireActiveWorkshopId();
   const collectionRef = collection(firestore, sparePartsCollection.name);
   const snapshot = await getDocs(
-    query(collectionRef, orderBy("sequentialId", "desc")),
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      orderBy("sequentialId", "desc"),
+    ),
   );
 
   return snapshot.docs.map((item) => ({
@@ -57,9 +99,16 @@ export async function createSparePart({
   supplier,
   status,
 }) {
+  const workshopId = requireActiveWorkshopId();
+  const relatedContext = await resolveSparePartContext(
+    { diagnosticId, workOrderId },
+    workshopId,
+  );
+
   return createEntityRecord("spareParts", {
-    diagnosticId: normalizeOptional(diagnosticId),
-    workOrderId: normalizeOptional(workOrderId),
+    workshopId,
+    diagnosticId: relatedContext.diagnosticId,
+    workOrderId: relatedContext.workOrderId,
     name: normalizeOptional(name),
     quantity: normalizeNumber(quantity),
     unitCost: normalizeNumber(unitCost),
@@ -69,9 +118,19 @@ export async function createSparePart({
 }
 
 export async function updateSparePart(sparePartId, payload) {
+  const workshopId = requireActiveWorkshopId();
+  const currentSparePart = await getEntityRecord("spareParts", sparePartId);
+
+  if (!currentSparePart || currentSparePart.workshopId !== workshopId) {
+    throw new Error("El repuesto no pertenece al taller activo.");
+  }
+
+  const relatedContext = await resolveSparePartContext(payload, workshopId);
+
   await patchEntityRecord("spareParts", sparePartId, {
-    diagnosticId: normalizeOptional(payload.diagnosticId),
-    workOrderId: normalizeOptional(payload.workOrderId),
+    workshopId,
+    diagnosticId: relatedContext.diagnosticId,
+    workOrderId: relatedContext.workOrderId,
     name: normalizeOptional(payload.name),
     quantity: normalizeNumber(payload.quantity),
     unitCost: normalizeNumber(payload.unitCost),
@@ -81,9 +140,10 @@ export async function updateSparePart(sparePartId, payload) {
 }
 
 export async function deleteSparePart(sparePartId) {
+  const workshopId = requireActiveWorkshopId();
   const currentSparePart = await getEntityRecord("spareParts", sparePartId);
 
-  if (!currentSparePart) {
+  if (!currentSparePart || currentSparePart.workshopId !== workshopId) {
     throw new Error("No se encontro el repuesto a eliminar.");
   }
 

@@ -41,6 +41,22 @@
       ]
     },
     {
+      "collectionGroup": "progressEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "workshopId", "order": "ASCENDING" },
+        { "fieldPath": "workOrderId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "spareParts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "workshopId", "order": "ASCENDING" },
+        { "fieldPath": "sequentialId", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "staffInvitations",
       "queryScope": "COLLECTION",
       "fields": [

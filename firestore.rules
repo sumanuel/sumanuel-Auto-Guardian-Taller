@@ -18,8 +18,12 @@ service cloud.firestore {
       return /databases/$(database)/documents/staffInvitations/$(invitationId);
     }
 
+    function workshopMembershipId(workshopId, uid) {
+      return workshopId + '__' + uid;
+    }
+
     function workshopMembershipPath(workshopId, uid) {
-      return /databases/$(database)/documents/workshopMemberships/$(workshopId)__$(uid);
+      return /databases/$(database)/documents/workshopMemberships/$(workshopMembershipId(workshopId, uid));
     }
 
     function workOrderPath(workOrderId) {
@@ -211,6 +215,13 @@ service cloud.firestore {
         || isAssignedMechanicByUid(diagnosticData.assignedMechanicUid);
     }
 
+    function canReadProgressEntry(progressEntryData) {
+      return canReadWorkshopEntity(progressEntryData.workshopId)
+        && progressEntryData.workOrderId is string
+        && exists(workOrderPath(progressEntryData.workOrderId))
+        && canReadWorkOrder(get(workOrderPath(progressEntryData.workOrderId)).data);
+    }
+
     match /userProfiles/{uid} {
       allow get: if signedIn() && (isSelf(uid) || isAdmin() || isOwner());
       allow list: if isAdmin() || isOwner();
@@ -266,23 +277,29 @@ service cloud.firestore {
     }
 
     match /progressEntries/{progressEntryId} {
-      allow get: if isActiveProfile();
-      allow list: if isActiveProfile();
-      allow create: if isActiveProfile() && (
-        canManageOperations()
+      allow get, list: if canReadProgressEntry(resource.data);
+      allow create: if request.resource.data.workshopId is string
+        && canReadWorkshopEntity(request.resource.data.workshopId)
+        && (
+        canManageWorkshopEntity(request.resource.data.workshopId)
         || (isMechanic()
           && request.resource.data.authorUid == currentUid()
           && request.resource.data.workOrderId is string
           && exists(workOrderPath(request.resource.data.workOrderId))
+          && request.resource.data.workshopId == get(workOrderPath(request.resource.data.workOrderId)).data.workshopId
           && isAssignedMechanicInList(get(workOrderPath(request.resource.data.workOrderId)).data.assignedMechanicUids))
       );
-      allow update: if canManageOperations() || (isMechanic() && resource.data.authorUid == currentUid());
-      allow delete: if canManageOperations();
+      allow update: if canManageWorkshopEntity(resource.data.workshopId)
+        || (isMechanic()
+          && resource.data.authorUid == currentUid()
+          && canReadProgressEntry(resource.data));
+      allow delete: if canManageWorkshopEntity(resource.data.workshopId);
     }
 
     match /spareParts/{sparePartId} {
-      allow read: if isActiveProfile();
-      allow create, update, delete: if canManageOperations();
+      allow read: if canReadWorkshopEntity(resource.data.workshopId);
+      allow create: if canManageWorkshopEntity(request.resource.data.workshopId);
+      allow update, delete: if canManageWorkshopEntity(resource.data.workshopId);
     }
 
     match /_counters/{counterId} {
