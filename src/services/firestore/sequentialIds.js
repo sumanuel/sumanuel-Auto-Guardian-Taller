@@ -67,13 +67,6 @@ export async function createSequentialDocument(
     const nextValue = currentValue + 1;
     const documentId = formatSequentialId(nextValue, { prefix, padding });
     const documentRef = doc(firestore, collectionName, documentId);
-    const existingDocument = await transaction.get(documentRef);
-
-    if (existingDocument.exists()) {
-      throw new Error(
-        `El documento ${documentId} ya existe en ${collectionName}.`,
-      );
-    }
 
     transaction.set(counterRef, {
       key: counterKey,
