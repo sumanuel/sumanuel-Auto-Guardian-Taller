@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import {
   ActivityIndicator,
   Alert,
@@ -76,6 +77,37 @@ function buildWorkshopForm(workshop) {
     logoUrl: workshop?.logoUrl || "",
     commercialNotes: workshop?.commercialNotes || "",
   };
+}
+
+async function pickWorkshopLogo() {
+  const permissionResult =
+    await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+  if (!permissionResult.granted) {
+    throw new Error(
+      "Debes permitir acceso a la galeria para seleccionar el logo del taller.",
+    );
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    allowsEditing: true,
+    aspect: [1, 1],
+    base64: true,
+    mediaTypes: ["images"],
+    quality: 0.55,
+  });
+
+  if (result.canceled || !result.assets?.length) {
+    return "";
+  }
+
+  const [asset] = result.assets;
+
+  if (!asset?.base64) {
+    throw new Error("No se pudo preparar la imagen seleccionada.");
+  }
+
+  return `data:${asset.mimeType || "image/jpeg"};base64,${asset.base64}`;
 }
 
 function formatShortDate(value) {
@@ -312,6 +344,60 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     } finally {
       setWorkshopSubmitting(false);
     }
+  };
+
+  const handlePickActiveWorkshopLogo = async () => {
+    try {
+      const nextLogo = await pickWorkshopLogo();
+
+      if (!nextLogo) {
+        return;
+      }
+
+      setActiveWorkshopForm((current) => ({
+        ...current,
+        logoUrl: nextLogo,
+      }));
+    } catch (error) {
+      Alert.alert(
+        "Talleres",
+        error?.message || "No se pudo seleccionar el logo del taller.",
+      );
+    }
+  };
+
+  const handlePickCreateWorkshopLogo = async () => {
+    try {
+      const nextLogo = await pickWorkshopLogo();
+
+      if (!nextLogo) {
+        return;
+      }
+
+      setCreateWorkshopForm((current) => ({
+        ...current,
+        logoUrl: nextLogo,
+      }));
+    } catch (error) {
+      Alert.alert(
+        "Talleres",
+        error?.message || "No se pudo seleccionar el logo del taller.",
+      );
+    }
+  };
+
+  const handleClearActiveWorkshopLogo = () => {
+    setActiveWorkshopForm((current) => ({
+      ...current,
+      logoUrl: "",
+    }));
+  };
+
+  const handleClearCreateWorkshopLogo = () => {
+    setCreateWorkshopForm((current) => ({
+      ...current,
+      logoUrl: "",
+    }));
   };
 
   const handleCreateInvitation = async () => {
@@ -681,26 +767,50 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                   ]}
                   value={activeWorkshopForm.rif}
                 />
-                <TextInput
-                  autoCapitalize="none"
-                  onChangeText={(value) =>
-                    setActiveWorkshopForm((current) => ({
-                      ...current,
-                      logoUrl: value,
-                    }))
-                  }
-                  placeholder="Logo del taller por URL"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={activeWorkshopForm.logoUrl}
-                />
+                <View style={styles.logoActionsRow}>
+                  <Pressable
+                    onPress={handlePickActiveWorkshopLogo}
+                    style={[
+                      styles.secondaryFilledAction,
+                      styles.logoActionButton,
+                      {
+                        backgroundColor: colors.cardMuted,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.secondaryFilledActionText,
+                        { color: colors.text },
+                      ]}
+                    >
+                      Seleccionar logo
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    disabled={!activeWorkshopLogoPreview}
+                    onPress={handleClearActiveWorkshopLogo}
+                    style={[
+                      styles.secondaryAction,
+                      styles.logoActionButton,
+                      {
+                        borderColor: colors.borderStrong,
+                        backgroundColor: colors.cardBackground,
+                      },
+                      !activeWorkshopLogoPreview ? styles.disabledAction : null,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.secondaryActionText,
+                        { color: colors.text },
+                      ]}
+                    >
+                      Quitar logo
+                    </Text>
+                  </Pressable>
+                </View>
                 {activeWorkshopLogoPreview ? (
                   <View
                     style={[
@@ -728,8 +838,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                   <Text
                     style={[styles.rowMeta, { color: colors.textSecondary }]}
                   >
-                    Puedes pegar una URL publica de imagen para usarla como logo
-                    del taller.
+                    Selecciona una imagen desde la galeria para guardarla como
+                    logo comercial del taller.
                   </Text>
                 )}
                 <TextInput
@@ -887,26 +997,71 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
               ]}
               value={createWorkshopForm.rif}
             />
-            <TextInput
-              autoCapitalize="none"
-              onChangeText={(value) =>
-                setCreateWorkshopForm((current) => ({
-                  ...current,
-                  logoUrl: value,
-                }))
-              }
-              placeholder="Logo del taller por URL"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={createWorkshopForm.logoUrl}
-            />
+            <View style={styles.logoActionsRow}>
+              <Pressable
+                onPress={handlePickCreateWorkshopLogo}
+                style={[
+                  styles.secondaryFilledAction,
+                  styles.logoActionButton,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.secondaryFilledActionText,
+                    { color: colors.text },
+                  ]}
+                >
+                  Seleccionar logo
+                </Text>
+              </Pressable>
+              <Pressable
+                disabled={!createWorkshopForm.logoUrl}
+                onPress={handleClearCreateWorkshopLogo}
+                style={[
+                  styles.secondaryAction,
+                  styles.logoActionButton,
+                  {
+                    borderColor: colors.borderStrong,
+                    backgroundColor: colors.cardBackground,
+                  },
+                  !createWorkshopForm.logoUrl ? styles.disabledAction : null,
+                ]}
+              >
+                <Text
+                  style={[styles.secondaryActionText, { color: colors.text }]}
+                >
+                  Quitar logo
+                </Text>
+              </Pressable>
+            </View>
+            {createWorkshopForm.logoUrl ? (
+              <View
+                style={[
+                  styles.logoPreviewCard,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Image
+                  source={{ uri: createWorkshopForm.logoUrl }}
+                  style={styles.logoPreviewImage}
+                />
+                <Text
+                  style={[
+                    styles.logoPreviewText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Logo listo para el nuevo taller.
+                </Text>
+              </View>
+            ) : null}
             <TextInput
               multiline
               numberOfLines={4}
@@ -1938,6 +2093,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     fontSize: rf(14),
+  },
+  logoActionsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  logoActionButton: {
+    flex: 1,
   },
   notesInput: {
     minHeight: rf(92),

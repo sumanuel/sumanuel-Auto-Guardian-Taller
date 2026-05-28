@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
 import {
@@ -43,6 +44,7 @@ export default function DiagnosticFormScreen({
   userProfile,
 }) {
   const { colors } = useTheme();
+  const { activeWorkshop } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [clients, setClients] = useState([]);
   const [mechanics, setMechanics] = useState([]);
@@ -183,7 +185,12 @@ export default function DiagnosticFormScreen({
             client: selectedClient,
             vehicle: selectedVehicle,
             workshopProfile: {
+              ...activeWorkshop,
               ...userProfile,
+              workshopName:
+                activeWorkshop?.name ||
+                userProfile?.workshopName ||
+                "Auto-Guardian Taller",
               assignedMechanicName:
                 assignedMechanic?.fullName ||
                 assignedMechanic?.email ||

@@ -52,6 +52,16 @@ function buildLogoDataUri() {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+function resolveWorkshopLogoUri(workshopProfile) {
+  const customLogo = String(workshopProfile?.logoUrl || "").trim();
+
+  if (customLogo) {
+    return customLogo;
+  }
+
+  return buildLogoDataUri();
+}
+
 function renderBulletList(items, emptyLabel) {
   if (!items.length) {
     return `<li>${escapeHtml(emptyLabel)}</li>`;
@@ -72,11 +82,16 @@ function buildDiagnosticQuoteHtml({
   const spareParts = Array.isArray(diagnostic.spareParts)
     ? diagnostic.spareParts
     : [];
-  const logoUri = buildLogoDataUri();
+  const logoUri = resolveWorkshopLogoUri(workshopProfile);
   const workshopName = workshopProfile?.workshopName || "Auto-Guardian Taller";
   const advisorName = workshopProfile?.fullName || "Equipo operativo";
   const advisorPhone = workshopProfile?.phone || "Sin telefono operativo";
   const advisorEmail = workshopProfile?.email || "Sin correo operativo";
+  const workshopRif = workshopProfile?.rif || "Sin identificacion fiscal";
+  const workshopAddress = workshopProfile?.address || "Sin direccion operativa";
+  const commercialNotes =
+    workshopProfile?.commercialNotes ||
+    "Sin notas comerciales registradas para este taller.";
   const clientPhone = client?.phone || "Sin telefono registrado";
   const vehicleLabel = [vehicle?.brand, vehicle?.model, vehicle?.year]
     .filter(Boolean)
@@ -260,6 +275,8 @@ function buildDiagnosticQuoteHtml({
               <p class="line"><strong>Asesor:</strong> ${escapeHtml(advisorName)}</p>
               <p class="line"><strong>Contacto taller:</strong> ${escapeHtml(advisorPhone)}</p>
               <p class="line"><strong>Correo:</strong> ${escapeHtml(advisorEmail)}</p>
+              <p class="line"><strong>RIF:</strong> ${escapeHtml(workshopRif)}</p>
+              <p class="line"><strong>Direccion:</strong> ${escapeHtml(workshopAddress)}</p>
               <p class="line"><strong>Costo estimado:</strong> ${escapeHtml(formatCurrency(diagnostic.quoteCost))}</p>
             </div>
             <div class="card">
@@ -271,6 +288,10 @@ function buildDiagnosticQuoteHtml({
               <div class="section">
                 <div class="section-title">Notas</div>
                 <p class="body-copy">${escapeHtml(diagnostic.notes || "Sin notas adicionales")}</p>
+              </div>
+              <div class="section">
+                <div class="section-title">Notas comerciales</div>
+                <p class="body-copy">${escapeHtml(commercialNotes)}</p>
               </div>
             </div>
           </div>
