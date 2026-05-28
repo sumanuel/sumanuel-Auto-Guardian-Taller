@@ -93,6 +93,11 @@ service cloud.firestore {
       return isActiveProfile() && hasActiveWorkshopMembership(workshopId);
     }
 
+    function hasAnyActiveWorkshopMembership() {
+      return hasProfile() && profileData().defaultWorkshopId is string
+        && hasActiveWorkshopMembership(profileData().defaultWorkshopId);
+    }
+
     function canManageWorkshopEntity(workshopId) {
       return canReadWorkshopEntity(workshopId)
         && ['owner', 'administrator', 'reception'].hasAny([
@@ -200,8 +205,8 @@ service cloud.firestore {
           || (counterId == 'vehicles' && canManageOperations())
           || (counterId == 'diagnostics' && canManageOperations())
           || (counterId == 'workOrders' && canManageOperations())
-          || (counterId == 'stockItems' && canManageOperations())
-          || (counterId == 'stockMovements' && canManageOperations())
+          || (counterId == 'stockItems' && hasAnyActiveWorkshopMembership())
+          || (counterId == 'stockMovements' && hasAnyActiveWorkshopMembership())
           || (counterId == 'spareParts' && canManageOperations())
           || (counterId == 'progressEntries' && (canManageOperations() || isMechanic()))
         );

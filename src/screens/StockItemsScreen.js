@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { hasPermission } from "../constants/accessControl";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
   deleteStockItem,
@@ -86,14 +87,18 @@ export default function StockItemsScreen({
   viewState,
 }) {
   const { colors } = useTheme();
+  const { activeWorkshopId, memberships } = useAuth();
   const [loading, setLoading] = useState(false);
   const [stockItems, setStockItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
-  const canManageInventory = hasPermission(
-    userProfile?.role,
-    "inventory.manage",
+  const activeMembership = memberships.find(
+    (membership) => membership.workshopId === activeWorkshopId,
   );
+  const activeMembershipRole = activeMembership?.role || userProfile?.role;
+  const canManageInventory =
+    hasPermission(activeMembershipRole, "inventory.manage") &&
+    activeMembership?.status === "active";
 
   const refreshData = async () => {
     setLoading(true);
@@ -292,8 +297,9 @@ export default function StockItemsScreen({
 
         {!canManageInventory ? (
           <Text style={[styles.helperText, { color: colors.textSecondary }]}>
-            Tu rol puede consultar el inventario, pero no crear ni editar
-            registros.
+            {activeMembership?.status !== "active"
+              ? "Tu acceso en este taller esta suspendido. Debes entrar con un usuario activo para crear o editar inventario."
+              : "Tu rol puede consultar el inventario, pero no crear ni editar registros."}
           </Text>
         ) : null}
 

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { hasPermission } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -31,7 +32,7 @@ export default function StockItemFormScreen({
   onSaved,
 }) {
   const { colors } = useTheme();
-  const { userProfile } = useAuth();
+  const { activeWorkshopId, memberships, userProfile } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(
     createEmptyStockItemForm({
@@ -41,6 +42,13 @@ export default function StockItemFormScreen({
   );
 
   const editingStockItemId = getStockItemId(initialStockItem);
+  const activeMembership = memberships.find(
+    (membership) => membership.workshopId === activeWorkshopId,
+  );
+  const activeMembershipRole = activeMembership?.role || userProfile?.role;
+  const canManageInventory =
+    hasPermission(activeMembershipRole, "inventory.manage") &&
+    activeMembership?.status === "active";
 
   useEffect(() => {
     setForm(
@@ -52,6 +60,16 @@ export default function StockItemFormScreen({
   }, [initialDraft, initialStockItem]);
 
   const handleSubmit = async () => {
+    if (!canManageInventory) {
+      Alert.alert(
+        "Stock y herramientas",
+        activeMembership?.status !== "active"
+          ? "Tu acceso en este taller esta suspendido y no puede crear o editar items del inventario."
+          : "Tu rol actual no puede crear o editar items del inventario.",
+      );
+      return;
+    }
+
     if (!form.name.trim()) {
       Alert.alert("Stock y herramientas", "Ingresa el nombre del item.");
       return;
@@ -329,8 +347,16 @@ export default function StockItemFormScreen({
           </View>
 
           <Pressable
+            disabled={!canManageInventory || submitting}
             onPress={handleSubmit}
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
+            style={[
+              styles.primaryAction,
+              {
+                backgroundColor: canManageInventory
+                  ? colors.primary
+                  : colors.cardMuted,
+              },
+            ]}
           >
             <Text style={[styles.primaryActionText, { color: colors.white }]}>
               {submitting

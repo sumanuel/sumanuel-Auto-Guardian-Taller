@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { hasPermission } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -42,7 +43,7 @@ export default function StockMovementFormScreen({
   onSaved,
 }) {
   const { colors } = useTheme();
-  const { userProfile } = useAuth();
+  const { activeWorkshopId, memberships, userProfile } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(
     createEmptyStockMovementForm({ movementType: initialMovementType }),
@@ -58,6 +59,13 @@ export default function StockMovementFormScreen({
     () => getMovementMeta(form.movementType),
     [form.movementType],
   );
+  const activeMembership = memberships.find(
+    (membership) => membership.workshopId === activeWorkshopId,
+  );
+  const activeMembershipRole = activeMembership?.role || userProfile?.role;
+  const canManageInventory =
+    hasPermission(activeMembershipRole, "inventory.manage") &&
+    activeMembership?.status === "active";
   const currentQuantity = Number(initialStockItem?.quantity || 0);
   const projectedQuantity = (() => {
     const movementQuantity = Number(form.quantity || 0);
@@ -72,6 +80,16 @@ export default function StockMovementFormScreen({
   })();
 
   const handleSubmit = async () => {
+    if (!canManageInventory) {
+      Alert.alert(
+        "Stock y herramientas",
+        activeMembership?.status !== "active"
+          ? "Tu acceso en este taller esta suspendido y no puede registrar movimientos en el inventario."
+          : "Tu rol actual no puede registrar movimientos en el inventario.",
+      );
+      return;
+    }
+
     if (!initialStockItem?.id && !initialStockItem?.refId) {
       Alert.alert("Stock y herramientas", "No se encontro el item a mover.");
       return;
@@ -285,8 +303,16 @@ export default function StockMovementFormScreen({
           </View>
 
           <Pressable
+            disabled={!canManageInventory || submitting}
             onPress={handleSubmit}
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
+            style={[
+              styles.primaryAction,
+              {
+                backgroundColor: canManageInventory
+                  ? colors.primary
+                  : colors.cardMuted,
+              },
+            ]}
           >
             <Text style={[styles.primaryActionText, { color: colors.white }]}>
               {submitting ? "Registrando movimiento..." : movementMeta.title}
