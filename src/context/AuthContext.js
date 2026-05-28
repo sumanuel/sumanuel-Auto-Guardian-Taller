@@ -23,6 +23,9 @@ import {
   ensurePersonalWorkshopForUser,
   getWorkshopById,
   listUserWorkshopMemberships,
+  renameWorkshop,
+  upsertWorkshopMembership,
+  createWorkshop as createWorkshopRecord,
 } from "../services/workshops/workshopService";
 
 const AuthContext = createContext();
@@ -284,6 +287,54 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const createWorkshop = async ({ name, phone, email, address } = {}) => {
+    if (!auth.currentUser?.uid || !userProfile) {
+      throw new Error("Debes iniciar sesion para crear un taller.");
+    }
+
+    setAuthBusy(true);
+
+    try {
+      const workshop = await createWorkshopRecord({
+        name,
+        phone,
+        email: email || userProfile.email,
+        address,
+        ownerUserUid: auth.currentUser.uid,
+      });
+
+      await upsertWorkshopMembership({
+        workshopId: workshop.id,
+        userUid: auth.currentUser.uid,
+        role: "owner",
+        status: userProfile.status,
+        invitedByUid: auth.currentUser.uid,
+      });
+
+      await refreshWorkshopContext(workshop.id);
+
+      return workshop;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const renameActiveWorkshop = async (name) => {
+    if (!activeWorkshopId) {
+      throw new Error("No hay un taller activo para renombrar.");
+    }
+
+    setAuthBusy(true);
+
+    try {
+      const workshop = await renameWorkshop(activeWorkshopId, name);
+      await refreshWorkshopContext(activeWorkshopId);
+      return workshop;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
   const signOutUser = async () => {
     setAuthBusy(true);
     try {
@@ -304,7 +355,9 @@ export function AuthProvider({ children }) {
       authUser,
       memberships,
       pendingInvitation,
+      createWorkshop,
       refreshWorkshopContext,
+      renameActiveWorkshop,
       recoverPassword,
       signIn,
       signUp,

@@ -101,8 +101,10 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     activeWorkshop,
     activeWorkshopId,
     authBusy,
+    createWorkshop,
     memberships,
     pendingInvitation,
+    renameActiveWorkshop,
     switchWorkshop,
   } = useAuth();
   const canManageCollaborators = hasPermission(
@@ -119,10 +121,21 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
   const [switchingWorkshopId, setSwitchingWorkshopId] = useState(null);
   const [acceptingIncomingInvitation, setAcceptingIncomingInvitation] =
     useState(false);
+  const [workshopSubmitting, setWorkshopSubmitting] = useState(false);
+  const [createWorkshopForm, setCreateWorkshopForm] = useState({
+    name: "",
+    phone: "",
+    address: "",
+  });
+  const [renameWorkshopName, setRenameWorkshopName] = useState("");
   const [invitationForm, setInvitationForm] = useState({
     email: "",
     role: USER_ROLES.MECHANIC,
   });
+
+  useEffect(() => {
+    setRenameWorkshopName(activeWorkshop?.name || "");
+  }, [activeWorkshop?.name]);
 
   const refreshAdminData = async () => {
     if (!canManageCollaborators || !activeWorkshopId) {
@@ -214,6 +227,56 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
       );
     } finally {
       setAcceptingIncomingInvitation(false);
+    }
+  };
+
+  const handleCreateWorkshop = async () => {
+    if (!createWorkshopForm.name.trim()) {
+      Alert.alert("Talleres", "Ingresa el nombre del nuevo taller.");
+      return;
+    }
+
+    try {
+      setWorkshopSubmitting(true);
+      const workshop = await createWorkshop({
+        name: createWorkshopForm.name.trim(),
+        phone: createWorkshopForm.phone.trim(),
+        address: createWorkshopForm.address.trim(),
+      });
+      setCreateWorkshopForm({ name: "", phone: "", address: "" });
+      await refreshAdminData();
+      Alert.alert(
+        "Talleres",
+        `${workshop.name} fue creado y quedo como taller disponible en tu sesion.`,
+      );
+    } catch (error) {
+      Alert.alert("Talleres", error?.message || "No se pudo crear el taller.");
+    } finally {
+      setWorkshopSubmitting(false);
+    }
+  };
+
+  const handleRenameWorkshop = async () => {
+    if (!renameWorkshopName.trim()) {
+      Alert.alert("Talleres", "Ingresa el nombre del taller activo.");
+      return;
+    }
+
+    try {
+      setWorkshopSubmitting(true);
+      const workshop = await renameActiveWorkshop(renameWorkshopName.trim());
+      await refreshAdminData();
+      Alert.alert(
+        "Talleres",
+        `El taller activo ahora se llama ${workshop.name}.`,
+      );
+    } catch (error) {
+      Alert.alert(
+        "Talleres",
+        error?.message || "No se pudo renombrar el taller activo.",
+      );
+    } finally {
+      setWorkshopSubmitting(false);
     }
   };
 
@@ -461,6 +524,138 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                 </View>
               );
             })}
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.panel,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.panelTitle, { color: colors.text }]}>
+            Gestion del taller activo
+          </Text>
+          <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+            Renombra el taller actual o crea uno nuevo sin salir de la app.
+          </Text>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Renombrar taller activo
+            </Text>
+            <TextInput
+              onChangeText={setRenameWorkshopName}
+              placeholder="Nombre del taller activo"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={renameWorkshopName}
+            />
+            <Pressable
+              disabled={workshopSubmitting || authBusy || !activeWorkshopId}
+              onPress={handleRenameWorkshop}
+              style={[
+                styles.secondaryFilledAction,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.secondaryFilledActionText,
+                  { color: colors.text },
+                ]}
+              >
+                {workshopSubmitting ? "Guardando..." : "Renombrar taller"}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.fieldLabel, { color: colors.text }]}>
+              Crear nuevo taller
+            </Text>
+            <TextInput
+              onChangeText={(value) =>
+                setCreateWorkshopForm((current) => ({
+                  ...current,
+                  name: value,
+                }))
+              }
+              placeholder="Nombre del nuevo taller"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={createWorkshopForm.name}
+            />
+            <TextInput
+              onChangeText={(value) =>
+                setCreateWorkshopForm((current) => ({
+                  ...current,
+                  phone: value,
+                }))
+              }
+              placeholder="Telefono del taller"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={createWorkshopForm.phone}
+            />
+            <TextInput
+              onChangeText={(value) =>
+                setCreateWorkshopForm((current) => ({
+                  ...current,
+                  address: value,
+                }))
+              }
+              placeholder="Direccion del taller"
+              placeholderTextColor={colors.textTertiary}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.border,
+                  color: colors.text,
+                },
+              ]}
+              value={createWorkshopForm.address}
+            />
+            <Pressable
+              disabled={workshopSubmitting || authBusy}
+              onPress={handleCreateWorkshop}
+              style={[
+                styles.primaryAction,
+                { backgroundColor: colors.primary },
+              ]}
+            >
+              <Text style={[styles.primaryActionText, { color: colors.white }]}>
+                {workshopSubmitting ? "Creando taller..." : "Crear taller"}
+              </Text>
+            </Pressable>
           </View>
         </View>
 
@@ -926,6 +1121,14 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                                 { color: colors.textSecondary },
                               ]}
                             >
+                              Taller {invitation.workshopName || "Sin nombre"}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.rowMeta,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
                               Codigo {invitation.id || invitation.refId}
                             </Text>
                             <Text
@@ -1191,7 +1394,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                             <Text
                               style={[styles.rowTag, { color: colors.accent }]}
                             >
-                              {statusLabels[profile.status] ||
+                              {statusLabels[profile.membershipStatus] ||
+                                statusLabels[profile.status] ||
                                 profile.status ||
                                 "Sin estado"}
                             </Text>
@@ -1547,6 +1751,17 @@ const styles = StyleSheet.create({
   secondaryActionText: {
     fontSize: rf(12),
     fontWeight: "700",
+  },
+  secondaryFilledAction: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+  },
+  secondaryFilledActionText: {
+    fontSize: rf(13),
+    fontWeight: "800",
   },
   approveAction: {
     borderWidth: 1,

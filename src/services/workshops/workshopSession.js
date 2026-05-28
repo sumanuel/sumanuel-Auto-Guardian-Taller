@@ -20,6 +20,16 @@ export function getActiveWorkshopId() {
   return activeWorkshopSession?.workshopId || "";
 }
 
+export function requireActiveWorkshopId() {
+  const workshopId = getActiveWorkshopId();
+
+  if (!workshopId) {
+    throw new Error("No hay un taller activo seleccionado.");
+  }
+
+  return workshopId;
+}
+
 export function clearActiveWorkshopSession() {
   activeWorkshopSession = null;
 }

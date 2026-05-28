@@ -1,4 +1,4 @@
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { serverTimestamp } from "firebase/firestore";
 import { firestore } from "../firebase/config";
 import {
@@ -12,6 +12,7 @@ import {
   closeDiagnostic,
   isDiagnosticClosed,
 } from "../diagnostics/diagnosticService";
+import { requireActiveWorkshopId } from "../workshops/workshopSession";
 
 const workOrdersCollection = firestoreCollections.workOrders;
 
@@ -49,9 +50,14 @@ export const workOrderStatusOptions = [
 ];
 
 export async function listWorkOrders() {
+  const activeWorkshopId = requireActiveWorkshopId();
   const collectionRef = collection(firestore, workOrdersCollection.name);
   const snapshot = await getDocs(
-    query(collectionRef, orderBy("sequentialId", "desc")),
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      orderBy("sequentialId", "desc"),
+    ),
   );
 
   return snapshot.docs.map((item) => ({
@@ -68,6 +74,7 @@ export async function createWorkOrder({
   assignedMechanicIdsText,
   status,
 }) {
+  const workshopId = requireActiveWorkshopId();
   const normalizedDiagnosticId = normalizeOptional(diagnosticId);
 
   if (normalizedDiagnosticId) {
@@ -76,7 +83,7 @@ export async function createWorkOrder({
       normalizedDiagnosticId,
     );
 
-    if (!diagnostic) {
+    if (!diagnostic || diagnostic.workshopId !== workshopId) {
       throw new Error("No se encontro el diagnostico base de la orden.");
     }
 
@@ -88,6 +95,7 @@ export async function createWorkOrder({
   }
 
   const createdWorkOrder = await createEntityRecord("workOrders", {
+    workshopId,
     diagnosticId: normalizeOptional(diagnosticId),
     vehicleId: normalizeOptional(vehicleId),
     clientId: normalizeOptional(clientId),
@@ -110,7 +118,15 @@ export async function createWorkOrder({
 }
 
 export async function updateWorkOrder(workOrderId, payload) {
+  const workshopId = requireActiveWorkshopId();
+  const currentWorkOrder = await getEntityRecord("workOrders", workOrderId);
+
+  if (!currentWorkOrder || currentWorkOrder.workshopId !== workshopId) {
+    throw new Error("La orden no pertenece al taller activo.");
+  }
+
   await patchEntityRecord("workOrders", workOrderId, {
+    workshopId,
     diagnosticId: normalizeOptional(payload.diagnosticId),
     vehicleId: normalizeOptional(payload.vehicleId),
     clientId: normalizeOptional(payload.clientId),
@@ -126,9 +142,10 @@ export async function updateWorkOrderOperationalState(
   workOrderId,
   { status, progressPercent },
 ) {
+  const workshopId = requireActiveWorkshopId();
   const currentWorkOrder = await getEntityRecord("workOrders", workOrderId);
 
-  if (!currentWorkOrder) {
+  if (!currentWorkOrder || currentWorkOrder.workshopId !== workshopId) {
     throw new Error("No se encontro la orden a actualizar.");
   }
 
@@ -174,6 +191,13 @@ export async function updateWorkOrderOperationalState(
 }
 
 export async function deleteWorkOrder(workOrderId) {
+  const workshopId = requireActiveWorkshopId();
+  const currentWorkOrder = await getEntityRecord("workOrders", workOrderId);
+
+  if (!currentWorkOrder || currentWorkOrder.workshopId !== workshopId) {
+    throw new Error("La orden no pertenece al taller activo.");
+  }
+
   await deleteEntityRecord("workOrders", workOrderId);
 }
 

@@ -3,9 +3,11 @@ import { firestore } from "../firebase/config";
 import {
   createEntityRecord,
   deleteEntityRecord,
+  getEntityRecord,
   patchEntityRecord,
 } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
+import { requireActiveWorkshopId } from "../workshops/workshopSession";
 
 const vehiclesCollection = firestoreCollections.vehicles;
 
@@ -23,9 +25,14 @@ function normalizeNumeric(value) {
 }
 
 export async function listVehiclesByClientId(clientId) {
+  const activeWorkshopId = requireActiveWorkshopId();
   const collectionRef = collection(firestore, vehiclesCollection.name);
   const snapshot = await getDocs(
-    query(collectionRef, where("clientId", "==", clientId)),
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      where("clientId", "==", clientId),
+    ),
   );
 
   return snapshot.docs
@@ -39,9 +46,14 @@ export async function listVehiclesByClientId(clientId) {
 }
 
 export async function listVehicles() {
+  const activeWorkshopId = requireActiveWorkshopId();
   const collectionRef = collection(firestore, vehiclesCollection.name);
   const snapshot = await getDocs(
-    query(collectionRef, orderBy("sequentialId", "desc")),
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      orderBy("sequentialId", "desc"),
+    ),
   );
 
   return snapshot.docs.map((item) => ({
@@ -61,7 +73,10 @@ export async function createVehicle({
   mileage,
   notes,
 }) {
+  const workshopId = requireActiveWorkshopId();
+
   return createEntityRecord("vehicles", {
+    workshopId,
     clientId,
     plate: plate.trim().toUpperCase(),
     brand: normalizeOptional(brand),
@@ -75,8 +90,16 @@ export async function createVehicle({
 }
 
 export async function updateVehicle(vehicleId, payload) {
+  const workshopId = requireActiveWorkshopId();
+  const currentVehicle = await getEntityRecord("vehicles", vehicleId);
+
+  if (!currentVehicle || currentVehicle.workshopId !== workshopId) {
+    throw new Error("El vehiculo no pertenece al taller activo.");
+  }
+
   await patchEntityRecord("vehicles", vehicleId, {
     ...payload,
+    workshopId,
     plate: payload.plate.trim().toUpperCase(),
     brand: normalizeOptional(payload.brand),
     model: normalizeOptional(payload.model),
@@ -89,6 +112,13 @@ export async function updateVehicle(vehicleId, payload) {
 }
 
 export async function deleteVehicle(vehicleId) {
+  const workshopId = requireActiveWorkshopId();
+  const currentVehicle = await getEntityRecord("vehicles", vehicleId);
+
+  if (!currentVehicle || currentVehicle.workshopId !== workshopId) {
+    throw new Error("El vehiculo no pertenece al taller activo.");
+  }
+
   await deleteEntityRecord("vehicles", vehicleId);
 }
 

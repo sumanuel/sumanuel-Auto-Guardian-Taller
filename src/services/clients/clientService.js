@@ -1,11 +1,13 @@
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { firestore } from "../firebase/config";
 import {
   createEntityRecord,
   deleteEntityRecord,
+  getEntityRecord,
   patchEntityRecord,
 } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
+import { requireActiveWorkshopId } from "../workshops/workshopSession";
 
 const clientsCollection = firestoreCollections.clients;
 
@@ -14,9 +16,14 @@ function normalizeOptional(value) {
 }
 
 export async function listClients() {
+  const activeWorkshopId = requireActiveWorkshopId();
   const collectionRef = collection(firestore, clientsCollection.name);
   const snapshot = await getDocs(
-    query(collectionRef, orderBy("sequentialId", "desc")),
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      orderBy("sequentialId", "desc"),
+    ),
   );
 
   return snapshot.docs.map((item) => ({
@@ -34,7 +41,10 @@ export async function createClient({
   notes,
   createdByUid,
 }) {
+  const workshopId = requireActiveWorkshopId();
+
   return createEntityRecord("clients", {
+    workshopId,
     identification: normalizeOptional(identification),
     fullName: fullName.trim(),
     address: normalizeOptional(address),
@@ -46,8 +56,16 @@ export async function createClient({
 }
 
 export async function updateClient(clientId, payload) {
+  const workshopId = requireActiveWorkshopId();
+  const currentClient = await getEntityRecord("clients", clientId);
+
+  if (!currentClient || currentClient.workshopId !== workshopId) {
+    throw new Error("El cliente no pertenece al taller activo.");
+  }
+
   await patchEntityRecord("clients", clientId, {
     ...payload,
+    workshopId,
     identification: normalizeOptional(payload.identification),
     fullName: payload.fullName.trim(),
     address: normalizeOptional(payload.address),
@@ -58,6 +76,13 @@ export async function updateClient(clientId, payload) {
 }
 
 export async function deleteClient(clientId) {
+  const workshopId = requireActiveWorkshopId();
+  const currentClient = await getEntityRecord("clients", clientId);
+
+  if (!currentClient || currentClient.workshopId !== workshopId) {
+    throw new Error("El cliente no pertenece al taller activo.");
+  }
+
   await deleteEntityRecord("clients", clientId);
 }
 

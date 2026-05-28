@@ -6,6 +6,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import { USER_ROLES, USER_STATUSES } from "../../constants/accessControl";
@@ -84,6 +85,41 @@ export async function createWorkshop({
     email: normalizeOptional(email).toLowerCase(),
     address: normalizeOptional(address),
   });
+}
+
+export async function renameWorkshop(workshopId, nextName) {
+  const normalizedWorkshopId = normalizeOptional(workshopId);
+  const normalizedName = normalizeOptional(nextName);
+
+  if (!normalizedWorkshopId) {
+    throw new Error("No se encontro el taller a renombrar.");
+  }
+
+  if (!normalizedName) {
+    throw new Error("Ingresa el nombre del taller.");
+  }
+
+  const workshopRef = doc(
+    firestore,
+    workshopCollection.name,
+    normalizedWorkshopId,
+  );
+  await updateDoc(workshopRef, {
+    name: normalizedName,
+    updatedAt: serverTimestamp(),
+  });
+
+  const memberships = await listWorkshopMemberships(normalizedWorkshopId);
+  await Promise.all(
+    memberships.map((membership) =>
+      updateDoc(doc(firestore, membershipCollection.name, membership.refId), {
+        workshopName: normalizedName,
+        updatedAt: serverTimestamp(),
+      }),
+    ),
+  );
+
+  return getWorkshopById(normalizedWorkshopId);
 }
 
 export async function upsertWorkshopMembership({

@@ -80,6 +80,22 @@ service cloud.firestore {
       return get(workshopMembershipPath(workshopId, currentUid())).data.role;
     }
 
+    function hasActiveWorkshopMembership(workshopId) {
+      return hasWorkshopMembership(workshopId)
+        && get(workshopMembershipPath(workshopId, currentUid())).data.status == 'active';
+    }
+
+    function canReadWorkshopEntity(workshopId) {
+      return isActiveProfile() && hasActiveWorkshopMembership(workshopId);
+    }
+
+    function canManageWorkshopEntity(workshopId) {
+      return canReadWorkshopEntity(workshopId)
+        && ['owner', 'administrator', 'reception'].hasAny([
+          activeWorkshopMembershipRole(workshopId)
+        ]);
+    }
+
     function isSelfWorkshopContextUpdate(uid) {
       return isSelf(uid)
         && request.resource.data.uid == resource.data.uid
@@ -186,12 +202,12 @@ service cloud.firestore {
     }
 
     function canReadWorkOrder(workOrderData) {
-      return canManageOperations()
+      return canManageWorkshopEntity(workOrderData.workshopId)
         || isAssignedMechanicInList(workOrderData.assignedMechanicUids);
     }
 
     function canReadDiagnostic(diagnosticData) {
-      return canManageOperations()
+      return canManageWorkshopEntity(diagnosticData.workshopId)
         || isAssignedMechanicByUid(diagnosticData.assignedMechanicUid);
     }
 
@@ -226,25 +242,27 @@ service cloud.firestore {
     }
 
     match /clients/{clientId} {
-      allow read: if isActiveProfile();
-      allow create, update, delete: if canManageOperations();
+      allow read: if canReadWorkshopEntity(resource.data.workshopId);
+      allow create: if canManageWorkshopEntity(request.resource.data.workshopId);
+      allow update, delete: if canManageWorkshopEntity(resource.data.workshopId);
     }
 
     match /vehicles/{vehicleId} {
-      allow read: if isActiveProfile();
-      allow create, update, delete: if canManageOperations();
+      allow read: if canReadWorkshopEntity(resource.data.workshopId);
+      allow create: if canManageWorkshopEntity(request.resource.data.workshopId);
+      allow update, delete: if canManageWorkshopEntity(resource.data.workshopId);
     }
 
     match /diagnostics/{diagnosticId} {
-      allow get: if isActiveProfile() && canReadDiagnostic(resource.data);
-      allow list: if isActiveProfile();
-      allow create, update, delete: if canManageOperations();
+      allow get, list: if canReadDiagnostic(resource.data);
+      allow create: if canManageWorkshopEntity(request.resource.data.workshopId);
+      allow update, delete: if canManageWorkshopEntity(resource.data.workshopId);
     }
 
     match /workOrders/{workOrderId} {
-      allow get: if isActiveProfile() && canReadWorkOrder(resource.data);
-      allow list: if isActiveProfile();
-      allow create, update, delete: if canManageOperations();
+      allow get, list: if canReadWorkOrder(resource.data);
+      allow create: if canManageWorkshopEntity(request.resource.data.workshopId);
+      allow update, delete: if canManageWorkshopEntity(resource.data.workshopId);
     }
 
     match /progressEntries/{progressEntryId} {

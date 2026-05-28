@@ -13,6 +13,7 @@ import {
   patchEntityRecord,
 } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
+import { requireActiveWorkshopId } from "../workshops/workshopSession";
 
 const diagnosticsCollection = firestoreCollections.diagnostics;
 
@@ -49,9 +50,14 @@ export function isDiagnosticClosed(status) {
 }
 
 export async function listDiagnostics() {
+  const activeWorkshopId = requireActiveWorkshopId();
   const collectionRef = collection(firestore, diagnosticsCollection.name);
   const snapshot = await getDocs(
-    query(collectionRef, orderBy("sequentialId", "desc")),
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      orderBy("sequentialId", "desc"),
+    ),
   );
 
   return snapshot.docs.map((item) => ({
@@ -64,6 +70,7 @@ export async function findActiveDiagnosticByVehicleId(
   vehicleId,
   excludeDiagnosticId = "",
 ) {
+  const activeWorkshopId = requireActiveWorkshopId();
   const normalizedVehicleId = normalizeOptional(vehicleId);
 
   if (!normalizedVehicleId) {
@@ -78,6 +85,7 @@ export async function findActiveDiagnosticByVehicleId(
 
       return (
         normalizeOptional(diagnostic.vehicleId) === normalizedVehicleId &&
+        normalizeOptional(diagnostic.workshopId) === activeWorkshopId &&
         !isDiagnosticClosed(diagnostic.status) &&
         currentId !== normalizeOptional(excludeDiagnosticId)
       );
@@ -97,6 +105,7 @@ export async function createDiagnostic({
   quoteCost,
   notes,
 }) {
+  const workshopId = requireActiveWorkshopId();
   const existingActiveDiagnostic =
     await findActiveDiagnosticByVehicleId(vehicleId);
 
@@ -107,6 +116,7 @@ export async function createDiagnostic({
   }
 
   return createEntityRecord("diagnostics", {
+    workshopId,
     clientId: normalizeOptional(clientId),
     vehicleId: normalizeOptional(vehicleId),
     openedByUid: normalizeOptional(openedByUid),
@@ -122,9 +132,10 @@ export async function createDiagnostic({
 }
 
 export async function updateDiagnostic(diagnosticId, payload) {
+  const workshopId = requireActiveWorkshopId();
   const currentDiagnostic = await getEntityRecord("diagnostics", diagnosticId);
 
-  if (!currentDiagnostic) {
+  if (!currentDiagnostic || currentDiagnostic.workshopId !== workshopId) {
     throw new Error("No se encontro el diagnostico a actualizar.");
   }
 
@@ -144,6 +155,7 @@ export async function updateDiagnostic(diagnosticId, payload) {
   }
 
   await patchEntityRecord("diagnostics", diagnosticId, {
+    workshopId,
     clientId: normalizeOptional(payload.clientId),
     vehicleId: normalizeOptional(payload.vehicleId),
     assignedMechanicUid: normalizeOptional(payload.assignedMechanicUid),
@@ -157,9 +169,14 @@ export async function updateDiagnostic(diagnosticId, payload) {
 }
 
 export async function closeDiagnostic(diagnosticId) {
+  const workshopId = requireActiveWorkshopId();
   const currentDiagnostic = await getEntityRecord("diagnostics", diagnosticId);
 
-  if (!currentDiagnostic || isDiagnosticClosed(currentDiagnostic.status)) {
+  if (
+    !currentDiagnostic ||
+    currentDiagnostic.workshopId !== workshopId ||
+    isDiagnosticClosed(currentDiagnostic.status)
+  ) {
     return;
   }
 
@@ -170,6 +187,13 @@ export async function closeDiagnostic(diagnosticId) {
 }
 
 export async function deleteDiagnostic(diagnosticId) {
+  const workshopId = requireActiveWorkshopId();
+  const currentDiagnostic = await getEntityRecord("diagnostics", diagnosticId);
+
+  if (!currentDiagnostic || currentDiagnostic.workshopId !== workshopId) {
+    throw new Error("El diagnostico no pertenece al taller activo.");
+  }
+
   await deleteEntityRecord("diagnostics", diagnosticId);
 }
 
