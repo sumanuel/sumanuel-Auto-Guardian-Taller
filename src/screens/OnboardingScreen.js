@@ -360,17 +360,17 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    justifyContent: "space-between",
-    gap: spacing.xl,
+    padding: spacing.lg,
+    justifyContent: "flex-start",
+    gap: spacing.lg,
   },
   visualStack: {
-    gap: spacing.md,
+    gap: spacing.sm,
     alignItems: "center",
   },
   logoFrame: {
-    width: rf(168),
-    height: rf(168),
+    width: rf(152),
+    height: rf(152),
     borderRadius: borderRadius.xl,
     borderWidth: 1,
     alignItems: "center",
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   copyBlock: {
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   kicker: {
     fontSize: rf(11),
@@ -404,13 +404,13 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   title: {
-    fontSize: rf(28),
-    lineHeight: rf(34),
+    fontSize: rf(26),
+    lineHeight: rf(31),
     fontWeight: "900",
   },
   description: {
     fontSize: rf(14),
-    lineHeight: rf(22),
+    lineHeight: rf(20),
     fontWeight: "500",
   },
   highlightRow: {
