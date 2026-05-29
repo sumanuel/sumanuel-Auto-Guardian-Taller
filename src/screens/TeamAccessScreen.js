@@ -845,12 +845,48 @@ export default function TeamAccessScreen({
                       </Text>
                     </View>
                   ) : (
-                    <Text
-                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    <View
+                      style={[
+                        styles.logoPlaceholderCard,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
                     >
-                      Selecciona una imagen desde la galeria para guardarla como
-                      logo comercial del taller.
-                    </Text>
+                      <View
+                        style={[
+                          styles.logoPlaceholderBadge,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.logoPlaceholderInitials,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          LOGO
+                        </Text>
+                      </View>
+                      <Text
+                        style={[styles.logoPreviewText, { color: colors.text }]}
+                      >
+                        Aun no hay logo cargado
+                      </Text>
+                      <Text
+                        style={[
+                          styles.rowMeta,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Selecciona una imagen desde la galeria para guardarla
+                        como logo comercial del taller.
+                      </Text>
+                    </View>
                   )}
                   <TextInput
                     multiline
@@ -1995,6 +2031,27 @@ const styles = StyleSheet.create({
     fontSize: rf(12),
     lineHeight: rf(17),
     textAlign: "center",
+  },
+  logoPlaceholderCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+    alignItems: "center",
+  },
+  logoPlaceholderBadge: {
+    minWidth: rf(92),
+    minHeight: rf(92),
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+  },
+  logoPlaceholderInitials: {
+    fontSize: rf(16),
+    fontWeight: "900",
+    letterSpacing: 1.2,
   },
   roleOptionRow: {
     flexDirection: "row",

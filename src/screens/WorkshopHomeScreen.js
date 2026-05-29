@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   Pressable,
@@ -32,9 +33,27 @@ const roleLabels = {
 };
 
 const queueTypeOptions = [
-  { key: "all", label: "Todos" },
-  { key: "diagnostic", label: "Diagnosticos" },
-  { key: "work-order", label: "Ordenes" },
+  {
+    key: "all",
+    label: "Todos",
+    title: "Panorama general",
+    subtitle: "Diagnosticos y ordenes mezclados segun actividad reciente.",
+    icon: "grid-outline",
+  },
+  {
+    key: "diagnostic",
+    label: "Diagnosticos",
+    title: "Diagnosticos del taller",
+    subtitle: "Revision inicial, cotizacion y aprobacion antes de abrir orden.",
+    icon: "clipboard-outline",
+  },
+  {
+    key: "work-order",
+    label: "Ordenes",
+    title: "Ordenes operativas",
+    subtitle: "Seguimiento de ejecucion, pausas, entregas y avance tecnico.",
+    icon: "construct-outline",
+  },
 ];
 
 function normalizeSearchValue(value) {
@@ -49,6 +68,18 @@ function getVehicleKey(vehicle) {
 
 function getRecordKey(record) {
   return record?.refId || record?.id || "";
+}
+
+function getTimestampMillis(value) {
+  if (value?.toMillis) {
+    return value.toMillis();
+  }
+
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  return 0;
 }
 
 function formatOperationalCode(record, collectionConfig) {
@@ -107,6 +138,14 @@ function getQueueAccentColor(item, colors) {
 
 function getQueueCaseColor(item, colors) {
   return item.type === "diagnostic" ? colors.primary : colors.warning;
+}
+
+function getQueueIconName(itemType) {
+  return itemType === "diagnostic" ? "clipboard-outline" : "construct-outline";
+}
+
+function getQueueTypeLabel(itemType) {
+  return itemType === "diagnostic" ? "Diagnostico" : "Orden";
 }
 
 export default function WorkshopHomeScreen({ userProfile }) {
@@ -174,7 +213,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
       return accumulator;
     }, {});
 
-    const latestDiagnostics = diagnostics.slice(0, 2).map((diagnostic) => {
+    const latestDiagnostics = diagnostics.map((diagnostic) => {
       const vehicle = vehicleLookup[diagnostic.vehicleId];
       const sequentialCode = formatOperationalCode(
         diagnostic,
@@ -193,6 +232,9 @@ export default function WorkshopHomeScreen({ userProfile }) {
           sequentialCode,
         plate: vehicle?.plate || "Sin placa",
         detail: sequentialCode,
+        createdAt:
+          getTimestampMillis(diagnostic?.updatedAt) ||
+          getTimestampMillis(diagnostic?.createdAt),
         statusKey: diagnostic.status || "",
         status:
           diagnosticStatusOptions.find((item) => item.key === diagnostic.status)
@@ -202,7 +244,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
       };
     });
 
-    const latestWorkOrders = workOrders.slice(0, 2).map((workOrder) => {
+    const latestWorkOrders = workOrders.map((workOrder) => {
       const vehicle = vehicleLookup[workOrder.vehicleId];
       const sequentialCode = formatOperationalCode(
         workOrder,
@@ -221,6 +263,9 @@ export default function WorkshopHomeScreen({ userProfile }) {
           sequentialCode,
         plate: vehicle?.plate || "Sin placa",
         detail: sequentialCode,
+        createdAt:
+          getTimestampMillis(workOrder?.updatedAt) ||
+          getTimestampMillis(workOrder?.createdAt),
         statusKey: workOrder.status || "",
         status:
           workOrderStatusOptions.find((item) => item.key === workOrder.status)
@@ -230,7 +275,9 @@ export default function WorkshopHomeScreen({ userProfile }) {
       };
     });
 
-    return [...latestDiagnostics, ...latestWorkOrders].slice(0, 3);
+    return [...latestDiagnostics, ...latestWorkOrders].sort(
+      (left, right) => right.createdAt - left.createdAt,
+    );
   }, [diagnostics, vehicles, workOrders]);
 
   const statusFilterOptions = useMemo(() => {
@@ -256,36 +303,38 @@ export default function WorkshopHomeScreen({ userProfile }) {
       ];
     }
 
-    return [
-      { id: "all", value: "all", label: "Todos los estados" },
-      ...diagnosticStatusOptions.map((option) => ({
-        id: `diagnostic-${option.key}`,
-        value: option.key,
-        label: `Diag. ${option.label}`,
-      })),
-      ...workOrderStatusOptions.map((option) => ({
-        id: `work-order-${option.key}`,
-        value: option.key,
-        label: `Ord. ${option.label}`,
-      })),
-    ];
+    return [{ id: "all", value: "all", label: "Todo" }];
   }, [selectedType]);
 
   const filteredQueue = useMemo(() => {
     const normalizedPlateQuery = normalizeSearchValue(plateQuery);
 
-    return queue.filter((item) => {
-      const matchesPlate = normalizedPlateQuery
-        ? normalizeSearchValue(item.plate).includes(normalizedPlateQuery)
-        : true;
-      const matchesType =
-        selectedType === "all" ? true : item.type === selectedType;
-      const matchesStatus =
-        selectedStatus === "all" ? true : item.statusKey === selectedStatus;
-
-      return matchesPlate && matchesType && matchesStatus;
-    });
+    return queue
+      .filter((item) => {
+        const matchesPlate = normalizedPlateQuery
+          ? normalizeSearchValue(item.plate).includes(normalizedPlateQuery)
+          : true;
+        const matchesType =
+          selectedType === "all" ? true : item.type === selectedType;
+        const matchesStatus =
+          selectedStatus === "all" ? true : item.statusKey === selectedStatus;
+        return matchesPlate && matchesType && matchesStatus;
+      })
+      .slice(0, 8);
   }, [plateQuery, queue, selectedStatus, selectedType]);
+
+  const selectedQueueType =
+    queueTypeOptions.find((option) => option.key === selectedType) ||
+    queueTypeOptions[0];
+
+  const tabCounters = useMemo(
+    () => ({
+      all: queue.length,
+      diagnostic: diagnostics.length,
+      "work-order": workOrders.length,
+    }),
+    [diagnostics.length, queue.length, workOrders.length],
+  );
 
   const activeOrdersCount = workOrders.filter(
     (workOrder) => workOrder.status !== "delivered",
@@ -399,94 +448,168 @@ export default function WorkshopHomeScreen({ userProfile }) {
             },
           ]}
         >
-          <Text style={[styles.panelEyebrow, { color: colors.primary }]}>
-            Agenda
-          </Text>
-          <Text style={[styles.panelTitle, { color: colors.text }]}>
-            Cola de hoy
-          </Text>
+          <View style={styles.panelHeaderBlock}>
+            <Text style={[styles.panelEyebrow, { color: colors.primary }]}>
+              Agenda operativa
+            </Text>
+            <Text style={[styles.panelTitle, { color: colors.text }]}>
+              {selectedQueueType.title}
+            </Text>
+            <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+              {selectedQueueType.subtitle}
+            </Text>
+          </View>
+
+          <View style={styles.tabRail}>
+            {queueTypeOptions.map((option) => {
+              const isActive = option.key === selectedType;
+
+              return (
+                <Pressable
+                  key={option.key}
+                  onPress={() => setSelectedType(option.key)}
+                  style={[
+                    styles.tabCard,
+                    {
+                      backgroundColor: isActive
+                        ? colors.primary
+                        : colors.cardMuted,
+                      borderColor: isActive ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <View style={styles.tabCardTopRow}>
+                    <Ionicons
+                      color={isActive ? colors.white : colors.textSecondary}
+                      name={option.icon}
+                      size={rf(16)}
+                    />
+                    <Text
+                      style={[
+                        styles.tabCardCount,
+                        { color: isActive ? colors.white : colors.text },
+                      ]}
+                    >
+                      {tabCounters[option.key] || 0}
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.tabCardLabel,
+                      { color: isActive ? colors.white : colors.text },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
 
           <View style={styles.filtersBlock}>
-            <TextInput
-              placeholder="Buscar por placa"
-              placeholderTextColor={colors.textTertiary}
+            <View
               style={[
-                styles.searchInput,
+                styles.searchShell,
                 {
                   backgroundColor: colors.inputBackground,
                   borderColor: colors.border,
-                  color: colors.text,
                 },
               ]}
-              value={plateQuery}
-              onChangeText={setPlateQuery}
-              autoCapitalize="characters"
-            />
-
-            <View style={styles.filterGroup}>
-              {queueTypeOptions.map((option) => {
-                const isActive = option.key === selectedType;
-
-                return (
-                  <Pressable
-                    key={option.key}
-                    onPress={() => setSelectedType(option.key)}
-                    style={[
-                      styles.filterChip,
-                      {
-                        backgroundColor: isActive
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: isActive ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterChipText,
-                        { color: isActive ? colors.white : colors.text },
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+            >
+              <Ionicons
+                color={colors.textTertiary}
+                name="search-outline"
+                size={rf(18)}
+              />
+              <TextInput
+                placeholder="Buscar por placa"
+                placeholderTextColor={colors.textTertiary}
+                style={[styles.searchInput, { color: colors.text }]}
+                value={plateQuery}
+                onChangeText={setPlateQuery}
+                autoCapitalize="characters"
+              />
             </View>
 
-            <View style={styles.filterGroup}>
-              {statusFilterOptions.map((option) => {
-                const isActive = option.value === selectedStatus;
+            <View
+              style={[
+                styles.contextStrip,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <View style={styles.contextStripCopy}>
+                <Text
+                  style={[styles.contextStripTitle, { color: colors.text }]}
+                >
+                  {filteredQueue.length} registro
+                  {filteredQueue.length === 1 ? "" : "s"} visibles
+                </Text>
+                <Text
+                  style={[
+                    styles.contextStripSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {selectedType === "all"
+                    ? "Vista compacta para detectar rapido diagnosticos y ordenes activas."
+                    : "Filtra por estado solo cuando estes revisando un flujo operativo especifico."}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.contextBadge,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.contextBadgeText, { color: colors.primary }]}
+                >
+                  {selectedQueueType.label}
+                </Text>
+              </View>
+            </View>
 
-                return (
-                  <Pressable
-                    key={option.id}
-                    onPress={() => setSelectedStatus(option.value)}
-                    style={[
-                      styles.filterChip,
-                      styles.filterChipCompact,
-                      {
-                        backgroundColor: isActive
-                          ? colors.primaryStrong
-                          : colors.cardMuted,
-                        borderColor: isActive
-                          ? colors.primaryStrong
-                          : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
+            {selectedType !== "all" ? (
+              <View style={styles.filterGroup}>
+                {statusFilterOptions.map((option) => {
+                  const isActive = option.value === selectedStatus;
+
+                  return (
+                    <Pressable
+                      key={option.id}
+                      onPress={() => setSelectedStatus(option.value)}
                       style={[
-                        styles.filterChipText,
-                        { color: isActive ? colors.white : colors.text },
+                        styles.filterChip,
+                        styles.filterChipCompact,
+                        {
+                          backgroundColor: isActive
+                            ? colors.primaryStrong
+                            : colors.cardMuted,
+                          borderColor: isActive
+                            ? colors.primaryStrong
+                            : colors.border,
+                        },
                       ]}
                     >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          { color: isActive ? colors.white : colors.text },
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -510,27 +633,28 @@ export default function WorkshopHomeScreen({ userProfile }) {
                   ]}
                 >
                   <View style={styles.queueCopy}>
-                    <View
-                      style={[
-                        styles.queueHeader,
-                        { borderBottomColor: colors.border },
-                      ]}
-                    >
-                      <View style={styles.queueHeaderCopy}>
+                    <View style={styles.queueTopRow}>
+                      <View
+                        style={[
+                          styles.queueTypeBadge,
+                          {
+                            backgroundColor: colors.cardMuted,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          color={accentColor}
+                          name={getQueueIconName(item.type)}
+                          size={rf(15)}
+                        />
                         <Text
-                          style={[styles.queueEyebrow, { color: accentColor }]}
+                          style={[
+                            styles.queueTypeBadgeText,
+                            { color: accentColor },
+                          ]}
                         >
-                          Agenda
-                        </Text>
-                        <Text
-                          style={[styles.queueTitle, { color: colors.text }]}
-                        >
-                          {item.title}
-                        </Text>
-                        <Text
-                          style={[styles.queuePlate, { color: colors.accent }]}
-                        >
-                          Placa: {item.plate}
+                          {getQueueTypeLabel(item.type)}
                         </Text>
                       </View>
                       <View
@@ -549,8 +673,25 @@ export default function WorkshopHomeScreen({ userProfile }) {
                         </Text>
                       </View>
                     </View>
+
+                    <Text style={[styles.queueTitle, { color: colors.text }]}>
+                      {item.title}
+                    </Text>
+                    <Text style={[styles.queuePlate, { color: colors.accent }]}>
+                      Placa: {item.plate}
+                    </Text>
                     <Text style={[styles.queueCaseTag, { color: caseColor }]}>
                       {item.detail}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.queueDetail,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {item.type === "diagnostic"
+                        ? "Listo para revision tecnica, cotizacion o aprobacion."
+                        : "Sigue el avance de ejecucion y prepara la entrega del vehiculo."}
                     </Text>
                   </View>
                 </View>
@@ -573,8 +714,8 @@ export default function WorkshopHomeScreen({ userProfile }) {
                 <Text
                   style={[styles.queueDetail, { color: colors.textSecondary }]}
                 >
-                  No hay coincidencias con los filtros actuales para mostrar en
-                  el home.
+                  No hay coincidencias para esta vista. Cambia de tab o ajusta
+                  la placa buscada para recuperar actividad operativa.
                 </Text>
               </View>
             </View>
@@ -635,17 +776,84 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.sm,
   },
+  panelHeaderBlock: {
+    gap: spacing.xs,
+  },
+  tabRail: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  tabCard: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    gap: spacing.xs,
+  },
+  tabCardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  tabCardCount: {
+    fontSize: rf(16),
+    fontWeight: "900",
+  },
+  tabCardLabel: {
+    fontSize: rf(12),
+    fontWeight: "800",
+  },
   filtersBlock: {
     marginTop: spacing.md,
     gap: spacing.sm,
   },
-  searchInput: {
+  searchShell: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
     paddingVertical: spacing.sm,
     fontSize: rf(14),
     fontWeight: "600",
+  },
+  contextStrip: {
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  contextStripCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  contextStripTitle: {
+    fontSize: rf(14),
+    fontWeight: "800",
+  },
+  contextStripSubtitle: {
+    fontSize: rf(12),
+    lineHeight: rf(17),
+  },
+  contextBadge: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  contextBadgeText: {
+    fontSize: rf(12),
+    fontWeight: "800",
   },
   filterGroup: {
     flexDirection: "row",
@@ -684,20 +892,24 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   queueCopy: { flex: 1, gap: spacing.sm },
-  queueHeader: {
+  queueTopRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: spacing.md,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
   },
-  queueHeaderCopy: { flex: 1, gap: 2 },
-  queueEyebrow: {
-    fontSize: rf(10),
+  queueTypeBadge: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  queueTypeBadgeText: {
+    fontSize: rf(11),
     fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
   },
   queueTitle: { fontSize: rf(16), fontWeight: "800" },
   queuePlate: {

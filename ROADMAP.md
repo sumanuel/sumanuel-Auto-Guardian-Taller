@@ -1,6 +1,6 @@
 # Roadmap Auto-Guardian-Taller
 
-Ultima actualizacion: 27-05-2026
+Ultima actualizacion: 29-05-2026
 
 ## Como se actualiza este roadmap
 
@@ -37,8 +37,10 @@ Ultima actualizacion: 27-05-2026
 - Completado: asociacion de uno o varios vehiculos por cliente y CRUD base de vehiculos desde la pantalla de clientes.
 - Completado: vista de detalle real por cliente con acciones rapidas, vehiculos asociados, acceso directo a diagnostico por vehiculo y boton flotante para alta.
 - Completado: directorio formal de personal tecnico con ficha editable de nombre, telefono, rol y estado desde la pantalla de equipo.
-- Pendiente: evolucionar el modelo actual de taller unico a arquitectura multi-taller con membresias, taller activo e invitaciones por taller.
-- Pendiente: funcionalidad de negocio, autenticacion, datos y flujos operativos del taller.
+- Completado: evolucion del modelo inicial a arquitectura multi-taller con workshops, memberships, taller activo, migracion y reglas desplegadas.
+- Completado: gestion del taller activo con nombre, contacto, direccion, RIF, logo, notas comerciales y reinicio de datos operativos.
+- Completado: inventario general de stock y herramientas con CRUD y movimientos de entrada y salida.
+- En progreso: dashboard operativo del home con mejor jerarquia visual, tabs y lectura rapida por diagnosticos y ordenes.
 
 ## Fase 0. Fundacion tecnica
 
@@ -62,18 +64,18 @@ Ultima actualizacion: 27-05-2026
 | F1-3 | Recuperacion de contrasena                                                             | Completado | Alta      | F0-2             | 30-04-2026 |
 | F1-4 | Persistencia de sesion y cierre de sesion                                              | Completado | Alta      | F1-1             | 30-04-2026 |
 | F1-5 | Validaciones, mensajes de error y estados vacios de auth                               | Completado | Media     | F1-1, F1-2, F1-3 | 30-04-2026 |
-| F1-6 | Evolucionar sesion y perfil hacia contexto multi-taller con taller activo y membresias | Pendiente  | Alta      | F1-1, F1-4       | -          |
+| F1-6 | Evolucionar sesion y perfil hacia contexto multi-taller con taller activo y membresias | Completado | Alta      | F1-1, F1-4       | 28-05-2026 |
 
 ## Fase 1B. Multi-taller
 
-| ID    | Aspecto                                                                 | Estado    | Prioridad | Dependencias | Completado |
-| ----- | ----------------------------------------------------------------------- | --------- | --------- | ------------ | ---------- |
-| F1B-1 | Crear modelo de workshops y workshopMemberships                         | Pendiente | Alta      | F0-4, F1-6   | -          |
-| F1B-2 | Adaptar invitaciones para asociarlas a un taller                        | Pendiente | Alta      | F0-5, F1B-1  | -          |
-| F1B-3 | Agregar selector de taller activo y gestion de talleres y colaboradores | Pendiente | Alta      | F1B-1, F1B-2 | -          |
-| F1B-4 | Particionar entidades operativas por workshopId                         | Pendiente | Alta      | F1B-1        | -          |
-| F1B-5 | Migrar datos existentes al modelo multi-taller                          | Pendiente | Alta      | F1B-1, F1B-4 | -          |
-| F1B-6 | Endurecer reglas de Firestore para el modelo multi-taller               | Pendiente | Alta      | F1B-2, F1B-4 | -          |
+| ID    | Aspecto                                                                 | Estado     | Prioridad | Dependencias | Completado |
+| ----- | ----------------------------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
+| F1B-1 | Crear modelo de workshops y workshopMemberships                         | Completado | Alta      | F0-4, F1-6   | 28-05-2026 |
+| F1B-2 | Adaptar invitaciones para asociarlas a un taller                        | Completado | Alta      | F0-5, F1B-1  | 28-05-2026 |
+| F1B-3 | Agregar selector de taller activo y gestion de talleres y colaboradores | Completado | Alta      | F1B-1, F1B-2 | 29-05-2026 |
+| F1B-4 | Particionar entidades operativas por workshopId                         | Completado | Alta      | F1B-1        | 28-05-2026 |
+| F1B-5 | Migrar datos existentes al modelo multi-taller                          | Completado | Alta      | F1B-1, F1B-4 | 28-05-2026 |
+| F1B-6 | Endurecer reglas de Firestore para el modelo multi-taller               | Completado | Alta      | F1B-2, F1B-4 | 28-05-2026 |
 
 ## Fase 2. Clientes y vehiculos
 
@@ -116,15 +118,15 @@ Ultima actualizacion: 27-05-2026
 
 ## Fase 6. Operacion necesaria para completar la app
 
-| ID   | Aspecto                                                            | Estado      | Prioridad | Dependencias     | Completado |
-| ---- | ------------------------------------------------------------------ | ----------- | --------- | ---------------- | ---------- |
-| F6-1 | Inventario basico de repuestos vinculable a diagnosticos y ordenes | Pendiente   | Media     | F4-3, F5-1       | -          |
-| F6-2 | Presupuestos y costos estimados por trabajo                        | En progreso | Media     | F4-2, F4-3       | -          |
-| F6-3 | Registro de pagos, saldo pendiente y cierre administrativo         | Pendiente   | Media     | F6-2, F5-5       | -          |
-| F6-4 | Notificaciones internas o por correo para cambios de estado        | Pendiente   | Media     | F5-3, F0-2       | -          |
-| F6-5 | Adjuntos y evidencias: fotos, documentos, facturas                 | Pendiente   | Media     | F4-1             | -          |
-| F6-6 | Auditoria minima de cambios importantes                            | Pendiente   | Media     | F0-4             | -          |
-| F6-7 | Dashboard operativo del taller con indicadores clave               | Pendiente   | Media     | F2-1, F4-1, F5-3 | -          |
+| ID   | Aspecto                                                              | Estado      | Prioridad | Dependencias     | Completado |
+| ---- | -------------------------------------------------------------------- | ----------- | --------- | ---------------- | ---------- |
+| F6-1 | Inventario basico de stock y herramientas con movimientos operativos | Completado  | Media     | F4-3, F5-1       | 28-05-2026 |
+| F6-2 | Presupuestos y costos estimados por trabajo                          | En progreso | Media     | F4-2, F4-3       | -          |
+| F6-3 | Registro de pagos, saldo pendiente y cierre administrativo           | Pendiente   | Media     | F6-2, F5-5       | -          |
+| F6-4 | Notificaciones internas o por correo para cambios de estado          | Pendiente   | Media     | F5-3, F0-2       | -          |
+| F6-5 | Adjuntos y evidencias: fotos, documentos, facturas                   | Pendiente   | Media     | F4-1             | -          |
+| F6-6 | Auditoria minima de cambios importantes                              | Pendiente   | Media     | F0-4             | -          |
+| F6-7 | Dashboard operativo del taller con indicadores clave                 | En progreso | Media     | F2-1, F4-1, F5-3 | -          |
 
 ## Fase 7. Diseno y consistencia de producto
 
@@ -144,7 +146,7 @@ Ultima actualizacion: 27-05-2026
 | H3   | Equipo tecnico con invitaciones operativas en app               | Completado  |
 | H4   | Diagnostico con partes, repuestos y aprobacion                  | En progreso |
 | H5   | Seguimiento de trabajos y avances                               | En progreso |
-| H6   | Operacion extendida: costos, pagos, inventario y notificaciones | Pendiente   |
+| H6   | Operacion extendida: costos, pagos, inventario y notificaciones | En progreso |
 
 ## Historial de avances
 
@@ -165,6 +167,9 @@ Ultima actualizacion: 27-05-2026
 - 22-05-2026: clientes agrega campo de identificacion, la busqueda se limita a identificacion o nombre, la lista principal expone vehiculos asociados y la ficha del cliente abre diagnosticos por vehiculo sin volver a seleccionar cliente ni unidad.
 - 27-05-2026: el formulario de diagnosticos gana ayudas visuales, costo estimado y mejor resumen para edicion; ademas, ordenes ahora abre la lista de repuestos filtrada por orden y el modulo de repuestos queda reducido a los estados solicitado, recibido e instalado.
 - 28-05-2026: se documenta la arquitectura objetivo para evolucionar de taller unico a multi-taller, con talleres, membresias, taller activo, invitaciones por taller y migracion de datos operativos.
+- 28-05-2026: se cierra la migracion al esquema multi-taller, se publican reglas e indices y la operacion queda consolidada en el taller unico Taller el suma con taller activo y membresias reales.
+- 28-05-2026: la administracion del taller gana RIF, logo, notas comerciales, PDF con datos del taller activo y un modulo de stock y herramientas con CRUD y movimientos de entrada y salida.
+- 29-05-2026: Mas opciones separa Datos del taller y Colaboradores, la ficha del taller muestra placeholder cuando aun no tiene logo y el home se reorganiza con tabs para Todos, Diagnosticos y Ordenes con una lectura mas clara del flujo operativo.
 
 ## Decisiones base cerradas
 
