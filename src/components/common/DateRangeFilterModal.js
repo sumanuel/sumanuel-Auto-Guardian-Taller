@@ -437,7 +437,7 @@ export default function DateRangeFilterModal({
 
           <View style={styles.actionsRow}>
             <Pressable
-              onPress={() => applyPreset(() => createLastDaysRange(30))}
+              onPress={onClose}
               style={[
                 styles.secondaryButton,
                 {
@@ -449,7 +449,7 @@ export default function DateRangeFilterModal({
               <Text
                 style={[styles.secondaryButtonText, { color: colors.text }]}
               >
-                Ultimos 30 dias
+                Cancelar
               </Text>
             </Pressable>
             <Pressable
