@@ -397,7 +397,10 @@ export default function WorkshopHomeScreen({
               style={[
                 styles.metricTile,
                 styles.metricActionTile,
-                { backgroundColor: colors.cardMuted, borderColor: colors.border },
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
               ]}
             >
               <View style={styles.metricTileHeader}>
@@ -425,7 +428,9 @@ export default function WorkshopHomeScreen({
               <Text style={[styles.metricValue, { color: colors.text }]}>
                 {vehicles.length}
               </Text>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}> 
+              <Text
+                style={[styles.metricLabel, { color: colors.textSecondary }]}
+              >
                 Vehiculos
               </Text>
             </Pressable>
@@ -434,7 +439,10 @@ export default function WorkshopHomeScreen({
               style={[
                 styles.metricTile,
                 styles.metricActionTile,
-                { backgroundColor: colors.cardMuted, borderColor: colors.border },
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
               ]}
             >
               <View style={styles.metricTileHeader}>
@@ -462,7 +470,9 @@ export default function WorkshopHomeScreen({
               <Text style={[styles.metricValue, { color: colors.text }]}>
                 {clients.length}
               </Text>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}> 
+              <Text
+                style={[styles.metricLabel, { color: colors.textSecondary }]}
+              >
                 Clientes
               </Text>
             </Pressable>

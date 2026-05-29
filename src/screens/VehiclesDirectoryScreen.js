@@ -149,7 +149,9 @@ export default function VehiclesDirectoryScreen({ onBack }) {
             <Text style={[styles.summaryValue, { color: colors.text }]}>
               {filteredVehicles.length}
             </Text>
-            <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>
+            <Text
+              style={[styles.summaryLabel, { color: colors.textSecondary }]}
+            >
               unidad{filteredVehicles.length === 1 ? "" : "es"} visible
               {filteredVehicles.length === 1 ? "" : "s"}
             </Text>
@@ -191,30 +193,52 @@ export default function VehiclesDirectoryScreen({ onBack }) {
                       />
                     </View>
                     <View style={styles.vehicleTitleBlock}>
-                      <Text style={[styles.vehicleTitle, { color: colors.text }]}>
+                      <Text
+                        style={[styles.vehicleTitle, { color: colors.text }]}
+                      >
                         {buildVehicleTitle(vehicle)}
                       </Text>
-                      <Text style={[styles.vehiclePlate, { color: colors.accent }]}>
+                      <Text
+                        style={[styles.vehiclePlate, { color: colors.accent }]}
+                      >
                         Placa: {vehicle.plate || "Sin placa"}
                       </Text>
                     </View>
                   </View>
 
                   <View style={styles.metaGrid}>
-                    <Text style={[styles.metaLine, { color: colors.textSecondary }]}>
-                      <Text style={[styles.metaLabel, { color: colors.text }]}>Cliente:</Text>{" "}
+                    <Text
+                      style={[styles.metaLine, { color: colors.textSecondary }]}
+                    >
+                      <Text style={[styles.metaLabel, { color: colors.text }]}>
+                        Cliente:
+                      </Text>{" "}
                       {client?.fullName || "Sin cliente asociado"}
                     </Text>
-                    <Text style={[styles.metaLine, { color: colors.textSecondary }]}>
-                      <Text style={[styles.metaLabel, { color: colors.text }]}>Color:</Text>{" "}
+                    <Text
+                      style={[styles.metaLine, { color: colors.textSecondary }]}
+                    >
+                      <Text style={[styles.metaLabel, { color: colors.text }]}>
+                        Color:
+                      </Text>{" "}
                       {vehicle.color || "Sin color"}
                     </Text>
-                    <Text style={[styles.metaLine, { color: colors.textSecondary }]}>
-                      <Text style={[styles.metaLabel, { color: colors.text }]}>Kilometraje:</Text>{" "}
-                      {vehicle.mileage ? `${vehicle.mileage} km` : "Sin kilometraje"}
+                    <Text
+                      style={[styles.metaLine, { color: colors.textSecondary }]}
+                    >
+                      <Text style={[styles.metaLabel, { color: colors.text }]}>
+                        Kilometraje:
+                      </Text>{" "}
+                      {vehicle.mileage
+                        ? `${vehicle.mileage} km`
+                        : "Sin kilometraje"}
                     </Text>
-                    <Text style={[styles.metaLine, { color: colors.textSecondary }]}>
-                      <Text style={[styles.metaLabel, { color: colors.text }]}>VIN:</Text>{" "}
+                    <Text
+                      style={[styles.metaLine, { color: colors.textSecondary }]}
+                    >
+                      <Text style={[styles.metaLabel, { color: colors.text }]}>
+                        VIN:
+                      </Text>{" "}
                       {vehicle.vin || "Sin VIN"}
                     </Text>
                   </View>
@@ -231,7 +255,9 @@ export default function VehiclesDirectoryScreen({ onBack }) {
                 },
               ]}
             >
-              <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>Flota</Text>
+              <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
+                Flota
+              </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 No hay vehiculos que coincidan con la busqueda actual.
               </Text>
