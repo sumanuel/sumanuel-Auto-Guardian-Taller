@@ -88,7 +88,10 @@ export async function resetActiveWorkshopDataForCurrentUser() {
       continue;
     }
 
-    const deletedCount = await deleteDocsForCollection(collectionName, workshopId);
+    const deletedCount = await deleteDocsForCollection(
+      collectionName,
+      workshopId,
+    );
     deletedByCollection[entityKey] = deletedCount;
     deletedDocuments += deletedCount;
   }

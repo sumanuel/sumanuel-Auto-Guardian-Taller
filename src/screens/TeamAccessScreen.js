@@ -678,109 +678,210 @@ export default function TeamAccessScreen({
               </Text>
               {canManageWorkshop ? (
                 <>
-                <TextInput
-                  onChangeText={(value) =>
-                    setActiveWorkshopForm((current) => ({
-                      ...current,
-                      name: value,
-                    }))
-                  }
-                  placeholder="Nombre del taller activo"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={activeWorkshopForm.name}
-                />
-                <TextInput
-                  onChangeText={(value) =>
-                    setActiveWorkshopForm((current) => ({
-                      ...current,
-                      phone: value,
-                    }))
-                  }
-                  placeholder="Telefono del taller"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={activeWorkshopForm.phone}
-                />
-                <TextInput
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  onChangeText={(value) =>
-                    setActiveWorkshopForm((current) => ({
-                      ...current,
-                      email: value,
-                    }))
-                  }
-                  placeholder="Correo del taller"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={activeWorkshopForm.email}
-                />
-                <TextInput
-                  onChangeText={(value) =>
-                    setActiveWorkshopForm((current) => ({
-                      ...current,
-                      address: value,
-                    }))
-                  }
-                  placeholder="Direccion del taller"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={activeWorkshopForm.address}
-                />
-                <TextInput
-                  onChangeText={(value) =>
-                    setActiveWorkshopForm((current) => ({
-                      ...current,
-                      rif: value,
-                    }))
-                  }
-                  placeholder="RIF o identificacion fiscal"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={activeWorkshopForm.rif}
-                />
-                <View style={styles.logoActionsRow}>
+                  <TextInput
+                    onChangeText={(value) =>
+                      setActiveWorkshopForm((current) => ({
+                        ...current,
+                        name: value,
+                      }))
+                    }
+                    placeholder="Nombre del taller activo"
+                    placeholderTextColor={colors.textTertiary}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    value={activeWorkshopForm.name}
+                  />
+                  <TextInput
+                    onChangeText={(value) =>
+                      setActiveWorkshopForm((current) => ({
+                        ...current,
+                        phone: value,
+                      }))
+                    }
+                    placeholder="Telefono del taller"
+                    placeholderTextColor={colors.textTertiary}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    value={activeWorkshopForm.phone}
+                  />
+                  <TextInput
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    onChangeText={(value) =>
+                      setActiveWorkshopForm((current) => ({
+                        ...current,
+                        email: value,
+                      }))
+                    }
+                    placeholder="Correo del taller"
+                    placeholderTextColor={colors.textTertiary}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    value={activeWorkshopForm.email}
+                  />
+                  <TextInput
+                    onChangeText={(value) =>
+                      setActiveWorkshopForm((current) => ({
+                        ...current,
+                        address: value,
+                      }))
+                    }
+                    placeholder="Direccion del taller"
+                    placeholderTextColor={colors.textTertiary}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    value={activeWorkshopForm.address}
+                  />
+                  <TextInput
+                    onChangeText={(value) =>
+                      setActiveWorkshopForm((current) => ({
+                        ...current,
+                        rif: value,
+                      }))
+                    }
+                    placeholder="RIF o identificacion fiscal"
+                    placeholderTextColor={colors.textTertiary}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    value={activeWorkshopForm.rif}
+                  />
+                  <View style={styles.logoActionsRow}>
+                    <Pressable
+                      onPress={handlePickActiveWorkshopLogo}
+                      style={[
+                        styles.secondaryFilledAction,
+                        styles.logoActionButton,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.secondaryFilledActionText,
+                          { color: colors.text },
+                        ]}
+                      >
+                        Seleccionar logo
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      disabled={!activeWorkshopLogoPreview}
+                      onPress={handleClearActiveWorkshopLogo}
+                      style={[
+                        styles.secondaryAction,
+                        styles.logoActionButton,
+                        {
+                          borderColor: colors.borderStrong,
+                          backgroundColor: colors.cardBackground,
+                        },
+                        !activeWorkshopLogoPreview
+                          ? styles.disabledAction
+                          : null,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.secondaryActionText,
+                          { color: colors.text },
+                        ]}
+                      >
+                        Quitar logo
+                      </Text>
+                    </Pressable>
+                  </View>
+                  {activeWorkshopLogoPreview ? (
+                    <View
+                      style={[
+                        styles.logoPreviewCard,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Image
+                        source={{ uri: activeWorkshopLogoPreview }}
+                        style={styles.logoPreviewImage}
+                      />
+                      <Text
+                        style={[
+                          styles.logoPreviewText,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Vista previa del logo comercial del taller.
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text
+                      style={[styles.rowMeta, { color: colors.textSecondary }]}
+                    >
+                      Selecciona una imagen desde la galeria para guardarla como
+                      logo comercial del taller.
+                    </Text>
+                  )}
+                  <TextInput
+                    multiline
+                    numberOfLines={4}
+                    onChangeText={(value) =>
+                      setActiveWorkshopForm((current) => ({
+                        ...current,
+                        commercialNotes: value,
+                      }))
+                    }
+                    placeholder="Notas comerciales, slogan o texto breve para documentos"
+                    placeholderTextColor={colors.textTertiary}
+                    style={[
+                      styles.input,
+                      styles.notesInput,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                    ]}
+                    textAlignVertical="top"
+                    value={activeWorkshopForm.commercialNotes}
+                  />
                   <Pressable
-                    onPress={handlePickActiveWorkshopLogo}
+                    disabled={
+                      workshopSubmitting || authBusy || !activeWorkshopId
+                    }
+                    onPress={handleUpdateWorkshop}
                     style={[
                       styles.secondaryFilledAction,
-                      styles.logoActionButton,
                       {
                         backgroundColor: colors.cardMuted,
                         borderColor: colors.border,
@@ -793,108 +894,11 @@ export default function TeamAccessScreen({
                         { color: colors.text },
                       ]}
                     >
-                      Seleccionar logo
+                      {workshopSubmitting
+                        ? "Guardando..."
+                        : "Guardar datos del taller"}
                     </Text>
                   </Pressable>
-                  <Pressable
-                    disabled={!activeWorkshopLogoPreview}
-                    onPress={handleClearActiveWorkshopLogo}
-                    style={[
-                      styles.secondaryAction,
-                      styles.logoActionButton,
-                      {
-                        borderColor: colors.borderStrong,
-                        backgroundColor: colors.cardBackground,
-                      },
-                      !activeWorkshopLogoPreview ? styles.disabledAction : null,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.secondaryActionText,
-                        { color: colors.text },
-                      ]}
-                    >
-                      Quitar logo
-                    </Text>
-                  </Pressable>
-                </View>
-                {activeWorkshopLogoPreview ? (
-                  <View
-                    style={[
-                      styles.logoPreviewCard,
-                      {
-                        backgroundColor: colors.cardMuted,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Image
-                      source={{ uri: activeWorkshopLogoPreview }}
-                      style={styles.logoPreviewImage}
-                    />
-                    <Text
-                      style={[
-                        styles.logoPreviewText,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      Vista previa del logo comercial del taller.
-                    </Text>
-                  </View>
-                ) : (
-                  <Text
-                    style={[styles.rowMeta, { color: colors.textSecondary }]}
-                  >
-                    Selecciona una imagen desde la galeria para guardarla como
-                    logo comercial del taller.
-                  </Text>
-                )}
-                <TextInput
-                  multiline
-                  numberOfLines={4}
-                  onChangeText={(value) =>
-                    setActiveWorkshopForm((current) => ({
-                      ...current,
-                      commercialNotes: value,
-                    }))
-                  }
-                  placeholder="Notas comerciales, slogan o texto breve para documentos"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    styles.notesInput,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  textAlignVertical="top"
-                  value={activeWorkshopForm.commercialNotes}
-                />
-                <Pressable
-                  disabled={workshopSubmitting || authBusy || !activeWorkshopId}
-                  onPress={handleUpdateWorkshop}
-                  style={[
-                    styles.secondaryFilledAction,
-                    {
-                      backgroundColor: colors.cardMuted,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.secondaryFilledActionText,
-                      { color: colors.text },
-                    ]}
-                  >
-                    {workshopSubmitting
-                      ? "Guardando..."
-                      : "Guardar datos del taller"}
-                  </Text>
-                </Pressable>
                 </>
               ) : (
                 <Text
@@ -952,10 +956,7 @@ export default function TeamAccessScreen({
                   ]}
                 >
                   <Text
-                    style={[
-                      styles.dangerActionText,
-                      { color: colors.danger },
-                    ]}
+                    style={[styles.dangerActionText, { color: colors.danger }]}
                   >
                     {resetSubmitting
                       ? "Reiniciando..."

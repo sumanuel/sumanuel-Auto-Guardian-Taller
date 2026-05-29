@@ -528,10 +528,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
                           {item.title}
                         </Text>
                         <Text
-                          style={[
-                            styles.queuePlate,
-                            { color: colors.accent },
-                          ]}
+                          style={[styles.queuePlate, { color: colors.accent }]}
                         >
                           Placa: {item.plate}
                         </Text>

@@ -756,10 +756,7 @@ export default function WorkOrdersScreen({
                         ]}
                       />
                       <Text
-                        style={[
-                          styles.vehiclePlate,
-                          { color: colors.accent },
-                        ]}
+                        style={[styles.vehiclePlate, { color: colors.accent }]}
                       >
                         <Text
                           style={[

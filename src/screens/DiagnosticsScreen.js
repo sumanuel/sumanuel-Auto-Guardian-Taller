@@ -479,10 +479,7 @@ export default function DiagnosticsScreen({
                         ]}
                       />
                       <Text
-                        style={[
-                          styles.vehiclePlate,
-                          { color: colors.accent },
-                        ]}
+                        style={[styles.vehiclePlate, { color: colors.accent }]}
                       >
                         <Text
                           style={[
@@ -749,7 +746,7 @@ export default function DiagnosticsScreen({
                 { backgroundColor: colors.border },
               ]}
             />
-            <Text style={[styles.vehiclePlate, { color: colors.accent }]}> 
+            <Text style={[styles.vehiclePlate, { color: colors.accent }]}>
               <Text
                 style={[styles.vehiclePlateLabel, { color: colors.accent }]}
               >
