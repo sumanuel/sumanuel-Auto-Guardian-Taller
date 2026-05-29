@@ -181,9 +181,13 @@ function resolveProgressButtonLabel(type) {
 function resolveWorkOrderStatusLabel(status) {
   return (
     workOrderStatusOptions.find((item) => item.key === status)?.label ||
-    status ||
+    (status === "approved" ? "Abierta" : status) ||
     "Sin estado"
   );
+}
+
+function isWorkOrderProgressLocked(status) {
+  return status === "ready" || status === "delivered";
 }
 
 export default function WorkOrdersScreen({
@@ -437,6 +441,21 @@ export default function WorkOrdersScreen({
       return;
     }
 
+    const isProgressLocked = isWorkOrderProgressLocked(
+      selectedWorkOrder.status,
+    );
+    const canReopenWithNote =
+      progressForm.type === "note" &&
+      progressForm.operationalStatus === "in-progress";
+
+    if (isProgressLocked && !canReopenWithNote) {
+      Alert.alert(
+        "Ordenes",
+        "Esta orden esta lista o entregada. Para registrar mas avances debes agregar una nota y cambiar su estado a En proceso.",
+      );
+      return;
+    }
+
     const selectedPartUpdates = Object.entries(progressForm.partUpdates || {})
       .map(([sparePartId, status]) => {
         const matchedPart = selectedWorkOrderSpareParts.find(
@@ -507,6 +526,7 @@ export default function WorkOrdersScreen({
     try {
       let entryMessage = progressForm.message.trim();
       let statusSnapshot = selectedWorkOrder.status;
+      let statusChangedTo = "";
       let progressPercent = null;
       let sparePartUpdates = [];
       let deliveryClosedOrder = false;
@@ -514,10 +534,22 @@ export default function WorkOrdersScreen({
 
       if (progressForm.type === "note" && nextOperationalStatus) {
         statusSnapshot = nextOperationalStatus;
+        statusChangedTo =
+          nextOperationalStatus !== selectedWorkOrder.status
+            ? nextOperationalStatus
+            : "";
 
-        if (nextOperationalStatus !== selectedWorkOrder.status) {
+        if (nextOperationalStatus === "ready") {
+          progressPercent = 100;
+        }
+
+        if (
+          nextOperationalStatus !== selectedWorkOrder.status ||
+          nextOperationalStatus === "ready"
+        ) {
           await updateWorkOrderOperationalState(selectedWorkOrderId, {
             status: nextOperationalStatus,
+            progressPercent: nextOperationalStatus === "ready" ? 100 : null,
           });
         }
       }
@@ -584,6 +616,7 @@ export default function WorkOrdersScreen({
         type: progressForm.type,
         message: entryMessage,
         statusSnapshot,
+        statusChangedTo,
         progressPercent,
         sparePartUpdates,
         deliveryClosedOrder,
@@ -601,7 +634,10 @@ export default function WorkOrdersScreen({
             ? 100
             : progressForm.type === "status"
               ? Math.round(Number(progressForm.progressPercent) || 0)
-              : Number(selectedWorkOrder?.progressPercent) || 0,
+              : progressForm.type === "note" &&
+                  progressForm.operationalStatus === "ready"
+                ? 100
+                : Number(selectedWorkOrder?.progressPercent) || 0,
         ),
       );
     } catch (error) {
@@ -910,6 +946,14 @@ export default function WorkOrdersScreen({
       progressForm.progressPercent,
       colors,
     );
+    const isProgressLocked = isWorkOrderProgressLocked(
+      selectedWorkOrder?.status,
+    );
+    const canReopenWithNote =
+      progressForm.type === "note" &&
+      progressForm.operationalStatus === "in-progress";
+    const shouldDisableSubmit =
+      progressSubmitting || (isProgressLocked && !canReopenWithNote);
 
     return (
       <>
@@ -1135,10 +1179,13 @@ export default function WorkOrdersScreen({
             {progressEntryTypeOptions.map((typeOption) => {
               const selected = progressForm.type === typeOption.key;
               const palette = getProgressTypePalette(typeOption.key, colors);
+              const isTypeLocked =
+                isProgressLocked && typeOption.key !== "note";
 
               return (
                 <Pressable
                   key={typeOption.key}
+                  disabled={isTypeLocked}
                   onPress={() =>
                     setProgressForm(
                       createEmptyProgressForm(
@@ -1154,6 +1201,7 @@ export default function WorkOrdersScreen({
                         ? palette.accent
                         : colors.cardMuted,
                       borderColor: selected ? palette.accent : colors.border,
+                      opacity: isTypeLocked ? 0.45 : 1,
                     },
                   ]}
                 >
@@ -1170,6 +1218,30 @@ export default function WorkOrdersScreen({
             })}
           </View>
 
+          {isProgressLocked ? (
+            <View
+              style={[
+                styles.progressPanel,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.warning,
+                },
+              ]}
+            >
+              <Text style={[styles.fieldLabel, { color: colors.warning }]}>
+                Orden temporalmente cerrada para avances
+              </Text>
+              <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+                Mientras la orden este en{" "}
+                {resolveWorkOrderStatusLabel(
+                  selectedWorkOrder?.status,
+                ).toLowerCase()}
+                , no se pueden registrar avances, estados ni repuestos. Para
+                continuar, agrega una nota y cambia el estado a En proceso.
+              </Text>
+            </View>
+          ) : null}
+
           {progressForm.type === "note" ? (
             <View style={styles.formGroup}>
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
@@ -1183,10 +1255,13 @@ export default function WorkOrdersScreen({
                 {noteOperationalStatusOptions.map((statusOption) => {
                   const selected =
                     progressForm.operationalStatus === statusOption.key;
+                  const isStatusLocked =
+                    isProgressLocked && statusOption.key !== "in-progress";
 
                   return (
                     <Pressable
                       key={statusOption.key}
+                      disabled={isStatusLocked}
                       onPress={() =>
                         setProgressForm((current) => ({
                           ...current,
@@ -1202,6 +1277,7 @@ export default function WorkOrdersScreen({
                           borderColor: selected
                             ? colors.warning
                             : colors.border,
+                          opacity: isStatusLocked ? 0.4 : 1,
                         },
                       ]}
                     >
@@ -1221,6 +1297,18 @@ export default function WorkOrdersScreen({
                   );
                 })}
               </View>
+              {progressForm.operationalStatus === "ready" ? (
+                <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+                  Al marcar la orden como lista, se guardara automaticamente con
+                  100% de avance.
+                </Text>
+              ) : null}
+              {isProgressLocked ? (
+                <Text style={[styles.rowMeta, { color: colors.warning }]}>
+                  En este estado solo se permite reactivar la orden con una nota
+                  en En proceso.
+                </Text>
+              ) : null}
             </View>
           ) : null}
 
@@ -1416,6 +1504,7 @@ export default function WorkOrdersScreen({
           ) : null}
 
           <Pressable
+            disabled={shouldDisableSubmit}
             onPress={handleProgressSubmit}
             style={[
               styles.primaryButton,
@@ -1424,6 +1513,7 @@ export default function WorkOrdersScreen({
                   progressForm.type,
                   colors,
                 ).accent,
+                opacity: shouldDisableSubmit ? 0.5 : 1,
               },
             ]}
           >
@@ -1575,6 +1665,28 @@ export default function WorkOrdersScreen({
                           {entry.message}
                         </Text>
                       )}
+                      {entry.statusChangedTo ? (
+                        <View
+                          style={[
+                            styles.timelineTypeChip,
+                            {
+                              backgroundColor: colors.cardBackground,
+                              borderColor: colors.warning,
+                              alignSelf: "flex-start",
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.timelineTypeChipText,
+                              { color: colors.warning },
+                            ]}
+                          >
+                            Estado actualizado a{" "}
+                            {resolveWorkOrderStatusLabel(entry.statusChangedTo)}
+                          </Text>
+                        </View>
+                      ) : null}
                       {entry.type === "parts" &&
                       entry.sparePartUpdates?.length ? (
                         <View style={styles.timelineNestedList}>

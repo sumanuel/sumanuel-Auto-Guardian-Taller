@@ -40,9 +40,18 @@ function normalizeUidList(value) {
     .filter(Boolean);
 }
 
+function normalizeWorkOrderStatus(value) {
+  const normalizedStatus = normalizeOptional(value);
+
+  if (!normalizedStatus || normalizedStatus === "approved") {
+    return "open";
+  }
+
+  return normalizedStatus;
+}
+
 export const workOrderStatusOptions = [
   { key: "open", label: "Abierta" },
-  { key: "approved", label: "Aprobada" },
   { key: "in-progress", label: "En proceso" },
   { key: "paused", label: "En pausa" },
   { key: "ready", label: "Lista" },
@@ -63,6 +72,7 @@ export async function listWorkOrders() {
   return snapshot.docs.map((item) => ({
     refId: item.id,
     ...item.data(),
+    status: normalizeWorkOrderStatus(item.data().status),
   }));
 }
 
@@ -102,7 +112,7 @@ export async function createWorkOrder({
     assignedMechanicUids: normalizeUidList(
       assignedMechanicUids || assignedMechanicIdsText,
     ),
-    status: normalizeOptional(status) || "open",
+    status: normalizeWorkOrderStatus(status),
     progressPercent: 0,
     approvedAt: null,
     startedAt: null,
@@ -133,7 +143,7 @@ export async function updateWorkOrder(workOrderId, payload) {
     assignedMechanicUids: normalizeUidList(
       payload.assignedMechanicUids || payload.assignedMechanicIdsText,
     ),
-    status: normalizeOptional(payload.status) || "open",
+    status: normalizeWorkOrderStatus(payload.status),
     progressPercent: normalizeNumber(payload.progressPercent),
   });
 }
@@ -149,16 +159,12 @@ export async function updateWorkOrderOperationalState(
     throw new Error("No se encontro la orden a actualizar.");
   }
 
-  const nextStatus = normalizeOptional(status);
+  const nextStatus = normalizeWorkOrderStatus(status);
   const nextProgressPercent = normalizeNumber(progressPercent);
   const payload = {};
 
   if (nextStatus) {
     payload.status = nextStatus;
-
-    if (nextStatus === "approved" && !currentWorkOrder.approvedAt) {
-      payload.approvedAt = serverTimestamp();
-    }
 
     if (nextStatus === "in-progress" && !currentWorkOrder.startedAt) {
       payload.startedAt = serverTimestamp();
@@ -212,6 +218,6 @@ export function createEmptyWorkOrderForm(initialValues = {}) {
     assignedMechanicIdsText: Array.isArray(initialValues.assignedMechanicUids)
       ? initialValues.assignedMechanicUids.join(", ")
       : initialValues.assignedMechanicIdsText || "",
-    status: initialValues.status || "open",
+    status: normalizeWorkOrderStatus(initialValues.status),
   };
 }
