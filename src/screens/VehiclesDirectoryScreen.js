@@ -291,7 +291,8 @@ export default function VehiclesDirectoryScreen({
                 latestWorkOrderStatus: "",
               };
               const primaryBadge = resolvePrimaryVehicleBadge(operationalState);
-              const contextAction = resolveVehicleContextAction(operationalState);
+              const contextAction =
+                resolveVehicleContextAction(operationalState);
 
               return (
                 <Pressable
