@@ -16,14 +16,6 @@ import {
   diagnosticStatusOptions,
   listDiagnostics,
 } from "../services/diagnostics/diagnosticService";
-import {
-  listProgressEntriesByWorkOrderId,
-  progressEntryTypeOptions,
-} from "../services/progressEntries/progressEntryService";
-import {
-  listSpareParts,
-  sparePartStatusOptions,
-} from "../services/spareParts/sparePartService";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import {
   listWorkOrders,
@@ -58,24 +50,6 @@ function formatDateTime(value) {
 }
 
 function resolveTimelineMeta(item) {
-  if (item.type === "progress-entry") {
-    return (
-      progressEntryTypeOptions.find((option) => option.key === item.entryType)
-        ?.label ||
-      item.entryType ||
-      "Avance"
-    );
-  }
-
-  if (item.type === "spare-part") {
-    return (
-      sparePartStatusOptions.find((option) => option.key === item.status)
-        ?.label ||
-      item.status ||
-      "Sin estado"
-    );
-  }
-
   return resolveStatusLabel(item);
 }
 
@@ -96,18 +70,10 @@ function resolveTimelinePresentation(item, colors) {
     };
   }
 
-  if (item.type === "progress-entry") {
-    return {
-      icon: "trail-sign-outline",
-      label: "Avance",
-      accentColor: colors.accent,
-    };
-  }
-
   return {
-    icon: "cube-outline",
-    label: "Repuesto",
-    accentColor: colors.textSecondary,
+    icon: "clipboard-outline",
+    label: "Orden",
+    accentColor: colors.warning,
   };
 }
 
@@ -149,32 +115,23 @@ export default function VehicleHistoryScreen({
   const [vehicles, setVehicles] = useState([]);
   const [diagnostics, setDiagnostics] = useState([]);
   const [workOrders, setWorkOrders] = useState([]);
-  const [progressEntries, setProgressEntries] = useState([]);
-  const [spareParts, setSpareParts] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
 
       try {
-        const [
-          nextClients,
-          nextVehicles,
-          nextDiagnostics,
-          nextWorkOrders,
-          nextSpareParts,
-        ] = await Promise.all([
-          listClients(),
-          listVehicles(),
-          listDiagnostics(),
-          listWorkOrders(),
-          listSpareParts(),
-        ]);
+        const [nextClients, nextVehicles, nextDiagnostics, nextWorkOrders] =
+          await Promise.all([
+            listClients(),
+            listVehicles(),
+            listDiagnostics(),
+            listWorkOrders(),
+          ]);
         setClients(nextClients);
         setVehicles(nextVehicles);
         setDiagnostics(nextDiagnostics);
         setWorkOrders(nextWorkOrders);
-        setSpareParts(nextSpareParts);
       } finally {
         setLoading(false);
       }
@@ -210,7 +167,10 @@ export default function VehicleHistoryScreen({
       return [];
     }
 
-    return workOrders.filter((workOrder) => workOrder.vehicleId === vehicleId);
+    return workOrders.filter(
+      (workOrder) =>
+        workOrder.vehicleId === vehicleId && workOrder.status === "delivered",
+    );
   }, [resolvedVehicle, workOrders]);
 
   const relatedDiagnostics = useMemo(() => {
@@ -221,32 +181,10 @@ export default function VehicleHistoryScreen({
     }
 
     return diagnostics.filter(
-      (diagnostic) => diagnostic.vehicleId === vehicleId,
+      (diagnostic) =>
+        diagnostic.vehicleId === vehicleId && diagnostic.status === "closed",
     );
   }, [diagnostics, resolvedVehicle]);
-
-  useEffect(() => {
-    const loadProgressEntries = async () => {
-      const workOrderIds = relatedWorkOrders.map((workOrder) =>
-        getEntityId(workOrder),
-      );
-
-      if (!workOrderIds.length) {
-        setProgressEntries([]);
-        return;
-      }
-
-      const progressGroups = await Promise.all(
-        workOrderIds.map((workOrderId) =>
-          listProgressEntriesByWorkOrderId(workOrderId),
-        ),
-      );
-
-      setProgressEntries(progressGroups.flat());
-    };
-
-    loadProgressEntries();
-  }, [relatedWorkOrders]);
 
   const timeline = useMemo(() => {
     const vehicleId = getEntityId(resolvedVehicle);
@@ -273,60 +211,13 @@ export default function VehicleHistoryScreen({
         getTimestampMillis(workOrder.createdAt),
     }));
 
-    const workOrderIds = new Set(
-      relatedWorkOrders.map((workOrder) => getEntityId(workOrder)),
+    return [...diagnosticItems, ...workOrderItems].sort(
+      (left, right) => right.sortDate - left.sortDate,
     );
-    const diagnosticIds = new Set(
-      relatedDiagnostics.map((diagnostic) => getEntityId(diagnostic)),
-    );
+  }, [relatedDiagnostics, relatedWorkOrders, resolvedVehicle]);
 
-    const progressItems = progressEntries
-      .filter((entry) => workOrderIds.has(entry.workOrderId))
-      .map((entry) => ({
-        ...entry,
-        type: "progress-entry",
-        entityId: getEntityId(entry),
-        entryType: entry.type,
-        sortDate:
-          getTimestampMillis(entry.updatedAt) ||
-          getTimestampMillis(entry.createdAt),
-      }));
-
-    const sparePartItems = spareParts
-      .filter(
-        (sparePart) =>
-          workOrderIds.has(sparePart.workOrderId) ||
-          diagnosticIds.has(sparePart.diagnosticId),
-      )
-      .map((sparePart) => ({
-        ...sparePart,
-        type: "spare-part",
-        entityId: getEntityId(sparePart),
-        sortDate:
-          getTimestampMillis(sparePart.updatedAt) ||
-          getTimestampMillis(sparePart.createdAt),
-      }));
-
-    return [
-      ...diagnosticItems,
-      ...workOrderItems,
-      ...progressItems,
-      ...sparePartItems,
-    ].sort((left, right) => right.sortDate - left.sortDate);
-  }, [
-    progressEntries,
-    relatedDiagnostics,
-    relatedWorkOrders,
-    resolvedVehicle,
-    spareParts,
-  ]);
-
-  const activeDiagnosticCount = timeline.filter(
-    (item) => item.type === "diagnostic" && item.status !== "closed",
-  ).length;
-  const activeWorkOrderCount = timeline.filter(
-    (item) => item.type === "work-order" && item.status !== "delivered",
-  ).length;
+  const closedDiagnosticCount = relatedDiagnostics.length;
+  const deliveredWorkOrderCount = relatedWorkOrders.length;
 
   return (
     <SafeAreaView
@@ -392,12 +283,12 @@ export default function VehicleHistoryScreen({
               ]}
             >
               <Text style={[styles.countValue, { color: colors.text }]}>
-                {activeDiagnosticCount}
+                {closedDiagnosticCount}
               </Text>
               <Text
                 style={[styles.countLabel, { color: colors.textSecondary }]}
               >
-                Diag. activas
+                Diag. cerrados
               </Text>
             </View>
             <View
@@ -410,12 +301,12 @@ export default function VehicleHistoryScreen({
               ]}
             >
               <Text style={[styles.countValue, { color: colors.text }]}>
-                {activeWorkOrderCount}
+                {deliveredWorkOrderCount}
               </Text>
               <Text
                 style={[styles.countLabel, { color: colors.textSecondary }]}
               >
-                Ordenes activas
+                Ordenes entregadas
               </Text>
             </View>
           </View>
@@ -426,35 +317,20 @@ export default function VehicleHistoryScreen({
         <View style={styles.timelineWrap}>
           {timeline.length ? (
             timeline.map((item) => {
-              const isDiagnostic = item.type === "diagnostic";
               const presentation = resolveTimelinePresentation(item, colors);
               const accentColor = presentation.accentColor;
-              const opensWorkOrder =
-                item.type === "work-order" ||
-                item.type === "progress-entry" ||
-                (item.type === "spare-part" && item.workOrderId);
-              const opensDiagnostic =
-                item.type === "diagnostic" ||
-                (item.type === "spare-part" &&
-                  !item.workOrderId &&
-                  item.diagnosticId);
+              const isDiagnostic = item.type === "diagnostic";
 
               return (
                 <Pressable
                   key={`${item.type}-${item.entityId}`}
                   onPress={() => {
-                    if (opensWorkOrder) {
-                      onOpenWorkOrderDetail?.(
-                        item.workOrderId || item.entityId,
-                      );
+                    if (isDiagnostic) {
+                      onOpenDiagnosticDetail?.(item.entityId);
                       return;
                     }
 
-                    if (opensDiagnostic) {
-                      onOpenDiagnosticDetail?.(
-                        item.diagnosticId || item.entityId,
-                      );
-                    }
+                    onOpenWorkOrderDetail?.(item.entityId);
                   }}
                   style={[
                     styles.timelineCard,
@@ -521,11 +397,7 @@ export default function VehicleHistoryScreen({
                   >
                     {isDiagnostic
                       ? item.concerns || "Sin hallazgos registrados"
-                      : item.type === "work-order"
-                        ? `Progreso ${item.progressPercent || 0}%`
-                        : item.type === "progress-entry"
-                          ? item.message || "Sin detalle operativo"
-                          : `${item.name || "Repuesto"} · ${item.quantity || 0} und.`}
+                      : `Entrega completada con ${item.progressPercent || 0}% de avance final.`}
                   </Text>
                 </Pressable>
               );
@@ -544,8 +416,8 @@ export default function VehicleHistoryScreen({
                 Operacion
               </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                Esta unidad todavia no tiene diagnosticos ni ordenes
-                registradas.
+                Esta unidad todavia no tiene diagnosticos cerrados ni ordenes
+                entregadas.
               </Text>
             </View>
           )}

@@ -93,6 +93,9 @@ function resolveVehicleContextAction(state) {
     return {
       action: "work-order",
       label: "Continuar orden",
+      icon: "clipboard-outline",
+      tone: "warning",
+      summary: "Orden activa en curso para esta unidad.",
     };
   }
 
@@ -100,12 +103,18 @@ function resolveVehicleContextAction(state) {
     return {
       action: "diagnostic-detail",
       label: "Abrir diagnostico",
+      icon: "pulse-outline",
+      tone: "primary",
+      summary: "Diagnostico abierto pendiente de cierre.",
     };
   }
 
   return {
     action: "diagnostic-create",
     label: "Crear diagnostico",
+    icon: "add-circle-outline",
+    tone: "primary",
+    summary: "Sin diagnostico abierto ni orden activa.",
   };
 }
 
@@ -333,6 +342,14 @@ export default function VehiclesDirectoryScreen({
                       >
                         Placa: {vehicle.plate || "Sin placa"}
                       </Text>
+                      <Text
+                        style={[
+                          styles.operationalSummary,
+                          { color: colors[contextAction.tone] },
+                        ]}
+                      >
+                        {contextAction.summary}
+                      </Text>
                       <View style={styles.badgeRow}>
                         {primaryBadge ? (
                           <View
@@ -442,14 +459,19 @@ export default function VehiclesDirectoryScreen({
                         styles.secondaryAction,
                         {
                           backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
+                          borderColor: colors[contextAction.tone],
                         },
                       ]}
                     >
+                      <Ionicons
+                        color={colors[contextAction.tone]}
+                        name={contextAction.icon}
+                        size={rf(15)}
+                      />
                       <Text
                         style={[
                           styles.secondaryActionText,
-                          { color: colors.text },
+                          { color: colors[contextAction.tone] },
                         ]}
                       >
                         {contextAction.label}
@@ -600,6 +622,12 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 0.5,
   },
+  operationalSummary: {
+    fontSize: rf(12),
+    lineHeight: rf(17),
+    fontWeight: "700",
+    marginTop: spacing.xs,
+  },
   metaGrid: {
     gap: spacing.xs,
   },
@@ -625,6 +653,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.md,
+    flexDirection: "row",
+    gap: spacing.xs,
   },
   secondaryActionText: {
     fontSize: rf(12),
