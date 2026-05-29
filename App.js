@@ -98,6 +98,7 @@ function AppContent() {
   const [workOrderFormContext, setWorkOrderFormContext] = useState({
     workOrder: null,
     draft: null,
+    returnTo: APP_SCREENS.WORK_ORDERS,
   });
   const [workOrdersViewState, setWorkOrdersViewState] = useState({
     selectedWorkOrderId: null,
@@ -193,6 +194,7 @@ function AppContent() {
     setWorkOrderFormContext({
       workOrder: null,
       draft: null,
+      returnTo: APP_SCREENS.WORK_ORDERS,
     });
     setWorkOrdersViewState({
       selectedWorkOrderId: null,
@@ -290,7 +292,9 @@ function AppContent() {
         }
 
         if (activeScreen === APP_SCREENS.WORK_ORDER_FORM) {
-          setActiveScreen(APP_SCREENS.WORK_ORDERS);
+          setActiveScreen(
+            workOrderFormContext.returnTo || APP_SCREENS.WORK_ORDERS,
+          );
           return true;
         }
 
@@ -374,6 +378,7 @@ function AppContent() {
     sparePartsViewState.returnTo,
     vehicleFormContext.client,
     clientsViewState.returnTo,
+    workOrderFormContext.returnTo,
     workOrdersViewState.returnTo,
   ]);
 
@@ -645,6 +650,7 @@ function AppContent() {
             setWorkOrderFormContext({
               workOrder: workOrder || null,
               draft: options.seedData || null,
+              returnTo: APP_SCREENS.DIAGNOSTICS,
             });
             setActiveScreen(APP_SCREENS.WORK_ORDER_FORM);
           }}
@@ -719,6 +725,7 @@ function AppContent() {
             setWorkOrderFormContext({
               workOrder: workOrder || null,
               draft: options.seedData || null,
+              returnTo: APP_SCREENS.WORK_ORDERS,
             });
             setActiveScreen(APP_SCREENS.WORK_ORDER_FORM);
           }}
@@ -733,8 +740,17 @@ function AppContent() {
         <WorkOrderFormScreen
           initialDraft={workOrderFormContext.draft}
           initialWorkOrder={workOrderFormContext.workOrder}
-          onBack={() => setActiveScreen(APP_SCREENS.WORK_ORDERS)}
+          onBack={() =>
+            setActiveScreen(
+              workOrderFormContext.returnTo || APP_SCREENS.WORK_ORDERS,
+            )
+          }
           onSaved={(savedWorkOrderId) => {
+            if (workOrderFormContext.returnTo === APP_SCREENS.DIAGNOSTICS) {
+              setActiveScreen(APP_SCREENS.DIAGNOSTICS);
+              return;
+            }
+
             setWorkOrdersViewState({
               selectedWorkOrderId: savedWorkOrderId,
               returnTo: workOrdersViewState.returnTo,

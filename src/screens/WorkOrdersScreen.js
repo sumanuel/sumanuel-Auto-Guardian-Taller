@@ -84,10 +84,17 @@ function createEmptyProgressForm(type = "note", progressPercent = 0) {
   return {
     type,
     message: "",
+    operationalStatus: "",
     progressPercent,
     partUpdates: {},
   };
 }
+
+const noteOperationalStatusOptions = [
+  { key: "in-progress", label: "En proceso" },
+  { key: "paused", label: "En pausa" },
+  { key: "ready", label: "Lista" },
+];
 
 function getProgressTypePalette(type, colors) {
   if (type === "status") {
@@ -169,6 +176,14 @@ function resolveProgressButtonLabel(type) {
   }
 
   return "Registrar avance";
+}
+
+function resolveWorkOrderStatusLabel(status) {
+  return (
+    workOrderStatusOptions.find((item) => item.key === status)?.label ||
+    status ||
+    "Sin estado"
+  );
 }
 
 export default function WorkOrdersScreen({
@@ -495,6 +510,17 @@ export default function WorkOrdersScreen({
       let progressPercent = null;
       let sparePartUpdates = [];
       let deliveryClosedOrder = false;
+      const nextOperationalStatus = progressForm.operationalStatus || "";
+
+      if (progressForm.type === "note" && nextOperationalStatus) {
+        statusSnapshot = nextOperationalStatus;
+
+        if (nextOperationalStatus !== selectedWorkOrder.status) {
+          await updateWorkOrderOperationalState(selectedWorkOrderId, {
+            status: nextOperationalStatus,
+          });
+        }
+      }
 
       if (progressForm.type === "status") {
         progressPercent = Math.max(
@@ -1144,6 +1170,60 @@ export default function WorkOrdersScreen({
             })}
           </View>
 
+          {progressForm.type === "note" ? (
+            <View style={styles.formGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Estado operativo
+              </Text>
+              <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+                Opcional: si lo seleccionas, la nota tambien actualiza el estado
+                actual de la orden.
+              </Text>
+              <View style={styles.filterRow}>
+                {noteOperationalStatusOptions.map((statusOption) => {
+                  const selected =
+                    progressForm.operationalStatus === statusOption.key;
+
+                  return (
+                    <Pressable
+                      key={statusOption.key}
+                      onPress={() =>
+                        setProgressForm((current) => ({
+                          ...current,
+                          operationalStatus: selected ? "" : statusOption.key,
+                        }))
+                      }
+                      style={[
+                        styles.filterChip,
+                        {
+                          backgroundColor: selected
+                            ? colors.warning
+                            : colors.cardMuted,
+                          borderColor: selected
+                            ? colors.warning
+                            : colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          {
+                            color: selected
+                              ? colors.white
+                              : colors.textSecondary,
+                          },
+                        ]}
+                      >
+                        {statusOption.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+
           {progressForm.type === "status" ? (
             <View
               style={[
@@ -1524,7 +1604,8 @@ export default function WorkOrdersScreen({
                       <Text
                         style={[styles.rowMeta, { color: colors.textTertiary }]}
                       >
-                        Estado capturado: {entry.statusSnapshot || "sin estado"}
+                        Estado capturado:{" "}
+                        {resolveWorkOrderStatusLabel(entry.statusSnapshot)}
                       </Text>
                     </View>
                   </View>
