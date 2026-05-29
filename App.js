@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, BackHandler, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -17,6 +18,9 @@ import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
 import AccessStatusScreen from "./src/screens/AccessStatusScreen";
 import AuthScreen from "./src/screens/AuthScreen";
 import LoadingScreen from "./src/screens/LoadingScreen";
+import OnboardingScreen, {
+  ONBOARDING_STORAGE_KEY,
+} from "./src/screens/OnboardingScreen";
 import WorkOrderFormScreen from "./src/screens/WorkOrderFormScreen";
 import WorkOrdersScreen from "./src/screens/WorkOrdersScreen";
 import WorkshopHomeScreen from "./src/screens/WorkshopHomeScreen";
@@ -131,6 +135,21 @@ function AppContent() {
   const [stockItemsViewState, setStockItemsViewState] = useState({
     selectedStockItemId: null,
   });
+  const [onboardingReady, setOnboardingReady] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const loadOnboardingState = async () => {
+      try {
+        const completed = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
+        setShowOnboarding(!completed);
+      } finally {
+        setOnboardingReady(true);
+      }
+    };
+
+    loadOnboardingState();
+  }, []);
 
   const activeTab = useMemo(() => {
     if (ROOT_TABS.has(activeScreen)) {
@@ -402,11 +421,20 @@ function AppContent() {
     workOrdersViewState.returnTo,
   ]);
 
-  if (!authReady) {
+  if (!authReady || !onboardingReady) {
     return (
       <>
         <StatusBar style={isDarkMode ? "light" : "dark"} />
         <LoadingScreen />
+      </>
+    );
+  }
+
+  if (!authUser && showOnboarding) {
+    return (
+      <>
+        <StatusBar style="light" />
+        <OnboardingScreen onComplete={() => setShowOnboarding(false)} />
       </>
     );
   }
