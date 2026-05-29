@@ -174,8 +174,9 @@ function renderActionRow({
 
 export default function WorkshopMoreScreen({
   onBack,
+  onOpenCollaborators,
   onOpenStockItems,
-  onOpenTeamAccess,
+  onOpenWorkshopSettings,
   onSignOut,
   onToggleTheme,
   themeLabel,
@@ -343,7 +344,10 @@ export default function WorkshopMoreScreen({
               renderActionRow({
                 item,
                 colors,
-                onPress: onOpenTeamAccess,
+                onPress:
+                  item.key === "workshop-settings"
+                    ? onOpenWorkshopSettings
+                    : onOpenCollaborators,
                 userProfile,
                 memberships,
                 activeWorkshopId,

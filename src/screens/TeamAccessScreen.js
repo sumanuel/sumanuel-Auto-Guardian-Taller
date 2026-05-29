@@ -29,6 +29,7 @@ import {
   listStaffProfiles,
   updateStaffProfile,
 } from "../services/admin/staffAdmin";
+import { resetActiveWorkshopDataForCurrentUser } from "../services/workshops/workshopResetService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
 const roleLabels = {
@@ -139,7 +140,11 @@ function formatDeliveryStatus(value) {
   return value || "sin estado";
 }
 
-export default function TeamAccessScreen({ onBack, userProfile }) {
+export default function TeamAccessScreen({
+  onBack,
+  screenMode = "all",
+  userProfile,
+}) {
   const { colors } = useTheme();
   const {
     acceptPendingInvitation,
@@ -151,13 +156,21 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     switchWorkshop,
     updateActiveWorkshop,
   } = useAuth();
+  const activeMembership = memberships.find(
+    (membership) => membership.workshopId === activeWorkshopId,
+  );
+  const currentRole = activeMembership?.role || userProfile?.role;
   const canManageCollaborators = hasPermission(
-    userProfile?.role,
+    currentRole,
     "invitations.manage",
   );
-  const canManageWorkshop = hasPermission(userProfile?.role, "workshop.manage");
+  const canManageWorkshop = hasPermission(currentRole, "workshop.manage");
+  const canResetWorkshopData = currentRole === USER_ROLES.OWNER;
+  const showWorkshopSection = screenMode !== "collaborators";
+  const showCollaboratorsSection = screenMode !== "workshop";
   const [adminRefreshing, setAdminRefreshing] = useState(false);
   const [adminSubmitting, setAdminSubmitting] = useState(false);
+  const [resetSubmitting, setResetSubmitting] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [staffProfiles, setStaffProfiles] = useState([]);
@@ -474,6 +487,60 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
     }
   };
 
+  const handleResetWorkshopData = () => {
+    Alert.alert(
+      "Reiniciar taller",
+      "Se eliminaran clientes, vehiculos, diagnosticos, ordenes, avances, repuestos y stock del taller activo. Esta accion no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Reiniciar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setResetSubmitting(true);
+              const result = await resetActiveWorkshopDataForCurrentUser();
+              await refreshAdminData();
+              Alert.alert(
+                "Taller reiniciado",
+                `Se eliminaron ${result.deletedDocuments} registros operativos del taller activo.`,
+              );
+            } catch (error) {
+              Alert.alert(
+                "Reiniciar taller",
+                error?.message || "No se pudo reiniciar la data del taller.",
+              );
+            } finally {
+              setResetSubmitting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const headerCopy =
+    screenMode === "workshop"
+      ? {
+          section: "Configuracion",
+          title: "Datos del taller",
+          subtitle:
+            "Identidad comercial, contexto activo y mantenimiento operativo del taller.",
+        }
+      : screenMode === "collaborators"
+        ? {
+            section: "Administracion",
+            title: "Colaboradores",
+            subtitle:
+              "Invitaciones, roles, estados y control de acceso del equipo tecnico.",
+          }
+        : {
+            section: "Control administrativo",
+            title: "Talleres y colaboradores",
+            subtitle:
+              "Taller activo, invitaciones y colaboradores con cambio de contexto dentro de la misma app.",
+          };
+
   return (
     <SafeAreaView
       edges={["left", "right", "bottom"]}
@@ -485,9 +552,9 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
       >
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Control administrativo"
-          subtitle="Taller activo, invitaciones y colaboradores con cambio de contexto dentro de la misma app."
-          title="Talleres y colaboradores"
+          section={headerCopy.section}
+          subtitle={headerCopy.subtitle}
+          title={headerCopy.title}
         />
 
         <View
@@ -587,29 +654,30 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
           </View>
         </View>
 
-        <View
-          style={[
-            styles.panel,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text style={[styles.panelTitle, { color: colors.text }]}>
-            Gestion del taller activo
-          </Text>
-          <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-            Ajusta identidad fiscal, contacto, logo y notas comerciales del
-            taller activo dentro del esquema de taller unico.
-          </Text>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Datos del taller activo
+        {showWorkshopSection ? (
+          <View
+            style={[
+              styles.panel,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.panelTitle, { color: colors.text }]}>
+              Gestion del taller activo
             </Text>
-            {canManageWorkshop ? (
-              <>
+            <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+              Ajusta identidad fiscal, contacto, logo y notas comerciales del
+              taller activo dentro del esquema de taller unico.
+            </Text>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                Datos del taller activo
+              </Text>
+              {canManageWorkshop ? (
+                <>
                 <TextInput
                   onChangeText={(value) =>
                     setActiveWorkshopForm((current) => ({
@@ -827,32 +895,79 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                       : "Guardar datos del taller"}
                   </Text>
                 </Pressable>
-              </>
-            ) : (
-              <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-                Solo el propietario puede cambiar la identidad y contacto del
-                taller, igual que en tienda-app.
+                </>
+              ) : (
+                <Text
+                  style={[styles.panelText, { color: colors.textSecondary }]}
+                >
+                  Solo el propietario puede cambiar la identidad y contacto del
+                  taller, igual que en tienda-app.
+                </Text>
+              )}
+            </View>
+
+            <View
+              style={[
+                styles.summaryPanel,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.summaryText, { color: colors.text }]}>
+                Esta implementacion opera con un solo taller. La seccion ya no
+                permite crear talleres adicionales.
               </Text>
-            )}
-          </View>
+            </View>
 
-          <View
-            style={[
-              styles.summaryPanel,
-              {
-                backgroundColor: colors.cardMuted,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text style={[styles.summaryText, { color: colors.text }]}>
-              Esta implementacion opera con un solo taller. La seccion ya no
-              permite crear talleres adicionales.
-            </Text>
+            {canResetWorkshopData ? (
+              <View
+                style={[
+                  styles.resetPanel,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                  Reiniciar datos del taller
+                </Text>
+                <Text
+                  style={[styles.panelText, { color: colors.textSecondary }]}
+                >
+                  Borra toda la data operativa del taller activo y conserva la
+                  identidad comercial y los colaboradores.
+                </Text>
+                <Pressable
+                  disabled={resetSubmitting || authBusy}
+                  onPress={handleResetWorkshopData}
+                  style={[
+                    styles.dangerAction,
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.danger,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.dangerActionText,
+                      { color: colors.danger },
+                    ]}
+                  >
+                    {resetSubmitting
+                      ? "Reiniciando..."
+                      : "Reiniciar datos del taller"}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
           </View>
-        </View>
+        ) : null}
 
-        {pendingInvitation ? (
+        {showCollaboratorsSection && pendingInvitation ? (
           <View
             style={[
               styles.panel,
@@ -892,7 +1007,7 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
           </View>
         ) : null}
 
-        {!canManageCollaborators && (
+        {showCollaboratorsSection && !canManageCollaborators && (
           <View
             style={[
               styles.accessNotice,
@@ -915,7 +1030,7 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
           </View>
         )}
 
-        {canManageCollaborators && (
+        {showCollaboratorsSection && canManageCollaborators && (
           <>
             {editingStaffId ? (
               <View
@@ -1587,8 +1702,8 @@ export default function TeamAccessScreen({ onBack, userProfile }) {
                             <Text
                               style={[styles.rowTag, { color: colors.accent }]}
                             >
-                              {statusLabels[profile.membershipStatus] ||
-                                statusLabels[profile.status] ||
+                              {statusLabels[profile.status] ||
+                                statusLabels[profile.membershipStatus] ||
                                 profile.status ||
                                 "Sin estado"}
                             </Text>
@@ -1849,6 +1964,19 @@ const styles = StyleSheet.create({
   notesInput: {
     minHeight: rf(92),
   },
+  summaryPanel: {
+    marginTop: spacing.lg,
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+  },
+  resetPanel: {
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
   logoPreviewCard: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
@@ -1984,6 +2112,18 @@ const styles = StyleSheet.create({
     fontSize: rf(13),
     fontWeight: "800",
   },
+  dangerAction: {
+    minHeight: rf(46),
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+  },
+  dangerActionText: {
+    fontSize: rf(13),
+    fontWeight: "800",
+  },
   disabledAction: {
     opacity: 0.55,
   },
@@ -2011,6 +2151,11 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: rf(13),
+    lineHeight: rf(19),
+  },
+  summaryText: {
+    fontSize: rf(13),
+    fontWeight: "600",
     lineHeight: rf(19),
   },
 });

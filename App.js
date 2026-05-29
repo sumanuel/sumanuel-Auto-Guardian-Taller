@@ -39,7 +39,8 @@ const APP_SCREENS = {
   STOCK_ITEMS: "stock-items",
   STOCK_ITEM_FORM: "stock-item-form",
   STOCK_MOVEMENT_FORM: "stock-movement-form",
-  TEAM_ACCESS: "team-access",
+  WORKSHOP_SETTINGS: "workshop-settings",
+  COLLABORATORS: "collaborators",
   MORE: "more",
 };
 
@@ -256,7 +257,10 @@ function AppContent() {
           return true;
         }
 
-        if (activeScreen === APP_SCREENS.TEAM_ACCESS) {
+        if (
+          activeScreen === APP_SCREENS.WORKSHOP_SETTINGS ||
+          activeScreen === APP_SCREENS.COLLABORATORS
+        ) {
           setActiveScreen(APP_SCREENS.MORE);
           return true;
         }
@@ -686,10 +690,21 @@ function AppContent() {
       );
     }
 
-    if (activeScreen === APP_SCREENS.TEAM_ACCESS) {
+    if (activeScreen === APP_SCREENS.WORKSHOP_SETTINGS) {
       return (
         <TeamAccessScreen
           onBack={() => setActiveScreen(APP_SCREENS.MORE)}
+          screenMode="workshop"
+          userProfile={userProfile}
+        />
+      );
+    }
+
+    if (activeScreen === APP_SCREENS.COLLABORATORS) {
+      return (
+        <TeamAccessScreen
+          onBack={() => setActiveScreen(APP_SCREENS.MORE)}
+          screenMode="collaborators"
           userProfile={userProfile}
         />
       );
@@ -699,13 +714,16 @@ function AppContent() {
       return (
         <WorkshopMoreScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onOpenCollaborators={() => setActiveScreen(APP_SCREENS.COLLABORATORS)}
           onOpenStockItems={() => {
             setStockItemsViewState({
               selectedStockItemId: null,
             });
             setActiveScreen(APP_SCREENS.STOCK_ITEMS);
           }}
-          onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.TEAM_ACCESS)}
+          onOpenWorkshopSettings={() =>
+            setActiveScreen(APP_SCREENS.WORKSHOP_SETTINGS)
+          }
           onSignOut={signOutUser}
           onToggleTheme={toggleTheme}
           themeLabel={
@@ -727,7 +745,7 @@ function AppContent() {
           });
           setActiveScreen(APP_SCREENS.SPARE_PARTS);
         }}
-        onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.TEAM_ACCESS)}
+        onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.COLLABORATORS)}
         onOpenWorkOrders={() => setActiveScreen(APP_SCREENS.WORK_ORDERS)}
         onSignOut={signOutUser}
         userProfile={userProfile}

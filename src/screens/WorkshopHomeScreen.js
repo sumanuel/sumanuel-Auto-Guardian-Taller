@@ -530,7 +530,7 @@ export default function WorkshopHomeScreen({ userProfile }) {
                         <Text
                           style={[
                             styles.queuePlate,
-                            { color: colors.textSecondary },
+                            { color: colors.accent },
                           ]}
                         >
                           Placa: {item.plate}
@@ -703,7 +703,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   queueTitle: { fontSize: rf(16), fontWeight: "800" },
-  queuePlate: { fontSize: rf(16), fontWeight: "600" },
+  queuePlate: {
+    fontSize: rf(18),
+    fontWeight: "900",
+    letterSpacing: 0.6,
+  },
   queueStatusBadge: {
     borderWidth: 1,
     borderRadius: borderRadius.pill,

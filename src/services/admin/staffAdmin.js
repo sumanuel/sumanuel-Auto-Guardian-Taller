@@ -271,16 +271,25 @@ export async function updateStaffProfile(uid, payload) {
 
   await updateDoc(documentRef, profilePayload);
 
+  const currentMembership = await getWorkshopMembership(activeWorkshopId, uid);
+
+  if (!currentMembership) {
+    throw new Error("La membresia del colaborador no existe en este taller.");
+  }
+
+  if (payload.status !== undefined) {
+    await upsertWorkshopMembership({
+      workshopId: activeWorkshopId,
+      userUid: uid,
+      role: currentMembership.role,
+      status: payload.status,
+      invitationId: currentMembership.invitationId,
+      invitedByUid: currentMembership.invitedByUid,
+      acceptedAt: currentMembership.acceptedAt,
+    });
+  }
+
   if (payload.role !== undefined) {
-    const currentMembership = await getWorkshopMembership(
-      activeWorkshopId,
-      uid,
-    );
-
-    if (!currentMembership) {
-      throw new Error("La membresia del colaborador no existe en este taller.");
-    }
-
     await upsertWorkshopMembership({
       workshopId: activeWorkshopId,
       userUid: uid,

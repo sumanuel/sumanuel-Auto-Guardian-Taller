@@ -480,14 +480,14 @@ export default function DiagnosticsScreen({
                       />
                       <Text
                         style={[
-                          styles.vehicleMeta,
-                          { color: colors.textSecondary },
+                          styles.vehiclePlate,
+                          { color: colors.accent },
                         ]}
                       >
                         <Text
                           style={[
-                            styles.vehicleMetaLabel,
-                            { color: colors.text },
+                            styles.vehiclePlateLabel,
+                            { color: colors.accent },
                           ]}
                         >
                           Placa:
@@ -749,8 +749,10 @@ export default function DiagnosticsScreen({
                 { backgroundColor: colors.border },
               ]}
             />
-            <Text style={[styles.vehicleMeta, { color: colors.textSecondary }]}>
-              <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
+            <Text style={[styles.vehiclePlate, { color: colors.accent }]}> 
+              <Text
+                style={[styles.vehiclePlateLabel, { color: colors.accent }]}
+              >
                 Placa:
               </Text>{" "}
               {vehicle?.plate || "Sin placa"}
@@ -959,6 +961,13 @@ const styles = StyleSheet.create({
   },
   vehicleMeta: { fontSize: rf(13), lineHeight: rf(19) },
   vehicleMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  vehiclePlate: {
+    fontSize: rf(16),
+    lineHeight: rf(20),
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  vehiclePlateLabel: { fontSize: rf(16), fontWeight: "900" },
   closedNotice: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,

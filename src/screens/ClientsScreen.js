@@ -391,14 +391,14 @@ export default function ClientsScreen({
                           />
                           <Text
                             style={[
-                              styles.vehicleInlineMeta,
-                              { color: colors.textSecondary },
+                              styles.vehicleInlinePlate,
+                              { color: colors.accent },
                             ]}
                           >
                             <Text
                               style={[
-                                styles.vehicleInlineMetaLabel,
-                                { color: colors.text },
+                                styles.vehicleInlinePlateLabel,
+                                { color: colors.accent },
                               ]}
                             >
                               Placa:
@@ -643,10 +643,13 @@ export default function ClientsScreen({
                 </View>
                 <View style={styles.cardBody}>
                   <Text
-                    style={[styles.clientMeta, { color: colors.textSecondary }]}
+                    style={[styles.clientPlateMeta, { color: colors.accent }]}
                   >
                     <Text
-                      style={[styles.clientMetaLabel, { color: colors.text }]}
+                      style={[
+                        styles.clientPlateMetaLabel,
+                        { color: colors.accent },
+                      ]}
                     >
                       Placa:
                     </Text>{" "}
@@ -828,6 +831,13 @@ const styles = StyleSheet.create({
   clientTitle: { fontSize: rf(17), fontWeight: "800" },
   clientMeta: { fontSize: rf(13), lineHeight: rf(19) },
   clientMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  clientPlateMeta: {
+    fontSize: rf(16),
+    lineHeight: rf(20),
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  clientPlateMetaLabel: { fontSize: rf(16), fontWeight: "900" },
   fieldLine: { fontSize: rf(13), lineHeight: rf(19) },
   fieldLineLabel: { fontSize: rf(13), fontWeight: "800" },
   vehicleSectionTitle: {
@@ -856,6 +866,13 @@ const styles = StyleSheet.create({
   },
   vehicleInlineMeta: { fontSize: rf(13), lineHeight: rf(19) },
   vehicleInlineMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  vehicleInlinePlate: {
+    fontSize: rf(16),
+    lineHeight: rf(20),
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  vehicleInlinePlateLabel: { fontSize: rf(16), fontWeight: "900" },
   linkHint: {
     borderWidth: 1,
     borderRadius: borderRadius.pill,
