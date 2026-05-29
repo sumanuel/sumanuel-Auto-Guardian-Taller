@@ -22,6 +22,7 @@ import WorkOrdersScreen from "./src/screens/WorkOrdersScreen";
 import WorkshopHomeScreen from "./src/screens/WorkshopHomeScreen";
 import WorkshopMoreScreen from "./src/screens/WorkshopMoreScreen";
 import VehicleFormScreen from "./src/screens/VehicleFormScreen";
+import VehicleHistoryScreen from "./src/screens/VehicleHistoryScreen";
 import VehiclesDirectoryScreen from "./src/screens/VehiclesDirectoryScreen";
 import WorkshopTabBar from "./src/components/common/WorkshopTabBar";
 import { findActiveDiagnosticByVehicleId } from "./src/services/diagnostics/diagnosticService";
@@ -30,6 +31,7 @@ const APP_SCREENS = {
   HOME: "home",
   CLIENTS: "clients",
   VEHICLES: "vehicles",
+  VEHICLE_HISTORY: "vehicle-history",
   CLIENT_FORM: "client-form",
   VEHICLE_FORM: "vehicle-form",
   DIAGNOSTICS: "diagnostics",
@@ -71,6 +73,9 @@ function AppContent() {
   });
   const [vehicleFormContext, setVehicleFormContext] = useState({
     client: null,
+    vehicle: null,
+  });
+  const [vehicleHistoryContext, setVehicleHistoryContext] = useState({
     vehicle: null,
   });
   const [clientsViewState, setClientsViewState] = useState({
@@ -123,6 +128,7 @@ function AppContent() {
     if (
       activeScreen === APP_SCREENS.CLIENT_FORM ||
       activeScreen === APP_SCREENS.VEHICLE_FORM ||
+      activeScreen === APP_SCREENS.VEHICLE_HISTORY ||
       activeScreen === APP_SCREENS.VEHICLES
     ) {
       return APP_SCREENS.CLIENTS;
@@ -157,6 +163,9 @@ function AppContent() {
     });
     setVehicleFormContext({
       client: null,
+      vehicle: null,
+    });
+    setVehicleHistoryContext({
       vehicle: null,
     });
     setClientsViewState({
@@ -225,6 +234,11 @@ function AppContent() {
             screenMode: "detail",
           });
           setActiveScreen(APP_SCREENS.CLIENTS);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.VEHICLE_HISTORY) {
+          setActiveScreen(APP_SCREENS.VEHICLES);
           return true;
         }
 
@@ -462,13 +476,33 @@ function AppContent() {
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
           onOpenVehicleHistory={(vehicle) => {
+            setVehicleHistoryContext({
+              vehicle: vehicle || null,
+            });
+            setActiveScreen(APP_SCREENS.VEHICLE_HISTORY);
+          }}
+        />
+      );
+    }
+
+    if (activeScreen === APP_SCREENS.VEHICLE_HISTORY) {
+      return (
+        <VehicleHistoryScreen
+          onBack={() => setActiveScreen(APP_SCREENS.VEHICLES)}
+          onOpenDiagnosticDetail={(diagnosticId) => {
             setDiagnosticsViewState({
-              selectedDiagnosticId: null,
-              searchQuery:
-                vehicle?.plate || vehicle?.id || vehicle?.refId || "",
+              selectedDiagnosticId: diagnosticId || null,
+              searchQuery: "",
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           }}
+          onOpenWorkOrderDetail={(workOrderId) => {
+            setWorkOrdersViewState({
+              selectedWorkOrderId: workOrderId || null,
+            });
+            setActiveScreen(APP_SCREENS.WORK_ORDERS);
+          }}
+          vehicleContext={vehicleHistoryContext.vehicle}
         />
       );
     }

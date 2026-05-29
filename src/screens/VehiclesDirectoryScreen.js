@@ -13,7 +13,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
+import { listDiagnostics } from "../services/diagnostics/diagnosticService";
 import { listVehicles } from "../services/vehicles/vehicleService";
+import { listWorkOrders } from "../services/workOrders/workOrderService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
 function normalizeSearchValue(value) {
@@ -40,18 +42,25 @@ export default function VehiclesDirectoryScreen({
   const [searchQuery, setSearchQuery] = useState("");
   const [clients, setClients] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [diagnostics, setDiagnostics] = useState([]);
+  const [workOrders, setWorkOrders] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
 
       try {
-        const [nextClients, nextVehicles] = await Promise.all([
+        const [nextClients, nextVehicles, nextDiagnostics, nextWorkOrders] =
+          await Promise.all([
           listClients(),
           listVehicles(),
+          listDiagnostics(),
+          listWorkOrders(),
         ]);
         setClients(nextClients);
         setVehicles(nextVehicles);
+        setDiagnostics(nextDiagnostics);
+        setWorkOrders(nextWorkOrders);
       } finally {
         setLoading(false);
       }
@@ -94,6 +103,29 @@ export default function VehiclesDirectoryScreen({
       return haystack.includes(normalizedQuery);
     });
   }, [clientLookup, searchQuery, vehicles]);
+
+  const vehicleOperationalState = useMemo(
+    () =>
+      filteredVehicles.reduce((accumulator, vehicle) => {
+        const vehicleId = vehicle.id || vehicle.refId;
+        const activeDiagnostics = diagnostics.filter(
+          (diagnostic) =>
+            diagnostic.vehicleId === vehicleId && diagnostic.status !== "closed",
+        );
+        const activeWorkOrders = workOrders.filter(
+          (workOrder) =>
+            workOrder.vehicleId === vehicleId && workOrder.status !== "delivered",
+        );
+
+        accumulator[vehicleId] = {
+          hasActiveDiagnostic: activeDiagnostics.length > 0,
+          hasActiveWorkOrder: activeWorkOrders.length > 0,
+        };
+
+        return accumulator;
+      }, {}),
+    [diagnostics, filteredVehicles, workOrders],
+  );
 
   return (
     <SafeAreaView
@@ -168,6 +200,11 @@ export default function VehiclesDirectoryScreen({
           {filteredVehicles.length ? (
             filteredVehicles.map((vehicle) => {
               const client = clientLookup[vehicle.clientId];
+              const vehicleId = vehicle.id || vehicle.refId;
+              const operationalState = vehicleOperationalState[vehicleId] || {
+                hasActiveDiagnostic: false,
+                hasActiveWorkOrder: false,
+              };
 
               return (
                 <Pressable
@@ -208,6 +245,58 @@ export default function VehiclesDirectoryScreen({
                       >
                         Placa: {vehicle.plate || "Sin placa"}
                       </Text>
+                      <View style={styles.badgeRow}>
+                        {operationalState.hasActiveDiagnostic ? (
+                          <View
+                            style={[
+                              styles.stateBadge,
+                              {
+                                backgroundColor: colors.cardMuted,
+                                borderColor: colors.primary,
+                              },
+                            ]}
+                          >
+                            <Ionicons
+                              color={colors.primary}
+                              name="pulse-outline"
+                              size={rf(12)}
+                            />
+                            <Text
+                              style={[
+                                styles.stateBadgeText,
+                                { color: colors.primary },
+                              ]}
+                            >
+                              Diag. activa
+                            </Text>
+                          </View>
+                        ) : null}
+                        {operationalState.hasActiveWorkOrder ? (
+                          <View
+                            style={[
+                              styles.stateBadge,
+                              {
+                                backgroundColor: colors.cardMuted,
+                                borderColor: colors.warning,
+                              },
+                            ]}
+                          >
+                            <Ionicons
+                              color={colors.warning}
+                              name="clipboard-outline"
+                              size={rf(12)}
+                            />
+                            <Text
+                              style={[
+                                styles.stateBadgeText,
+                                { color: colors.warning },
+                              ]}
+                            >
+                              Orden activa
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
                     </View>
                   </View>
 
@@ -384,6 +473,25 @@ const styles = StyleSheet.create({
   vehicleTitleBlock: {
     flex: 1,
     gap: 2,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  stateBadge: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  stateBadgeText: {
+    fontSize: rf(11),
+    fontWeight: "800",
   },
   vehicleTitle: {
     fontSize: rf(16),
