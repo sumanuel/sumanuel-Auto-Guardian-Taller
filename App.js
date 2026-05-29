@@ -24,6 +24,7 @@ import WorkshopMoreScreen from "./src/screens/WorkshopMoreScreen";
 import VehicleFormScreen from "./src/screens/VehicleFormScreen";
 import VehicleHistoryScreen from "./src/screens/VehicleHistoryScreen";
 import VehiclesDirectoryScreen from "./src/screens/VehiclesDirectoryScreen";
+import WorkOrderHistoryTimelineScreen from "./src/screens/WorkOrderHistoryTimelineScreen";
 import WorkshopTabBar from "./src/components/common/WorkshopTabBar";
 import { findActiveDiagnosticByVehicleId } from "./src/services/diagnostics/diagnosticService";
 
@@ -32,6 +33,7 @@ const APP_SCREENS = {
   CLIENTS: "clients",
   VEHICLES: "vehicles",
   VEHICLE_HISTORY: "vehicle-history",
+  WORK_ORDER_HISTORY_TIMELINE: "work-order-history-timeline",
   CLIENT_FORM: "client-form",
   VEHICLE_FORM: "vehicle-form",
   DIAGNOSTICS: "diagnostics",
@@ -78,6 +80,10 @@ function AppContent() {
   const [vehicleHistoryContext, setVehicleHistoryContext] = useState({
     vehicle: null,
   });
+  const [workOrderHistoryTimelineContext, setWorkOrderHistoryTimelineContext] =
+    useState({
+      workOrderId: null,
+    });
   const [clientsViewState, setClientsViewState] = useState({
     selectedClientId: null,
     screenMode: "list",
@@ -135,6 +141,7 @@ function AppContent() {
       activeScreen === APP_SCREENS.CLIENT_FORM ||
       activeScreen === APP_SCREENS.VEHICLE_FORM ||
       activeScreen === APP_SCREENS.VEHICLE_HISTORY ||
+      activeScreen === APP_SCREENS.WORK_ORDER_HISTORY_TIMELINE ||
       activeScreen === APP_SCREENS.VEHICLES
     ) {
       return APP_SCREENS.CLIENTS;
@@ -173,6 +180,9 @@ function AppContent() {
     });
     setVehicleHistoryContext({
       vehicle: null,
+    });
+    setWorkOrderHistoryTimelineContext({
+      workOrderId: null,
     });
     setClientsViewState({
       selectedClientId: null,
@@ -274,6 +284,11 @@ function AppContent() {
 
         if (activeScreen === APP_SCREENS.VEHICLE_HISTORY) {
           setActiveScreen(APP_SCREENS.VEHICLES);
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.WORK_ORDER_HISTORY_TIMELINE) {
+          setActiveScreen(APP_SCREENS.VEHICLE_HISTORY);
           return true;
         }
 
@@ -621,6 +636,9 @@ function AppContent() {
             setVehicleHistoryContext({
               vehicle: vehicle || null,
             });
+            setWorkOrderHistoryTimelineContext({
+              workOrderId: null,
+            });
             setActiveScreen(APP_SCREENS.VEHICLE_HISTORY);
           }}
         />
@@ -640,14 +658,22 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           }}
-          onOpenWorkOrderDetail={(workOrderId) => {
-            setWorkOrdersViewState({
-              selectedWorkOrderId: workOrderId || null,
-              returnTo: APP_SCREENS.VEHICLE_HISTORY,
-              detailEntry: true,
+          onOpenWorkOrderTimeline={(workOrderId) => {
+            setWorkOrderHistoryTimelineContext({
+              workOrderId: workOrderId || null,
             });
-            setActiveScreen(APP_SCREENS.WORK_ORDERS);
+            setActiveScreen(APP_SCREENS.WORK_ORDER_HISTORY_TIMELINE);
           }}
+          vehicleContext={vehicleHistoryContext.vehicle}
+        />
+      );
+    }
+
+    if (activeScreen === APP_SCREENS.WORK_ORDER_HISTORY_TIMELINE) {
+      return (
+        <WorkOrderHistoryTimelineScreen
+          onBack={() => setActiveScreen(APP_SCREENS.VEHICLE_HISTORY)}
+          workOrderId={workOrderHistoryTimelineContext.workOrderId}
           vehicleContext={vehicleHistoryContext.vehicle}
         />
       );

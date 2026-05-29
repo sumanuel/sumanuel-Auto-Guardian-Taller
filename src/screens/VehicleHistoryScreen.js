@@ -106,7 +106,7 @@ function resolveStatusLabel(item) {
 export default function VehicleHistoryScreen({
   onBack,
   onOpenDiagnosticDetail,
-  onOpenWorkOrderDetail,
+  onOpenWorkOrderTimeline,
   vehicleContext,
 }) {
   const { colors } = useTheme();
@@ -330,7 +330,7 @@ export default function VehicleHistoryScreen({
                       return;
                     }
 
-                    onOpenWorkOrderDetail?.(item.entityId);
+                    onOpenWorkOrderTimeline?.(item.entityId);
                   }}
                   style={[
                     styles.timelineCard,
