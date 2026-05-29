@@ -22,12 +22,14 @@ import WorkOrdersScreen from "./src/screens/WorkOrdersScreen";
 import WorkshopHomeScreen from "./src/screens/WorkshopHomeScreen";
 import WorkshopMoreScreen from "./src/screens/WorkshopMoreScreen";
 import VehicleFormScreen from "./src/screens/VehicleFormScreen";
+import VehiclesDirectoryScreen from "./src/screens/VehiclesDirectoryScreen";
 import WorkshopTabBar from "./src/components/common/WorkshopTabBar";
 import { findActiveDiagnosticByVehicleId } from "./src/services/diagnostics/diagnosticService";
 
 const APP_SCREENS = {
   HOME: "home",
   CLIENTS: "clients",
+  VEHICLES: "vehicles",
   CLIENT_FORM: "client-form",
   VEHICLE_FORM: "vehicle-form",
   DIAGNOSTICS: "diagnostics",
@@ -119,7 +121,8 @@ function AppContent() {
 
     if (
       activeScreen === APP_SCREENS.CLIENT_FORM ||
-      activeScreen === APP_SCREENS.VEHICLE_FORM
+      activeScreen === APP_SCREENS.VEHICLE_FORM ||
+      activeScreen === APP_SCREENS.VEHICLES
     ) {
       return APP_SCREENS.CLIENTS;
     }
@@ -281,6 +284,11 @@ function AppContent() {
           return true;
         }
 
+        if (activeScreen === APP_SCREENS.VEHICLES) {
+          setActiveScreen(APP_SCREENS.HOME);
+          return true;
+        }
+
         if (
           activeScreen === APP_SCREENS.DIAGNOSTICS ||
           activeScreen === APP_SCREENS.WORK_ORDERS ||
@@ -435,6 +443,14 @@ function AppContent() {
           }}
           userProfile={userProfile}
           viewState={clientsViewState}
+        />
+      );
+    }
+
+    if (activeScreen === APP_SCREENS.VEHICLES) {
+      return (
+        <VehiclesDirectoryScreen
+          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
         />
       );
     }
@@ -737,6 +753,7 @@ function AppContent() {
       <WorkshopHomeScreen
         onOpenClients={() => setActiveScreen(APP_SCREENS.CLIENTS)}
         onOpenDiagnostics={() => setActiveScreen(APP_SCREENS.DIAGNOSTICS)}
+        onOpenVehicles={() => setActiveScreen(APP_SCREENS.VEHICLES)}
         onOpenSpareParts={() => {
           setSparePartsViewState({
             selectedSparePartId: null,

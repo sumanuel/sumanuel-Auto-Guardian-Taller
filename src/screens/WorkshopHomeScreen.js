@@ -42,17 +42,17 @@ const queueTypeOptions = [
   },
   {
     key: "diagnostic",
-    label: "Diagnosticos",
+    label: "Diag.",
     title: "Diagnosticos del taller",
     subtitle: "Revision inicial, cotizacion y aprobacion antes de abrir orden.",
-    icon: "clipboard-outline",
+    icon: "pulse-outline",
   },
   {
     key: "work-order",
     label: "Ordenes",
     title: "Ordenes operativas",
     subtitle: "Seguimiento de ejecucion, pausas, entregas y avance tecnico.",
-    icon: "construct-outline",
+    icon: "clipboard-outline",
   },
 ];
 
@@ -141,14 +141,18 @@ function getQueueCaseColor(item, colors) {
 }
 
 function getQueueIconName(itemType) {
-  return itemType === "diagnostic" ? "clipboard-outline" : "construct-outline";
+  return itemType === "diagnostic" ? "pulse-outline" : "clipboard-outline";
 }
 
 function getQueueTypeLabel(itemType) {
   return itemType === "diagnostic" ? "Diagnostico" : "Orden";
 }
 
-export default function WorkshopHomeScreen({ userProfile }) {
+export default function WorkshopHomeScreen({
+  onOpenClients,
+  onOpenVehicles,
+  userProfile,
+}) {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState([]);
@@ -388,54 +392,80 @@ export default function WorkshopHomeScreen({ userProfile }) {
           </View>
 
           <View style={styles.metricsGrid}>
-            <View
-              style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
+            <Pressable
+              onPress={onOpenVehicles}
+              style={[
+                styles.metricTile,
+                styles.metricActionTile,
+                { backgroundColor: colors.cardMuted, borderColor: colors.border },
+              ]}
             >
+              <View style={styles.metricTileHeader}>
+                <View
+                  style={[
+                    styles.metricIconWrap,
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    color={colors.accent}
+                    name="car-sport-outline"
+                    size={rf(18)}
+                  />
+                </View>
+                <Ionicons
+                  color={colors.textTertiary}
+                  name="chevron-forward"
+                  size={rf(16)}
+                />
+              </View>
               <Text style={[styles.metricValue, { color: colors.text }]}>
                 {vehicles.length}
               </Text>
-              <Text
-                style={[styles.metricLabel, { color: colors.textSecondary }]}
-              >
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}> 
                 Vehiculos
               </Text>
-            </View>
-            <View
-              style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
+            </Pressable>
+            <Pressable
+              onPress={onOpenClients}
+              style={[
+                styles.metricTile,
+                styles.metricActionTile,
+                { backgroundColor: colors.cardMuted, borderColor: colors.border },
+              ]}
             >
+              <View style={styles.metricTileHeader}>
+                <View
+                  style={[
+                    styles.metricIconWrap,
+                    {
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    color={colors.primary}
+                    name="people-outline"
+                    size={rf(18)}
+                  />
+                </View>
+                <Ionicons
+                  color={colors.textTertiary}
+                  name="chevron-forward"
+                  size={rf(16)}
+                />
+              </View>
               <Text style={[styles.metricValue, { color: colors.text }]}>
                 {clients.length}
               </Text>
-              <Text
-                style={[styles.metricLabel, { color: colors.textSecondary }]}
-              >
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}> 
                 Clientes
               </Text>
-            </View>
-            <View
-              style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
-            >
-              <Text style={[styles.metricValue, { color: colors.text }]}>
-                {diagnostics.length}
-              </Text>
-              <Text
-                style={[styles.metricLabel, { color: colors.textSecondary }]}
-              >
-                Diagnosticos
-              </Text>
-            </View>
-            <View
-              style={[styles.metricTile, { backgroundColor: colors.cardMuted }]}
-            >
-              <Text style={[styles.metricValue, { color: colors.text }]}>
-                {workOrders.length}
-              </Text>
-              <Text
-                style={[styles.metricLabel, { color: colors.textSecondary }]}
-              >
-                Ordenes
-              </Text>
-            </View>
+            </Pressable>
           </View>
         </View>
 
@@ -764,9 +794,27 @@ const styles = StyleSheet.create({
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
   metricTile: {
     width: "47%",
+    borderWidth: 1,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     gap: 2,
+  },
+  metricActionTile: {
+    gap: spacing.sm,
+  },
+  metricTileHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  metricIconWrap: {
+    width: rf(36),
+    height: rf(36),
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    alignItems: "center",
+    justifyContent: "center",
   },
   metricValue: { fontSize: rf(24), fontWeight: "900" },
   metricLabel: { fontSize: rf(12), fontWeight: "700" },
