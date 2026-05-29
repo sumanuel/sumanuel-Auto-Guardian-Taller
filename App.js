@@ -464,7 +464,8 @@ function AppContent() {
           onOpenVehicleHistory={(vehicle) => {
             setDiagnosticsViewState({
               selectedDiagnosticId: null,
-              searchQuery: vehicle?.plate || vehicle?.id || vehicle?.refId || "",
+              searchQuery:
+                vehicle?.plate || vehicle?.id || vehicle?.refId || "",
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           }}
