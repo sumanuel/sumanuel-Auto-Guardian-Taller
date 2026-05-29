@@ -50,64 +50,65 @@ function getTimestampMillis(value) {
 function formatDateTime(value) {
   const resolvedDate = value?.toDate ? value.toDate() : value;
 
-  function resolveTimelineMeta(item) {
-    if (item.type === "progress-entry") {
-      return (
-        progressEntryTypeOptions.find((option) => option.key === item.entryType)
-          ?.label ||
-        item.entryType ||
-        "Avance"
-      );
-    }
-
-    if (item.type === "spare-part") {
-      return (
-        sparePartStatusOptions.find((option) => option.key === item.status)
-          ?.label ||
-        item.status ||
-        "Sin estado"
-      );
-    }
-
-    return resolveStatusLabel(item);
-  }
-
-  function resolveTimelinePresentation(item, colors) {
-    if (item.type === "diagnostic") {
-      return {
-        icon: "pulse-outline",
-        label: "Diagnostico",
-        accentColor: colors.primary,
-      };
-    }
-
-    if (item.type === "work-order") {
-      return {
-        icon: "clipboard-outline",
-        label: "Orden",
-        accentColor: colors.warning,
-      };
-    }
-
-    if (item.type === "progress-entry") {
-      return {
-        icon: "trail-sign-outline",
-        label: "Avance",
-        accentColor: colors.accent,
-      };
-    }
-
-    return {
-      icon: "cube-outline",
-      label: "Repuesto",
-      accentColor: colors.textSecondary,
-    };
-  }
   if (!(resolvedDate instanceof Date) || Number.isNaN(resolvedDate.getTime())) {
     return "Sin fecha";
   }
 
   return resolvedDate.toLocaleString("es-VE");
+}
+
+function resolveTimelineMeta(item) {
+  if (item.type === "progress-entry") {
+    return (
+      progressEntryTypeOptions.find((option) => option.key === item.entryType)
+        ?.label ||
+      item.entryType ||
+      "Avance"
+    );
+  }
+
+  if (item.type === "spare-part") {
+    return (
+      sparePartStatusOptions.find((option) => option.key === item.status)
+        ?.label ||
+      item.status ||
+      "Sin estado"
+    );
+  }
+
+  return resolveStatusLabel(item);
+}
+
+function resolveTimelinePresentation(item, colors) {
+  if (item.type === "diagnostic") {
+    return {
+      icon: "pulse-outline",
+      label: "Diagnostico",
+      accentColor: colors.primary,
+    };
+  }
+
+  if (item.type === "work-order") {
+    return {
+      icon: "clipboard-outline",
+      label: "Orden",
+      accentColor: colors.warning,
+    };
+  }
+
+  if (item.type === "progress-entry") {
+    return {
+      icon: "trail-sign-outline",
+      label: "Avance",
+      accentColor: colors.accent,
+    };
+  }
+
+  return {
+    icon: "cube-outline",
+    label: "Repuesto",
+    accentColor: colors.textSecondary,
+  };
 }
 
 function buildVehicleTitle(vehicle) {

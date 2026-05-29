@@ -92,6 +92,8 @@ function AppContent() {
   const [diagnosticsViewState, setDiagnosticsViewState] = useState({
     selectedDiagnosticId: null,
     searchQuery: "",
+    returnTo: APP_SCREENS.HOME,
+    detailEntry: false,
   });
   const [workOrderFormContext, setWorkOrderFormContext] = useState({
     workOrder: null,
@@ -99,6 +101,8 @@ function AppContent() {
   });
   const [workOrdersViewState, setWorkOrdersViewState] = useState({
     selectedWorkOrderId: null,
+    returnTo: APP_SCREENS.HOME,
+    detailEntry: false,
   });
   const [sparePartFormContext, setSparePartFormContext] = useState({
     sparePart: null,
@@ -183,6 +187,8 @@ function AppContent() {
     setDiagnosticsViewState({
       selectedDiagnosticId: null,
       searchQuery: "",
+      returnTo: APP_SCREENS.HOME,
+      detailEntry: false,
     });
     setWorkOrderFormContext({
       workOrder: null,
@@ -190,6 +196,8 @@ function AppContent() {
     });
     setWorkOrdersViewState({
       selectedWorkOrderId: null,
+      returnTo: APP_SCREENS.HOME,
+      detailEntry: false,
     });
     setSparePartFormContext({
       sparePart: null,
@@ -212,6 +220,25 @@ function AppContent() {
       selectedStockItemId: null,
     });
   }, [authUser?.uid]);
+
+  function navigateBackFromDiagnostics() {
+    setDiagnosticsViewState((current) => ({
+      ...current,
+      selectedDiagnosticId: null,
+      searchQuery: "",
+      detailEntry: false,
+    }));
+    setActiveScreen(diagnosticsViewState.returnTo || APP_SCREENS.HOME);
+  }
+
+  function navigateBackFromWorkOrders() {
+    setWorkOrdersViewState((current) => ({
+      ...current,
+      selectedWorkOrderId: null,
+      detailEntry: false,
+    }));
+    setActiveScreen(workOrdersViewState.returnTo || APP_SCREENS.HOME);
+  }
 
   useEffect(() => {
     if (!authReady || !authUser || !userProfile || profileStatus !== "active") {
@@ -315,11 +342,17 @@ function AppContent() {
           return true;
         }
 
-        if (
-          activeScreen === APP_SCREENS.DIAGNOSTICS ||
-          activeScreen === APP_SCREENS.WORK_ORDERS ||
-          activeScreen === APP_SCREENS.MORE
-        ) {
+        if (activeScreen === APP_SCREENS.DIAGNOSTICS) {
+          navigateBackFromDiagnostics();
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.WORK_ORDERS) {
+          navigateBackFromWorkOrders();
+          return true;
+        }
+
+        if (activeScreen === APP_SCREENS.MORE) {
           setActiveScreen(APP_SCREENS.HOME);
           return true;
         }
@@ -337,9 +370,11 @@ function AppContent() {
     userProfile,
     diagnosticFormContext.clientId,
     diagnosticFormContext.returnTo,
+    diagnosticsViewState.returnTo,
     sparePartsViewState.returnTo,
     vehicleFormContext.client,
     clientsViewState.returnTo,
+    workOrdersViewState.returnTo,
   ]);
 
   if (!authReady) {
@@ -392,13 +427,22 @@ function AppContent() {
     }
 
     if (nextTab === APP_SCREENS.DIAGNOSTICS) {
-      setDiagnosticsViewState({ selectedDiagnosticId: null, searchQuery: "" });
+      setDiagnosticsViewState({
+        selectedDiagnosticId: null,
+        searchQuery: "",
+        returnTo: APP_SCREENS.HOME,
+        detailEntry: false,
+      });
       setActiveScreen(APP_SCREENS.DIAGNOSTICS);
       return;
     }
 
     if (nextTab === APP_SCREENS.WORK_ORDERS) {
-      setWorkOrdersViewState({ selectedWorkOrderId: null });
+      setWorkOrdersViewState({
+        selectedWorkOrderId: null,
+        returnTo: APP_SCREENS.HOME,
+        detailEntry: false,
+      });
       setActiveScreen(APP_SCREENS.WORK_ORDERS);
       return;
     }
@@ -510,12 +554,16 @@ function AppContent() {
             setDiagnosticsViewState({
               selectedDiagnosticId: diagnosticId || null,
               searchQuery: "",
+              returnTo: APP_SCREENS.VEHICLE_HISTORY,
+              detailEntry: true,
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           }}
           onOpenWorkOrderDetail={(workOrderId) => {
             setWorkOrdersViewState({
               selectedWorkOrderId: workOrderId || null,
+              returnTo: APP_SCREENS.VEHICLE_HISTORY,
+              detailEntry: true,
             });
             setActiveScreen(APP_SCREENS.WORK_ORDERS);
           }}
@@ -582,7 +630,7 @@ function AppContent() {
     if (activeScreen === APP_SCREENS.DIAGNOSTICS) {
       return (
         <DiagnosticsScreen
-          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onBack={navigateBackFromDiagnostics}
           onOpenDiagnosticForm={(diagnostic, options = {}) => {
             setDiagnosticFormContext({
               diagnostic: diagnostic || null,
@@ -633,7 +681,9 @@ function AppContent() {
             }
 
             setDiagnosticsViewState({
+              ...diagnosticsViewState,
               selectedDiagnosticId: savedDiagnosticId,
+              detailEntry: true,
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           }}
@@ -645,11 +695,12 @@ function AppContent() {
     if (activeScreen === APP_SCREENS.WORK_ORDERS) {
       return (
         <WorkOrdersScreen
-          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onBack={navigateBackFromWorkOrders}
           onOpenSpareParts={(workOrder) => {
-            setWorkOrdersViewState({
+            setWorkOrdersViewState((current) => ({
+              ...current,
               selectedWorkOrderId: workOrder?.id || null,
-            });
+            }));
             setSparePartsViewState({
               selectedSparePartId: null,
               selectedWorkOrderId: workOrder?.id || null,
@@ -686,6 +737,8 @@ function AppContent() {
           onSaved={(savedWorkOrderId) => {
             setWorkOrdersViewState({
               selectedWorkOrderId: savedWorkOrderId,
+              returnTo: workOrdersViewState.returnTo,
+              detailEntry: true,
             });
             setActiveScreen(APP_SCREENS.WORK_ORDERS);
           }}
@@ -834,6 +887,8 @@ function AppContent() {
           setDiagnosticsViewState({
             selectedDiagnosticId: diagnosticId || null,
             searchQuery: "",
+            returnTo: APP_SCREENS.HOME,
+            detailEntry: true,
           });
           setActiveScreen(APP_SCREENS.DIAGNOSTICS);
         }}
@@ -845,7 +900,15 @@ function AppContent() {
           });
           setActiveScreen(APP_SCREENS.CLIENTS);
         }}
-        onOpenDiagnostics={() => setActiveScreen(APP_SCREENS.DIAGNOSTICS)}
+        onOpenDiagnostics={() => {
+          setDiagnosticsViewState({
+            selectedDiagnosticId: null,
+            searchQuery: "",
+            returnTo: APP_SCREENS.HOME,
+            detailEntry: false,
+          });
+          setActiveScreen(APP_SCREENS.DIAGNOSTICS);
+        }}
         onOpenVehicles={() => setActiveScreen(APP_SCREENS.VEHICLES)}
         onOpenSpareParts={() => {
           setSparePartsViewState({
@@ -859,10 +922,19 @@ function AppContent() {
         onOpenWorkOrderDetail={(workOrderId) => {
           setWorkOrdersViewState({
             selectedWorkOrderId: workOrderId || null,
+            returnTo: APP_SCREENS.HOME,
+            detailEntry: true,
           });
           setActiveScreen(APP_SCREENS.WORK_ORDERS);
         }}
-        onOpenWorkOrders={() => setActiveScreen(APP_SCREENS.WORK_ORDERS)}
+        onOpenWorkOrders={() => {
+          setWorkOrdersViewState({
+            selectedWorkOrderId: null,
+            returnTo: APP_SCREENS.HOME,
+            detailEntry: false,
+          });
+          setActiveScreen(APP_SCREENS.WORK_ORDERS);
+        }}
         onSignOut={signOutUser}
         userProfile={userProfile}
       />

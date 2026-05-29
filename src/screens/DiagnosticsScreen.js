@@ -161,6 +161,11 @@ export default function DiagnosticsScreen({
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        if (viewState?.detailEntry) {
+          onBack?.();
+          return true;
+        }
+
         setSelectedDiagnostic(null);
         setScreenMode(SCREEN_MODES.LIST);
         return true;
@@ -168,7 +173,7 @@ export default function DiagnosticsScreen({
     );
 
     return () => subscription.remove();
-  }, [screenMode]);
+  }, [onBack, screenMode, viewState?.detailEntry]);
 
   const filteredDiagnostics = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -232,6 +237,11 @@ export default function DiagnosticsScreen({
   };
 
   const handleBackToList = () => {
+    if (viewState?.detailEntry) {
+      onBack?.();
+      return;
+    }
+
     setSelectedDiagnostic(null);
     setScreenMode(SCREEN_MODES.LIST);
   };

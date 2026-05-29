@@ -239,26 +239,6 @@ export default function VehiclesDirectoryScreen({
               value={searchQuery}
             />
           </View>
-
-          <View
-            style={[
-              styles.summaryStrip,
-              {
-                backgroundColor: colors.cardMuted,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text style={[styles.summaryValue, { color: colors.text }]}>
-              {filteredVehicles.length}
-            </Text>
-            <Text
-              style={[styles.summaryLabel, { color: colors.textSecondary }]}
-            >
-              unidad{filteredVehicles.length === 1 ? "" : "es"} visible
-              {filteredVehicles.length === 1 ? "" : "s"}
-            </Text>
-          </View>
         </View>
 
         {loading ? <ActivityIndicator color={colors.primary} /> : null}

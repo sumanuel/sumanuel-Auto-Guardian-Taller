@@ -285,6 +285,11 @@ export default function WorkOrdersScreen({
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        if (viewState?.detailEntry) {
+          onBack?.();
+          return true;
+        }
+
         setSelectedWorkOrder(null);
         setScreenMode(SCREEN_MODES.LIST);
         return true;
@@ -292,7 +297,7 @@ export default function WorkOrdersScreen({
     );
 
     return () => subscription.remove();
-  }, [screenMode]);
+  }, [onBack, screenMode, viewState?.detailEntry]);
 
   useEffect(() => {
     if (!selectedWorkOrder?.id) {
@@ -373,6 +378,11 @@ export default function WorkOrdersScreen({
   };
 
   const handleBackToList = () => {
+    if (viewState?.detailEntry) {
+      onBack?.();
+      return;
+    }
+
     setSelectedWorkOrder(null);
     setScreenMode(SCREEN_MODES.LIST);
   };
