@@ -1,5 +1,13 @@
+import Constants from "expo-constants";
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { hasPermission } from "../constants/accessControl";
@@ -175,6 +183,7 @@ function renderActionRow({
 export default function WorkshopMoreScreen({
   onBack,
   onOpenCollaborators,
+  onOpenOnboarding,
   onOpenStockItems,
   onOpenWorkshopSettings,
   onSignOut,
@@ -184,6 +193,7 @@ export default function WorkshopMoreScreen({
   const { colors } = useTheme();
   const { activeWorkshop, activeWorkshopId, memberships, userProfile } =
     useAuth();
+  const appVersion = Constants?.expoConfig?.version || "-";
   const activeMembership = getPrimaryMembership(memberships, activeWorkshopId);
   const workshopName = activeWorkshop?.name || activeMembership?.workshopName;
   const roleLabel =
@@ -362,6 +372,33 @@ export default function WorkshopMoreScreen({
           </Text>
           <View style={styles.actionList}>
             <Pressable
+              onPress={onOpenOnboarding}
+              style={[
+                styles.actionRow,
+                {
+                  borderBottomColor: colors.border,
+                  backgroundColor: colors.cardMuted,
+                },
+              ]}
+            >
+              <View style={styles.actionCopy}>
+                <Text style={[styles.actionLabel, { color: colors.text }]}>
+                  Ver onboarding
+                </Text>
+                <Text
+                  style={[styles.actionMeta, { color: colors.textSecondary }]}
+                >
+                  Recorre otra vez la introduccion operativa de la app.
+                </Text>
+              </View>
+              <Ionicons
+                color={colors.textTertiary}
+                name="play-circle-outline"
+                size={rf(18)}
+              />
+            </Pressable>
+
+            <Pressable
               onPress={onToggleTheme}
               style={[
                 styles.actionRow,
@@ -408,6 +445,82 @@ export default function WorkshopMoreScreen({
                 size={rf(18)}
               />
             </Pressable>
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.sectionCard,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Acerca de
+          </Text>
+          <Text
+            style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
+          >
+            Identidad visual y version actual del centro operativo del taller.
+          </Text>
+
+          <View
+            style={[
+              styles.aboutCard,
+              {
+                backgroundColor: colors.cardMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.aboutLogoWrap,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Image
+                source={require("../../assets/icon.png")}
+                resizeMode="contain"
+                style={styles.aboutLogo}
+              />
+            </View>
+
+            <View style={styles.aboutCopy}>
+              <Text style={[styles.aboutEyebrow, { color: colors.primary }]}>
+                Auto-Guardian Taller
+              </Text>
+              <Text style={[styles.aboutTitle, { color: colors.text }]}>
+                Centro operativo del taller
+              </Text>
+              <Text
+                style={[
+                  styles.aboutDescription,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Version {appVersion}
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.versionBadge,
+                {
+                  backgroundColor: colors.cardBackground,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.versionBadgeText, { color: colors.text }]}>
+                v{appVersion}
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -464,6 +577,56 @@ const styles = StyleSheet.create({
   heroStatLabel: {
     fontSize: rf(12),
     fontWeight: "600",
+  },
+  aboutCard: {
+    borderWidth: 1,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  aboutLogoWrap: {
+    width: rf(72),
+    height: rf(72),
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing.sm,
+  },
+  aboutLogo: {
+    width: "100%",
+    height: "100%",
+  },
+  aboutCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  aboutEyebrow: {
+    fontSize: rf(10),
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  aboutTitle: {
+    fontSize: rf(16),
+    fontWeight: "800",
+  },
+  aboutDescription: {
+    fontSize: rf(12),
+    lineHeight: rf(18),
+    fontWeight: "600",
+  },
+  versionBadge: {
+    borderWidth: 1,
+    borderRadius: borderRadius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  versionBadgeText: {
+    fontSize: rf(11),
+    fontWeight: "800",
   },
   sectionCard: {
     borderWidth: 1,

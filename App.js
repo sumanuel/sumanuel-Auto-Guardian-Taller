@@ -430,7 +430,7 @@ function AppContent() {
     );
   }
 
-  if (!authUser && showOnboarding) {
+  if (showOnboarding) {
     return (
       <>
         <StatusBar style="light" />
@@ -1019,6 +1019,7 @@ function AppContent() {
         <WorkshopMoreScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
           onOpenCollaborators={() => setActiveScreen(APP_SCREENS.COLLABORATORS)}
+          onOpenOnboarding={() => setShowOnboarding(true)}
           onOpenStockItems={() => {
             setStockItemsViewState({
               selectedStockItemId: null,
