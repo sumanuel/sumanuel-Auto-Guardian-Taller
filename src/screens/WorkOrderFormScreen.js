@@ -403,7 +403,8 @@ export default function WorkOrderFormScreen({
               )}
             </View>
             <Text style={[styles.helperText, { color: colors.textSecondary }]}>
-              Puedes asignar o quitar administradores y colaboradores antes de iniciar la orden.
+              Puedes asignar o quitar administradores y colaboradores antes de
+              iniciar la orden.
             </Text>
           </View>
 

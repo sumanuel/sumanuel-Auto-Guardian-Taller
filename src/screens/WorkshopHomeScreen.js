@@ -632,7 +632,9 @@ export default function WorkshopHomeScreen({
               </Pressable>
             </View>
 
-            <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}> 
+            <Text
+              style={[styles.rangeSummary, { color: colors.textSecondary }]}
+            >
               Rango activo: {formatDateRangeLabel(dateRange)}
             </Text>
 
@@ -808,7 +810,7 @@ export default function WorkshopHomeScreen({
                           ? "Orden cerrada y vehiculo ya entregado."
                           : item.statusKey === "ready"
                             ? "Orden lista para coordinar la entrega del vehiculo."
-                        : "Sigue el avance de ejecucion y prepara la entrega del vehiculo."}
+                            : "Sigue el avance de ejecucion y prepara la entrega del vehiculo."}
                     </Text>
                   </View>
                 </Pressable>

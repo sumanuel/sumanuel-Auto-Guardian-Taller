@@ -766,7 +766,7 @@ export default function WorkOrdersScreen({
           </Pressable>
         </View>
 
-        <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}> 
+        <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}>
           Rango activo: {formatDateRangeLabel(dateRange)}
         </Text>
 
@@ -1208,8 +1208,9 @@ export default function WorkOrdersScreen({
                 </View>
               )}
             </View>
-            <Text style={[styles.rowMeta, { color: colors.textSecondary }]}> 
-              Usa editar responsables y orden para asignar o quitar personal antes de iniciar la orden.
+            <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+              Usa editar responsables y orden para asignar o quitar personal
+              antes de iniciar la orden.
             </Text>
           </View>
 

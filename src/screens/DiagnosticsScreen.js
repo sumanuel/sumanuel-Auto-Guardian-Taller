@@ -430,7 +430,7 @@ export default function DiagnosticsScreen({
           </Pressable>
         </View>
 
-        <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}> 
+        <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}>
           Rango activo: {formatDateRangeLabel(dateRange)}
         </Text>
 

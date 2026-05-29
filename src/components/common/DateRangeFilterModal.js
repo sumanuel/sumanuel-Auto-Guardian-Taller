@@ -127,7 +127,9 @@ export default function DateRangeFilterModal({
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Fecha desde</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Fecha desde
+            </Text>
             <TextInput
               autoCapitalize="none"
               keyboardType="numbers-and-punctuation"
@@ -147,7 +149,9 @@ export default function DateRangeFilterModal({
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Fecha hasta</Text>
+            <Text style={[styles.label, { color: colors.text }]}>
+              Fecha hasta
+            </Text>
             <TextInput
               autoCapitalize="none"
               keyboardType="numbers-and-punctuation"
@@ -185,7 +189,10 @@ export default function DateRangeFilterModal({
             </Pressable>
             <Pressable
               onPress={handleApply}
-              style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+              style={[
+                styles.primaryButton,
+                { backgroundColor: colors.primary },
+              ]}
             >
               <Text style={[styles.primaryButtonText, { color: colors.white }]}>
                 Aplicar
