@@ -485,7 +485,7 @@ export default function WorkshopMoreScreen({
               ]}
             >
               <Image
-                source={require("../../assets/icon.png")}
+                source={require("../../assets/icon-dark.png")}
                 resizeMode="contain"
                 style={styles.aboutLogo}
               />
