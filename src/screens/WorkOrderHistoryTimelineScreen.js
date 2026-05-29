@@ -236,8 +236,9 @@ export default function WorkOrderHistoryTimelineScreen({
     () =>
       [...progressEntries]
         .reverse()
-        .find((entry) => entry.deliveryClosedOrder || entry.type === "delivery") ||
-      null,
+        .find(
+          (entry) => entry.deliveryClosedOrder || entry.type === "delivery",
+        ) || null,
     [progressEntries],
   );
 
@@ -326,7 +327,7 @@ export default function WorkOrderHistoryTimelineScreen({
               >
                 Cliente: {client?.fullName || "Sin cliente asociado"}
               </Text>
-              <Text style={[styles.summaryDelivery, { color: colors.success }]}> 
+              <Text style={[styles.summaryDelivery, { color: colors.success }]}>
                 Entregada: {formatDateTime(deliveryTimestamp)}
               </Text>
             </View>
