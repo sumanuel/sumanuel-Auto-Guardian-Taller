@@ -150,8 +150,6 @@ export default function OnboardingScreen({ onComplete }) {
         scrollEventThrottle={16}
       >
         {slides.map((slide, index) => {
-          const isActive = index === currentSlide;
-
           return (
             <View key={slide.key} style={styles.slide}>
               <View
@@ -237,48 +235,46 @@ export default function OnboardingScreen({ onComplete }) {
                     </View>
                   ))}
                 </View>
-
-                <View
-                  style={[
-                    styles.progressCard,
-                    {
-                      backgroundColor: palette.panel,
-                      borderColor: palette.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[styles.progressLabel, { color: palette.muted }]}
-                  >
-                    Estado de introduccion
-                  </Text>
-                  <Text style={[styles.progressValue, { color: palette.text }]}>
-                    {String(index + 1).padStart(2, "0")} /{" "}
-                    {String(slides.length).padStart(2, "0")}
-                  </Text>
-                  <View style={styles.indicatorTrack}>
-                    {slides.map((_, indicatorIndex) => (
-                      <View
-                        key={`${slide.key}-${indicatorIndex}`}
-                        style={[
-                          styles.indicatorDot,
-                          {
-                            backgroundColor:
-                              indicatorIndex === index
-                                ? palette.accent
-                                : palette.border,
-                            flex: indicatorIndex === index ? 1.4 : 1,
-                          },
-                        ]}
-                      />
-                    ))}
-                  </View>
-                </View>
               </View>
             </View>
           );
         })}
       </ScrollView>
+
+      <View
+        style={[
+          styles.progressCard,
+          {
+            backgroundColor: palette.panel,
+            borderColor: palette.border,
+          },
+        ]}
+      >
+        <Text style={[styles.progressLabel, { color: palette.muted }]}>
+          Estado de introduccion
+        </Text>
+        <Text style={[styles.progressValue, { color: palette.text }]}>
+          {String(currentSlide + 1).padStart(2, "0")} /{" "}
+          {String(slides.length).padStart(2, "0")}
+        </Text>
+        <View style={styles.indicatorTrack}>
+          {slides.map((slide, indicatorIndex) => (
+            <View
+              key={`${slide.key}-${indicatorIndex}`}
+              style={[
+                styles.indicatorDot,
+                {
+                  backgroundColor:
+                    indicatorIndex === currentSlide
+                      ? palette.accent
+                      : palette.border,
+                  flex: indicatorIndex === currentSlide ? 1.4 : 1,
+                },
+              ]}
+            />
+          ))}
+        </View>
+      </View>
 
       <View style={styles.footer}>
         <Pressable
@@ -357,7 +353,8 @@ const styles = StyleSheet.create({
   slide: {
     width,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   heroCard: {
     flex: 1,
@@ -436,6 +433,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     gap: spacing.xs,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.xs,
   },
   progressLabel: {
     fontSize: rf(11),
@@ -459,7 +458,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
   },
   secondaryAction: {
     flex: 0.9,
