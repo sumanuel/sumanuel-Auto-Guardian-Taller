@@ -1720,7 +1720,7 @@ export default function WorkOrdersScreen({
                             <Text
                               style={[
                                 styles.timelineProgressPrefix,
-                                { color: colors.white },
+                                { color: colors.text },
                               ]}
                             >
                               {parsedProgressMessage.prefix}
@@ -1738,7 +1738,7 @@ export default function WorkOrdersScreen({
                             <Text
                               style={[
                                 styles.timelineProgressPrefix,
-                                { color: colors.white },
+                                { color: colors.text },
                               ]}
                             >
                               {parsedProgressMessage.suffix}
@@ -1748,7 +1748,7 @@ export default function WorkOrdersScreen({
                           <Text
                             style={[
                               styles.timelineProgressText,
-                              { color: colors.white },
+                              { color: colors.text },
                             ]}
                           >
                             {entry.message}

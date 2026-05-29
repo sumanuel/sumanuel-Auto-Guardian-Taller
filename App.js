@@ -546,6 +546,15 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
+          onOpenDiagnosticDetail={(diagnosticId) => {
+            setDiagnosticsViewState({
+              selectedDiagnosticId: diagnosticId || null,
+              searchQuery: "",
+              returnTo: APP_SCREENS.VEHICLES,
+              detailEntry: true,
+            });
+            setActiveScreen(APP_SCREENS.DIAGNOSTICS);
+          }}
           onOpenDiagnosticForm={async (vehicle, client) => {
             try {
               const vehicleId = vehicle?.id || vehicle?.refId || null;
@@ -599,6 +608,14 @@ function AppContent() {
                   "No se pudo preparar el diagnostico para esta unidad.",
               );
             }
+          }}
+          onOpenWorkOrderDetail={(workOrderId) => {
+            setWorkOrdersViewState({
+              selectedWorkOrderId: workOrderId || null,
+              returnTo: APP_SCREENS.VEHICLES,
+              detailEntry: true,
+            });
+            setActiveScreen(APP_SCREENS.WORK_ORDERS);
           }}
           onOpenVehicleHistory={(vehicle) => {
             setVehicleHistoryContext({

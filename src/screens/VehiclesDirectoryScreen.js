@@ -88,10 +88,33 @@ function resolvePrimaryVehicleBadge(state) {
   return null;
 }
 
+function resolveVehicleContextAction(state) {
+  if (state.activeWorkOrderId) {
+    return {
+      action: "work-order",
+      label: "Continuar orden",
+    };
+  }
+
+  if (state.activeDiagnosticId) {
+    return {
+      action: "diagnostic-detail",
+      label: "Abrir diagnostico",
+    };
+  }
+
+  return {
+    action: "diagnostic-create",
+    label: "Crear diagnostico",
+  };
+}
+
 export default function VehiclesDirectoryScreen({
   onBack,
   onOpenClientDetail,
+  onOpenDiagnosticDetail,
   onOpenDiagnosticForm,
+  onOpenWorkOrderDetail,
   onOpenVehicleHistory,
 }) {
   const { colors } = useTheme();
@@ -165,6 +188,13 @@ export default function VehiclesDirectoryScreen({
     () =>
       filteredVehicles.reduce((accumulator, vehicle) => {
         const vehicleId = vehicle.id || vehicle.refId;
+        const relatedDiagnostics = diagnostics
+          .filter((diagnostic) => diagnostic.vehicleId === vehicleId)
+          .sort(
+            (left, right) =>
+              getTimestampMillis(right.updatedAt || right.createdAt) -
+              getTimestampMillis(left.updatedAt || left.createdAt),
+          );
         const relatedWorkOrders = workOrders
           .filter((workOrder) => workOrder.vehicleId === vehicleId)
           .sort(
@@ -172,7 +202,7 @@ export default function VehiclesDirectoryScreen({
               getTimestampMillis(right.updatedAt || right.createdAt) -
               getTimestampMillis(left.updatedAt || left.createdAt),
           );
-        const activeDiagnostics = diagnostics.filter(
+        const activeDiagnostics = relatedDiagnostics.filter(
           (diagnostic) =>
             diagnostic.vehicleId === vehicleId &&
             diagnostic.status !== "closed",
@@ -187,6 +217,10 @@ export default function VehiclesDirectoryScreen({
         accumulator[vehicleId] = {
           hasActiveDiagnostic: activeDiagnostics.length > 0,
           hasActiveWorkOrder: activeWorkOrders.length > 0,
+          activeDiagnosticId:
+            activeDiagnostics[0]?.id || activeDiagnostics[0]?.refId || null,
+          activeWorkOrderId:
+            activeWorkOrders[0]?.id || activeWorkOrders[0]?.refId || null,
           latestWorkOrderStatus: latestWorkOrder?.status || "",
         };
 
@@ -252,9 +286,12 @@ export default function VehiclesDirectoryScreen({
               const operationalState = vehicleOperationalState[vehicleId] || {
                 hasActiveDiagnostic: false,
                 hasActiveWorkOrder: false,
+                activeDiagnosticId: null,
+                activeWorkOrderId: null,
                 latestWorkOrderStatus: "",
               };
               const primaryBadge = resolvePrimaryVehicleBadge(operationalState);
+              const contextAction = resolveVehicleContextAction(operationalState);
 
               return (
                 <Pressable
@@ -383,7 +420,23 @@ export default function VehiclesDirectoryScreen({
                       </Text>
                     </Pressable>
                     <Pressable
-                      onPress={() => onOpenDiagnosticForm?.(vehicle, client)}
+                      onPress={() => {
+                        if (contextAction.action === "work-order") {
+                          onOpenWorkOrderDetail?.(
+                            operationalState.activeWorkOrderId,
+                          );
+                          return;
+                        }
+
+                        if (contextAction.action === "diagnostic-detail") {
+                          onOpenDiagnosticDetail?.(
+                            operationalState.activeDiagnosticId,
+                          );
+                          return;
+                        }
+
+                        onOpenDiagnosticForm?.(vehicle, client);
+                      }}
                       style={[
                         styles.secondaryAction,
                         {
@@ -398,7 +451,7 @@ export default function VehiclesDirectoryScreen({
                           { color: colors.text },
                         ]}
                       >
-                        Diagnostico
+                        {contextAction.label}
                       </Text>
                     </Pressable>
                     <Pressable

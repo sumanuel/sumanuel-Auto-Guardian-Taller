@@ -17,6 +17,7 @@ import { firestoreCollections } from "../firestore/collections";
 import { requireActiveWorkshopId } from "../workshops/workshopSession";
 
 const diagnosticsCollection = firestoreCollections.diagnostics;
+const workOrdersCollection = firestoreCollections.workOrders;
 
 function normalizeOptional(value) {
   return value?.trim() || "";
@@ -94,6 +95,33 @@ export async function findActiveDiagnosticByVehicleId(
   );
 }
 
+async function findBlockingWorkOrderByVehicleId(vehicleId) {
+  const activeWorkshopId = requireActiveWorkshopId();
+  const normalizedVehicleId = normalizeOptional(vehicleId);
+
+  if (!normalizedVehicleId) {
+    return null;
+  }
+
+  const collectionRef = collection(firestore, workOrdersCollection.name);
+  const snapshot = await getDocs(
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      where("vehicleId", "==", normalizedVehicleId),
+    ),
+  );
+
+  return (
+    snapshot.docs
+      .map((item) => ({
+        refId: item.id,
+        ...item.data(),
+      }))
+      .find((workOrder) => workOrder.status !== "delivered") || null
+  );
+}
+
 export async function createDiagnostic({
   clientId,
   vehicleId,
@@ -109,10 +137,17 @@ export async function createDiagnostic({
   const workshopId = requireActiveWorkshopId();
   const existingActiveDiagnostic =
     await findActiveDiagnosticByVehicleId(vehicleId);
+  const blockingWorkOrder = await findBlockingWorkOrderByVehicleId(vehicleId);
 
   if (existingActiveDiagnostic) {
     throw new Error(
       "Esta unidad ya tiene un diagnostico abierto. Debes editar ese mismo registro antes de crear otro.",
+    );
+  }
+
+  if (blockingWorkOrder) {
+    throw new Error(
+      "Esta unidad ya tiene una orden activa. Debes continuar esa orden antes de abrir otro diagnostico.",
     );
   }
 
@@ -148,10 +183,23 @@ export async function updateDiagnostic(diagnosticId, payload) {
     payload.vehicleId,
     diagnosticId,
   );
+  const blockingWorkOrder = await findBlockingWorkOrderByVehicleId(
+    payload.vehicleId,
+  );
 
   if (existingActiveDiagnostic) {
     throw new Error(
       "Esta unidad ya tiene otro diagnostico abierto. Debes continuar con ese registro.",
+    );
+  }
+
+  if (
+    blockingWorkOrder &&
+    normalizeOptional(blockingWorkOrder.diagnosticId) !==
+      normalizeOptional(diagnosticId)
+  ) {
+    throw new Error(
+      "Esta unidad ya tiene una orden activa. Debes continuar esa orden antes de abrir otro diagnostico.",
     );
   }
 
