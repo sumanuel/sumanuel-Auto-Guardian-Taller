@@ -32,6 +32,62 @@ function buildVehicleTitle(vehicle) {
   );
 }
 
+function getTimestampMillis(value) {
+  if (value?.toMillis) {
+    return value.toMillis();
+  }
+
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+
+  return 0;
+}
+
+function resolvePrimaryVehicleBadge(state) {
+  if (state.latestWorkOrderStatus === "paused") {
+    return {
+      icon: "pause-circle-outline",
+      tone: "danger",
+      label: "Orden en pausa",
+    };
+  }
+
+  if (state.latestWorkOrderStatus === "ready") {
+    return {
+      icon: "checkmark-circle-outline",
+      tone: "success",
+      label: "Orden lista",
+    };
+  }
+
+  if (state.hasActiveDiagnostic) {
+    return {
+      icon: "pulse-outline",
+      tone: "primary",
+      label: "Diag. activa",
+    };
+  }
+
+  if (state.hasActiveWorkOrder) {
+    return {
+      icon: "clipboard-outline",
+      tone: "warning",
+      label: "Orden activa",
+    };
+  }
+
+  if (state.latestWorkOrderStatus === "delivered") {
+    return {
+      icon: "checkmark-done-outline",
+      tone: "textSecondary",
+      label: "Entregada",
+    };
+  }
+
+  return null;
+}
+
 export default function VehiclesDirectoryScreen({
   onBack,
   onOpenClientDetail,
@@ -108,20 +164,29 @@ export default function VehiclesDirectoryScreen({
     () =>
       filteredVehicles.reduce((accumulator, vehicle) => {
         const vehicleId = vehicle.id || vehicle.refId;
+        const relatedWorkOrders = workOrders
+          .filter((workOrder) => workOrder.vehicleId === vehicleId)
+          .sort(
+            (left, right) =>
+              getTimestampMillis(right.updatedAt || right.createdAt) -
+              getTimestampMillis(left.updatedAt || left.createdAt),
+          );
         const activeDiagnostics = diagnostics.filter(
           (diagnostic) =>
             diagnostic.vehicleId === vehicleId &&
             diagnostic.status !== "closed",
         );
-        const activeWorkOrders = workOrders.filter(
+        const activeWorkOrders = relatedWorkOrders.filter(
           (workOrder) =>
             workOrder.vehicleId === vehicleId &&
             workOrder.status !== "delivered",
         );
+        const latestWorkOrder = relatedWorkOrders[0] || null;
 
         accumulator[vehicleId] = {
           hasActiveDiagnostic: activeDiagnostics.length > 0,
           hasActiveWorkOrder: activeWorkOrders.length > 0,
+          latestWorkOrderStatus: latestWorkOrder?.status || "",
         };
 
         return accumulator;
@@ -206,7 +271,9 @@ export default function VehiclesDirectoryScreen({
               const operationalState = vehicleOperationalState[vehicleId] || {
                 hasActiveDiagnostic: false,
                 hasActiveWorkOrder: false,
+                latestWorkOrderStatus: "",
               };
+              const primaryBadge = resolvePrimaryVehicleBadge(operationalState);
 
               return (
                 <Pressable
@@ -248,53 +315,28 @@ export default function VehiclesDirectoryScreen({
                         Placa: {vehicle.plate || "Sin placa"}
                       </Text>
                       <View style={styles.badgeRow}>
-                        {operationalState.hasActiveDiagnostic ? (
+                        {primaryBadge ? (
                           <View
                             style={[
                               styles.stateBadge,
                               {
                                 backgroundColor: colors.cardMuted,
-                                borderColor: colors.primary,
+                                borderColor: colors[primaryBadge.tone],
                               },
                             ]}
                           >
                             <Ionicons
-                              color={colors.primary}
-                              name="pulse-outline"
+                              color={colors[primaryBadge.tone]}
+                              name={primaryBadge.icon}
                               size={rf(12)}
                             />
                             <Text
                               style={[
                                 styles.stateBadgeText,
-                                { color: colors.primary },
+                                { color: colors[primaryBadge.tone] },
                               ]}
                             >
-                              Diag. activa
-                            </Text>
-                          </View>
-                        ) : null}
-                        {operationalState.hasActiveWorkOrder ? (
-                          <View
-                            style={[
-                              styles.stateBadge,
-                              {
-                                backgroundColor: colors.cardMuted,
-                                borderColor: colors.warning,
-                              },
-                            ]}
-                          >
-                            <Ionicons
-                              color={colors.warning}
-                              name="clipboard-outline"
-                              size={rf(12)}
-                            />
-                            <Text
-                              style={[
-                                styles.stateBadgeText,
-                                { color: colors.warning },
-                              ]}
-                            >
-                              Orden activa
+                              {primaryBadge.label}
                             </Text>
                           </View>
                         ) : null}

@@ -167,6 +167,11 @@ export default function ClientsScreen({
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        if (viewState?.returnTo === "vehicles") {
+          onBack?.();
+          return true;
+        }
+
         setSelectedClient(null);
         setScreenMode(SCREEN_MODES.LIST);
         return true;
@@ -174,7 +179,7 @@ export default function ClientsScreen({
     );
 
     return () => subscription.remove();
-  }, [screenMode]);
+  }, [onBack, screenMode, viewState?.returnTo]);
 
   const openClientDetail = (client) => {
     setSelectedClient(client);
@@ -182,6 +187,11 @@ export default function ClientsScreen({
   };
 
   const handleBackToList = () => {
+    if (viewState?.returnTo === "vehicles") {
+      onBack?.();
+      return;
+    }
+
     setSelectedClient(null);
     setScreenMode(SCREEN_MODES.LIST);
   };

@@ -81,6 +81,7 @@ function AppContent() {
   const [clientsViewState, setClientsViewState] = useState({
     selectedClientId: null,
     screenMode: "list",
+    returnTo: APP_SCREENS.HOME,
   });
   const [diagnosticFormContext, setDiagnosticFormContext] = useState({
     diagnostic: null,
@@ -171,6 +172,7 @@ function AppContent() {
     setClientsViewState({
       selectedClientId: null,
       screenMode: "list",
+      returnTo: APP_SCREENS.HOME,
     });
     setDiagnosticFormContext({
       diagnostic: null,
@@ -220,7 +222,11 @@ function AppContent() {
       "hardwareBackPress",
       () => {
         if (activeScreen === APP_SCREENS.CLIENT_FORM) {
-          setClientsViewState({ selectedClientId: null, screenMode: "list" });
+          setClientsViewState((current) => ({
+            ...current,
+            selectedClientId: null,
+            screenMode: "list",
+          }));
           setActiveScreen(APP_SCREENS.CLIENTS);
           return true;
         }
@@ -295,8 +301,12 @@ function AppContent() {
         }
 
         if (activeScreen === APP_SCREENS.CLIENTS) {
-          setClientsViewState({ selectedClientId: null, screenMode: "list" });
-          setActiveScreen(APP_SCREENS.HOME);
+          setClientsViewState((current) => ({
+            ...current,
+            selectedClientId: null,
+            screenMode: "list",
+          }));
+          setActiveScreen(clientsViewState.returnTo || APP_SCREENS.HOME);
           return true;
         }
 
@@ -329,6 +339,7 @@ function AppContent() {
     diagnosticFormContext.returnTo,
     sparePartsViewState.returnTo,
     vehicleFormContext.client,
+    clientsViewState.returnTo,
   ]);
 
   if (!authReady) {
@@ -371,13 +382,16 @@ function AppContent() {
     }
 
     if (nextTab === APP_SCREENS.CLIENTS) {
-      setClientsViewState({ selectedClientId: null, screenMode: "list" });
+      setClientsViewState({
+        selectedClientId: null,
+        screenMode: "list",
+        returnTo: APP_SCREENS.HOME,
+      });
       setActiveScreen(APP_SCREENS.CLIENTS);
       return;
     }
 
     if (nextTab === APP_SCREENS.DIAGNOSTICS) {
-      setDiagnosticsViewState({ selectedDiagnosticId: null });
       setDiagnosticsViewState({ selectedDiagnosticId: null, searchQuery: "" });
       setActiveScreen(APP_SCREENS.DIAGNOSTICS);
       return;
@@ -401,7 +415,9 @@ function AppContent() {
     if (activeScreen === APP_SCREENS.CLIENTS) {
       return (
         <ClientsScreen
-          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onBack={() =>
+            setActiveScreen(clientsViewState.returnTo || APP_SCREENS.HOME)
+          }
           onOpenClientForm={(client, options = {}) => {
             setClientFormContext({
               client: client || null,
@@ -472,6 +488,7 @@ function AppContent() {
             setClientsViewState({
               selectedClientId: clientId || null,
               screenMode: "detail",
+              returnTo: APP_SCREENS.VEHICLES,
             });
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
@@ -512,11 +529,19 @@ function AppContent() {
         <ClientFormScreen
           initialClient={clientFormContext.client}
           onBack={() => {
-            setClientsViewState({ selectedClientId: null, screenMode: "list" });
+            setClientsViewState((current) => ({
+              ...current,
+              selectedClientId: null,
+              screenMode: "list",
+            }));
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
           onSaved={() => {
-            setClientsViewState({ selectedClientId: null, screenMode: "list" });
+            setClientsViewState((current) => ({
+              ...current,
+              selectedClientId: null,
+              screenMode: "list",
+            }));
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
           userProfile={userProfile}
@@ -536,6 +561,7 @@ function AppContent() {
                 vehicleFormContext.client?.refId ||
                 null,
               screenMode: "detail",
+              returnTo: clientsViewState.returnTo,
             });
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
@@ -545,6 +571,7 @@ function AppContent() {
                 vehicleFormContext.client?.id ||
                 vehicleFormContext.client?.refId,
               screenMode: "detail",
+              returnTo: clientsViewState.returnTo,
             });
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
@@ -810,7 +837,14 @@ function AppContent() {
           });
           setActiveScreen(APP_SCREENS.DIAGNOSTICS);
         }}
-        onOpenClients={() => setActiveScreen(APP_SCREENS.CLIENTS)}
+        onOpenClients={() => {
+          setClientsViewState({
+            selectedClientId: null,
+            screenMode: "list",
+            returnTo: APP_SCREENS.HOME,
+          });
+          setActiveScreen(APP_SCREENS.CLIENTS);
+        }}
         onOpenDiagnostics={() => setActiveScreen(APP_SCREENS.DIAGNOSTICS)}
         onOpenVehicles={() => setActiveScreen(APP_SCREENS.VEHICLES)}
         onOpenSpareParts={() => {
