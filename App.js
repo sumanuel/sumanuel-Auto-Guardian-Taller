@@ -287,6 +287,11 @@ function AppContent() {
             return true;
           }
 
+          if (diagnosticFormContext.returnTo === APP_SCREENS.VEHICLES) {
+            setActiveScreen(APP_SCREENS.VEHICLES);
+            return true;
+          }
+
           setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           return true;
         }
@@ -541,6 +546,60 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.CLIENTS);
           }}
+          onOpenDiagnosticForm={async (vehicle, client) => {
+            try {
+              const vehicleId = vehicle?.id || vehicle?.refId || null;
+              const clientId =
+                client?.id || client?.refId || vehicle?.clientId || null;
+
+              if (!vehicleId) {
+                Alert.alert(
+                  "Diagnosticos",
+                  "No se pudo identificar la unidad para abrir el diagnostico.",
+                );
+                return;
+              }
+
+              const activeDiagnostic =
+                await findActiveDiagnosticByVehicleId(vehicleId);
+
+              if (activeDiagnostic) {
+                Alert.alert(
+                  "Diagnosticos",
+                  "Esta unidad ya tiene un diagnostico abierto. Se abrira ese mismo registro para editarlo.",
+                );
+
+                setDiagnosticFormContext({
+                  diagnostic: activeDiagnostic,
+                  draft: {
+                    clientId,
+                    vehicleId,
+                  },
+                  returnTo: APP_SCREENS.VEHICLES,
+                  clientId,
+                });
+                setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
+                return;
+              }
+
+              setDiagnosticFormContext({
+                diagnostic: null,
+                draft: {
+                  clientId,
+                  vehicleId,
+                },
+                returnTo: APP_SCREENS.VEHICLES,
+                clientId,
+              });
+              setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
+            } catch (error) {
+              Alert.alert(
+                "Diagnosticos",
+                error?.message ||
+                  "No se pudo preparar el diagnostico para esta unidad.",
+              );
+            }
+          }}
           onOpenVehicleHistory={(vehicle) => {
             setVehicleHistoryContext({
               vehicle: vehicle || null,
@@ -674,6 +733,11 @@ function AppContent() {
               return;
             }
 
+            if (diagnosticFormContext.returnTo === APP_SCREENS.VEHICLES) {
+              setActiveScreen(APP_SCREENS.VEHICLES);
+              return;
+            }
+
             setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           }}
           onSaved={(savedDiagnosticId) => {
@@ -683,6 +747,11 @@ function AppContent() {
                 screenMode: "detail",
               });
               setActiveScreen(APP_SCREENS.CLIENTS);
+              return;
+            }
+
+            if (diagnosticFormContext.returnTo === APP_SCREENS.VEHICLES) {
+              setActiveScreen(APP_SCREENS.VEHICLES);
               return;
             }
 

@@ -90,6 +90,20 @@ function createEmptyProgressForm(type = "note", progressPercent = 0) {
   };
 }
 
+function getSuggestedReactivationProgress(progressPercent) {
+  const currentProgress = Math.round(Number(progressPercent) || 0);
+
+  if (currentProgress >= 100) {
+    return 90;
+  }
+
+  if (currentProgress <= 0) {
+    return 10;
+  }
+
+  return currentProgress;
+}
+
 const noteOperationalStatusOptions = [
   { key: "in-progress", label: "En proceso" },
   { key: "paused", label: "En pausa" },
@@ -544,12 +558,23 @@ export default function WorkOrdersScreen({
         }
 
         if (
+          nextOperationalStatus === "in-progress" &&
+          isProgressLocked &&
+          Number(selectedWorkOrder?.progressPercent) >= 100
+        ) {
+          progressPercent = Math.round(
+            Number(progressForm.progressPercent) || 0,
+          );
+        }
+
+        if (
           nextOperationalStatus !== selectedWorkOrder.status ||
-          nextOperationalStatus === "ready"
+          nextOperationalStatus === "ready" ||
+          (nextOperationalStatus === "in-progress" && isProgressLocked)
         ) {
           await updateWorkOrderOperationalState(selectedWorkOrderId, {
             status: nextOperationalStatus,
-            progressPercent: nextOperationalStatus === "ready" ? 100 : null,
+            progressPercent,
           });
         }
       }
@@ -1266,6 +1291,16 @@ export default function WorkOrdersScreen({
                         setProgressForm((current) => ({
                           ...current,
                           operationalStatus: selected ? "" : statusOption.key,
+                          progressPercent:
+                            !selected &&
+                            statusOption.key === "in-progress" &&
+                            isProgressLocked
+                              ? getSuggestedReactivationProgress(
+                                  selectedWorkOrder?.progressPercent,
+                                )
+                              : !selected && statusOption.key === "ready"
+                                ? 100
+                                : current.progressPercent,
                         }))
                       }
                       style={[
@@ -1302,6 +1337,65 @@ export default function WorkOrdersScreen({
                   Al marcar la orden como lista, se guardara automaticamente con
                   100% de avance.
                 </Text>
+              ) : null}
+              {isProgressLocked &&
+              progressForm.operationalStatus === "in-progress" ? (
+                <View
+                  style={[
+                    styles.progressPanel,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.accent,
+                    },
+                  ]}
+                >
+                  <View style={styles.progressHeaderRow}>
+                    <Text style={[styles.fieldLabel, { color: colors.text }]}>
+                      Nuevo avance sugerido al reactivar
+                    </Text>
+                    <Text
+                      style={[
+                        styles.progressValue,
+                        {
+                          color: getProgressMeterColor(
+                            progressForm.progressPercent,
+                            colors,
+                          ),
+                        },
+                      ]}
+                    >
+                      {Math.round(Number(progressForm.progressPercent) || 0)}%
+                    </Text>
+                  </View>
+                  <Text
+                    style={[styles.rowMeta, { color: colors.textSecondary }]}
+                  >
+                    La orden estaba al 100%. Puedes bajar este valor antes de
+                    reactivarla para reflejar el avance real restante.
+                  </Text>
+                  <Slider
+                    maximumTrackTintColor={colors.borderStrong}
+                    maximumValue={100}
+                    minimumTrackTintColor={getProgressMeterColor(
+                      progressForm.progressPercent,
+                      colors,
+                    )}
+                    minimumValue={0}
+                    onValueChange={(value) =>
+                      setProgressForm((current) => ({
+                        ...current,
+                        progressPercent: Math.round(value),
+                      }))
+                    }
+                    step={1}
+                    style={styles.slider}
+                    thumbTintColor={getProgressMeterColor(
+                      progressForm.progressPercent,
+                      colors,
+                    )}
+                    value={Number(progressForm.progressPercent) || 0}
+                  />
+                </View>
               ) : null}
               {isProgressLocked ? (
                 <Text style={[styles.rowMeta, { color: colors.warning }]}>

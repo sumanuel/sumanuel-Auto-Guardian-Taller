@@ -121,8 +121,6 @@ function getQueueAccentColor(item, colors) {
   switch (item.statusKey) {
     case "open":
       return colors.warning;
-    case "approved":
-      return colors.primary;
     case "in-progress":
       return colors.accent;
     case "paused":
@@ -138,6 +136,10 @@ function getQueueAccentColor(item, colors) {
 
 function getQueueCaseColor(item, colors) {
   return item.type === "diagnostic" ? colors.primary : colors.warning;
+}
+
+function normalizeLegacyWorkOrderStatus(status) {
+  return status === "approved" ? "open" : status || "";
 }
 
 function getQueueIconName(itemType) {
@@ -257,6 +259,7 @@ export default function WorkshopHomeScreen({
         workOrder,
         firestoreCollections.workOrders,
       );
+      const normalizedStatus = normalizeLegacyWorkOrderStatus(workOrder.status);
 
       return {
         key: `work-order-${getRecordKey(workOrder) || sequentialCode}`,
@@ -274,11 +277,11 @@ export default function WorkshopHomeScreen({
         createdAt:
           getTimestampMillis(workOrder?.updatedAt) ||
           getTimestampMillis(workOrder?.createdAt),
-        statusKey: workOrder.status || "",
+        statusKey: normalizedStatus,
         status:
-          workOrderStatusOptions.find((item) => item.key === workOrder.status)
+          workOrderStatusOptions.find((item) => item.key === normalizedStatus)
             ?.label ||
-          workOrder.status ||
+          normalizedStatus ||
           "Sin estado",
       };
     });

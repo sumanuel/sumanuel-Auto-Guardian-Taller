@@ -91,6 +91,7 @@ function resolvePrimaryVehicleBadge(state) {
 export default function VehiclesDirectoryScreen({
   onBack,
   onOpenClientDetail,
+  onOpenDiagnosticForm,
   onOpenVehicleHistory,
 }) {
   const { colors } = useTheme();
@@ -382,19 +383,38 @@ export default function VehiclesDirectoryScreen({
                       </Text>
                     </Pressable>
                     <Pressable
-                      onPress={() => onOpenVehicleHistory?.(vehicle)}
+                      onPress={() => onOpenDiagnosticForm?.(vehicle, client)}
                       style={[
                         styles.secondaryAction,
                         {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.primary,
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
                         },
                       ]}
                     >
                       <Text
                         style={[
                           styles.secondaryActionText,
-                          { color: colors.primary },
+                          { color: colors.text },
+                        ]}
+                      >
+                        Diagnostico
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => onOpenVehicleHistory?.(vehicle)}
+                      style={[
+                        styles.secondaryAction,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.secondaryActionText,
+                          { color: colors.text },
                         ]}
                       >
                         Historial operativo
@@ -531,6 +551,7 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
     marginTop: spacing.xs,
   },
@@ -542,7 +563,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   secondaryAction: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: "47%",
     minHeight: rf(42),
     borderWidth: 1,
     borderRadius: borderRadius.lg,
