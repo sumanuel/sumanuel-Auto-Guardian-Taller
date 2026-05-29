@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
-import { listMechanicProfiles } from "../services/admin/staffAdmin";
+import { listStaffProfiles } from "../services/admin/staffAdmin";
 import { listClients } from "../services/clients/clientService";
 import {
   isDiagnosticClosed,
@@ -40,7 +40,7 @@ export default function WorkOrderFormScreen({
   const [submitting, setSubmitting] = useState(false);
   const [diagnostics, setDiagnostics] = useState([]);
   const [clients, setClients] = useState([]);
-  const [mechanics, setMechanics] = useState([]);
+  const [assignableStaff, setAssignableStaff] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [form, setForm] = useState(
     createEmptyWorkOrderForm({
@@ -63,16 +63,16 @@ export default function WorkOrderFormScreen({
   useEffect(() => {
     const loadOptions = async () => {
       try {
-        const [nextDiagnostics, nextClients, nextMechanics, nextVehicles] =
+        const [nextDiagnostics, nextClients, nextStaff, nextVehicles] =
           await Promise.all([
             listDiagnostics(),
             listClients(),
-            listMechanicProfiles(),
+            listStaffProfiles(),
             listVehicles(),
           ]);
         setDiagnostics(nextDiagnostics);
         setClients(nextClients);
-        setMechanics(nextMechanics);
+        setAssignableStaff(nextStaff);
         setVehicles(nextVehicles);
       } catch (error) {
         Alert.alert("Ordenes", "No se pudieron cargar diagnosticos de apoyo.");
@@ -356,11 +356,11 @@ export default function WorkOrderFormScreen({
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Mecanicos asignados
+              Responsables asignados
             </Text>
             <View style={styles.optionWrap}>
-              {mechanics.length ? (
-                mechanics.map((mechanic) => {
+              {assignableStaff.length ? (
+                assignableStaff.map((mechanic) => {
                   const selected = form.assignedMechanicUids.includes(
                     mechanic.uid,
                   );
@@ -398,10 +398,13 @@ export default function WorkOrderFormScreen({
                 <Text
                   style={[styles.helperText, { color: colors.textSecondary }]}
                 >
-                  No hay mecanicos disponibles para asignar.
+                  No hay responsables disponibles para asignar.
                 </Text>
               )}
             </View>
+            <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+              Puedes asignar o quitar administradores y colaboradores antes de iniciar la orden.
+            </Text>
           </View>
 
           <Pressable

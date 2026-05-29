@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
@@ -27,6 +28,13 @@ import {
 import { ensureDiagnosticQuotePdfFile } from "../services/diagnostics/diagnosticQuotePdfService";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
+import {
+  formatDateRangeLabel,
+  getSharedOperationalDateRange,
+  getTimestampMillis,
+  isWithinDateRange,
+  setSharedOperationalDateRange,
+} from "../utils/dateRange";
 
 const SCREEN_MODES = {
   LIST: "list",
@@ -75,6 +83,10 @@ export default function DiagnosticsScreen({
   const [selectedDiagnostic, setSelectedDiagnostic] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [dateRange, setDateRange] = useState(() =>
+    getSharedOperationalDateRange(),
+  );
+  const [isDateFilterVisible, setIsDateFilterVisible] = useState(false);
 
   const selectedDiagnosticId = getEntityId(selectedDiagnostic);
 
@@ -183,6 +195,16 @@ export default function DiagnosticsScreen({
         return false;
       }
 
+      const matchesDate = isWithinDateRange(
+        getTimestampMillis(diagnostic.updatedAt) ||
+          getTimestampMillis(diagnostic.createdAt),
+        dateRange,
+      );
+
+      if (!matchesDate) {
+        return false;
+      }
+
       if (!normalizedQuery) {
         return true;
       }
@@ -204,7 +226,14 @@ export default function DiagnosticsScreen({
 
       return searchableText.includes(normalizedQuery);
     });
-  }, [activeFilter, clientLookup, diagnostics, searchQuery, vehicleLookup]);
+  }, [
+    activeFilter,
+    clientLookup,
+    dateRange,
+    diagnostics,
+    searchQuery,
+    vehicleLookup,
+  ]);
 
   const handleDelete = (diagnostic) => {
     Alert.alert(
@@ -350,21 +379,60 @@ export default function DiagnosticsScreen({
           },
         ]}
       >
-        <TextInput
-          autoCapitalize="none"
-          onChangeText={setSearchQuery}
-          placeholder="Buscar por codigo, placa, cliente o hallazgo"
-          placeholderTextColor={colors.textTertiary}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.inputBackground,
-              borderColor: colors.border,
-              color: colors.text,
-            },
-          ]}
-          value={searchQuery}
-        />
+        <View style={styles.searchRow}>
+          <TextInput
+            autoCapitalize="none"
+            onChangeText={setSearchQuery}
+            placeholder="Buscar por codigo, placa, cliente o hallazgo"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              styles.searchInput,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={searchQuery}
+          />
+          <Pressable
+            onPress={() => setIsDateFilterVisible(true)}
+            style={[
+              styles.iconAction,
+              {
+                backgroundColor: colors.cardMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons
+              color={colors.primary}
+              name="calendar-outline"
+              size={rf(18)}
+            />
+          </Pressable>
+          <Pressable
+            onPress={refreshData}
+            style={[
+              styles.iconAction,
+              {
+                backgroundColor: colors.cardMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons
+              color={colors.accent}
+              name="refresh-outline"
+              size={rf(18)}
+            />
+          </Pressable>
+        </View>
+
+        <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}> 
+          Rango activo: {formatDateRangeLabel(dateRange)}
+        </Text>
 
         <View style={styles.filterRow}>
           {[{ key: "all", label: "Todos" }, ...diagnosticStatusOptions].map(
@@ -890,6 +958,17 @@ export default function DiagnosticsScreen({
           ? renderListScreen()
           : renderDetailScreen()}
       </ScrollView>
+
+      <DateRangeFilterModal
+        initialRange={dateRange}
+        onApply={(nextRange) => {
+          const sharedRange = setSharedOperationalDateRange(nextRange);
+          setDateRange(sharedRange);
+        }}
+        onClose={() => setIsDateFilterVisible(false)}
+        title="Filtrar diagnosticos por fecha"
+        visible={isDateFilterVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -903,12 +982,32 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
+  searchRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    alignItems: "stretch",
+  },
   input: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: rf(14),
+  },
+  searchInput: {
+    flex: 1,
+  },
+  iconAction: {
+    width: rf(46),
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rangeSummary: {
+    fontSize: rf(12),
+    lineHeight: rf(17),
+    fontWeight: "700",
   },
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   filterChip: {

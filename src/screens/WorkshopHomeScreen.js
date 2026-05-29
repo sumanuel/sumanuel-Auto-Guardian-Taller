@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
+  Alert,
   ActivityIndicator,
   Pressable,
   ScrollView,
@@ -10,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
@@ -24,6 +26,12 @@ import {
 } from "../services/workOrders/workOrderService";
 import { firestoreCollections } from "../services/firestore/collections";
 import { borderRadius, rf, spacing } from "../utils/responsive";
+import {
+  formatDateRangeLabel,
+  getSharedOperationalDateRange,
+  isWithinDateRange,
+  setSharedOperationalDateRange,
+} from "../utils/dateRange";
 
 const roleLabels = {
   owner: "Dueno",
@@ -166,29 +174,38 @@ export default function WorkshopHomeScreen({
   const [plateQuery, setPlateQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [dateRange, setDateRange] = useState(() =>
+    getSharedOperationalDateRange(),
+  );
+  const [isDateFilterVisible, setIsDateFilterVisible] = useState(false);
+
+  const refreshData = async () => {
+    setLoading(true);
+
+    try {
+      const [nextClients, nextVehicles, nextDiagnostics, nextWorkOrders] =
+        await Promise.all([
+          listClients(),
+          listVehicles(),
+          listDiagnostics(),
+          listWorkOrders(),
+        ]);
+      setClients(nextClients);
+      setVehicles(nextVehicles);
+      setDiagnostics(nextDiagnostics);
+      setWorkOrders(nextWorkOrders);
+    } catch (error) {
+      Alert.alert(
+        "Home",
+        "No se pudo refrescar la agenda operativa del taller.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      setLoading(true);
-
-      try {
-        const [nextClients, nextVehicles, nextDiagnostics, nextWorkOrders] =
-          await Promise.all([
-            listClients(),
-            listVehicles(),
-            listDiagnostics(),
-            listWorkOrders(),
-          ]);
-        setClients(nextClients);
-        setVehicles(nextVehicles);
-        setDiagnostics(nextDiagnostics);
-        setWorkOrders(nextWorkOrders);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDashboard();
+    refreshData();
   }, []);
 
   useEffect(() => {
@@ -329,10 +346,11 @@ export default function WorkshopHomeScreen({
           selectedType === "all" ? true : item.type === selectedType;
         const matchesStatus =
           selectedStatus === "all" ? true : item.statusKey === selectedStatus;
-        return matchesPlate && matchesType && matchesStatus;
+        const matchesDate = isWithinDateRange(item.createdAt, dateRange);
+        return matchesPlate && matchesType && matchesStatus && matchesDate;
       })
       .slice(0, 8);
-  }, [plateQuery, queue, selectedStatus, selectedType]);
+  }, [dateRange, plateQuery, queue, selectedStatus, selectedType]);
 
   const selectedQueueType =
     queueTypeOptions.find((option) => option.key === selectedType) ||
@@ -554,29 +572,69 @@ export default function WorkshopHomeScreen({
           </View>
 
           <View style={styles.filtersBlock}>
-            <View
-              style={[
-                styles.searchShell,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Ionicons
-                color={colors.textTertiary}
-                name="search-outline"
-                size={rf(18)}
-              />
-              <TextInput
-                placeholder="Buscar por placa"
-                placeholderTextColor={colors.textTertiary}
-                style={[styles.searchInput, { color: colors.text }]}
-                value={plateQuery}
-                onChangeText={setPlateQuery}
-                autoCapitalize="characters"
-              />
+            <View style={styles.searchRow}>
+              <View
+                style={[
+                  styles.searchShell,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  color={colors.textTertiary}
+                  name="search-outline"
+                  size={rf(18)}
+                />
+                <TextInput
+                  placeholder="Buscar por placa"
+                  placeholderTextColor={colors.textTertiary}
+                  style={[styles.searchInput, { color: colors.text }]}
+                  value={plateQuery}
+                  onChangeText={setPlateQuery}
+                  autoCapitalize="characters"
+                />
+              </View>
+
+              <Pressable
+                onPress={() => setIsDateFilterVisible(true)}
+                style={[
+                  styles.iconAction,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  color={colors.primary}
+                  name="calendar-outline"
+                  size={rf(18)}
+                />
+              </Pressable>
+
+              <Pressable
+                onPress={refreshData}
+                style={[
+                  styles.iconAction,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  color={colors.accent}
+                  name="refresh-outline"
+                  size={rf(18)}
+                />
+              </Pressable>
             </View>
+
+            <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}> 
+              Rango activo: {formatDateRangeLabel(dateRange)}
+            </Text>
 
             <View
               style={[
@@ -746,6 +804,10 @@ export default function WorkshopHomeScreen({
                     >
                       {item.type === "diagnostic"
                         ? "Listo para revision tecnica, cotizacion o aprobacion."
+                        : item.statusKey === "delivered"
+                          ? "Orden cerrada y vehiculo ya entregado."
+                          : item.statusKey === "ready"
+                            ? "Orden lista para coordinar la entrega del vehiculo."
                         : "Sigue el avance de ejecucion y prepara la entrega del vehiculo."}
                     </Text>
                   </View>
@@ -777,6 +839,17 @@ export default function WorkshopHomeScreen({
           )}
         </View>
       </ScrollView>
+
+      <DateRangeFilterModal
+        initialRange={dateRange}
+        onApply={(nextRange) => {
+          const sharedRange = setSharedOperationalDateRange(nextRange);
+          setDateRange(sharedRange);
+        }}
+        onClose={() => setIsDateFilterVisible(false)}
+        title="Filtrar agenda por fecha"
+        visible={isDateFilterVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -883,7 +956,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     gap: spacing.sm,
   },
+  searchRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    alignItems: "stretch",
+  },
   searchShell: {
+    flex: 1,
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
@@ -891,11 +970,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
+  iconAction: {
+    width: rf(46),
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   searchInput: {
     flex: 1,
     paddingVertical: spacing.sm,
     fontSize: rf(14),
     fontWeight: "600",
+  },
+  rangeSummary: {
+    fontSize: rf(12),
+    lineHeight: rf(17),
+    fontWeight: "700",
   },
   contextStrip: {
     borderWidth: 1,

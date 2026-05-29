@@ -40,6 +40,18 @@ function normalizeUidList(value) {
     .filter(Boolean);
 }
 
+function ensureAssignedStaffForInProgress(status, assignedUids) {
+  if (normalizeWorkOrderStatus(status) !== "in-progress") {
+    return;
+  }
+
+  if (!normalizeUidList(assignedUids).length) {
+    throw new Error(
+      "Asigna al menos un responsable antes de iniciar la orden.",
+    );
+  }
+}
+
 function normalizeWorkOrderStatus(value) {
   const normalizedStatus = normalizeOptional(value);
 
@@ -104,14 +116,17 @@ export async function createWorkOrder({
     }
   }
 
+  const normalizedAssignedStaff = normalizeUidList(
+    assignedMechanicUids || assignedMechanicIdsText,
+  );
+  ensureAssignedStaffForInProgress(status, normalizedAssignedStaff);
+
   const createdWorkOrder = await createEntityRecord("workOrders", {
     workshopId,
     diagnosticId: normalizeOptional(diagnosticId),
     vehicleId: normalizeOptional(vehicleId),
     clientId: normalizeOptional(clientId),
-    assignedMechanicUids: normalizeUidList(
-      assignedMechanicUids || assignedMechanicIdsText,
-    ),
+    assignedMechanicUids: normalizedAssignedStaff,
     status: normalizeWorkOrderStatus(status),
     progressPercent: 0,
     approvedAt: null,
@@ -135,14 +150,17 @@ export async function updateWorkOrder(workOrderId, payload) {
     throw new Error("La orden no pertenece al taller activo.");
   }
 
+  const normalizedAssignedStaff = normalizeUidList(
+    payload.assignedMechanicUids || payload.assignedMechanicIdsText,
+  );
+  ensureAssignedStaffForInProgress(payload.status, normalizedAssignedStaff);
+
   await patchEntityRecord("workOrders", workOrderId, {
     workshopId,
     diagnosticId: normalizeOptional(payload.diagnosticId),
     vehicleId: normalizeOptional(payload.vehicleId),
     clientId: normalizeOptional(payload.clientId),
-    assignedMechanicUids: normalizeUidList(
-      payload.assignedMechanicUids || payload.assignedMechanicIdsText,
-    ),
+    assignedMechanicUids: normalizedAssignedStaff,
     status: normalizeWorkOrderStatus(payload.status),
     progressPercent: normalizeNumber(payload.progressPercent),
   });
@@ -164,6 +182,10 @@ export async function updateWorkOrderOperationalState(
   const payload = {};
 
   if (nextStatus) {
+    ensureAssignedStaffForInProgress(
+      nextStatus,
+      currentWorkOrder.assignedMechanicUids,
+    );
     payload.status = nextStatus;
 
     if (nextStatus === "in-progress" && !currentWorkOrder.startedAt) {

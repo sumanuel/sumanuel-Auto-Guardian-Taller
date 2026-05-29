@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listStaffProfiles } from "../services/admin/staffAdmin";
@@ -36,6 +37,13 @@ import {
   workOrderStatusOptions,
 } from "../services/workOrders/workOrderService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
+import {
+  formatDateRangeLabel,
+  getSharedOperationalDateRange,
+  getTimestampMillis,
+  isWithinDateRange,
+  setSharedOperationalDateRange,
+} from "../utils/dateRange";
 
 const SCREEN_MODES = {
   LIST: "list",
@@ -228,6 +236,10 @@ export default function WorkOrdersScreen({
   const [progressForm, setProgressForm] = useState(createEmptyProgressForm());
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [dateRange, setDateRange] = useState(() =>
+    getSharedOperationalDateRange(),
+  );
+  const [isDateFilterVisible, setIsDateFilterVisible] = useState(false);
 
   const selectedWorkOrderId = getEntityId(selectedWorkOrder);
   const clientLookup = useMemo(() => buildLookup(clients), [clients]);
@@ -383,6 +395,16 @@ export default function WorkOrdersScreen({
         return false;
       }
 
+      const matchesDate = isWithinDateRange(
+        getTimestampMillis(workOrder.updatedAt) ||
+          getTimestampMillis(workOrder.createdAt),
+        dateRange,
+      );
+
+      if (!matchesDate) {
+        return false;
+      }
+
       if (!normalizedQuery) {
         return true;
       }
@@ -403,7 +425,14 @@ export default function WorkOrdersScreen({
 
       return searchableText.includes(normalizedQuery);
     });
-  }, [activeFilter, clientLookup, searchQuery, vehicleLookup, workOrders]);
+  }, [
+    activeFilter,
+    clientLookup,
+    dateRange,
+    searchQuery,
+    vehicleLookup,
+    workOrders,
+  ]);
 
   const openWorkOrderDetail = (workOrder) => {
     setSelectedWorkOrder(workOrder);
@@ -686,21 +715,60 @@ export default function WorkOrdersScreen({
           },
         ]}
       >
-        <TextInput
-          autoCapitalize="none"
-          onChangeText={setSearchQuery}
-          placeholder="Buscar por orden, diagnostico, placa o cliente"
-          placeholderTextColor={colors.textTertiary}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.inputBackground,
-              borderColor: colors.border,
-              color: colors.text,
-            },
-          ]}
-          value={searchQuery}
-        />
+        <View style={styles.searchRow}>
+          <TextInput
+            autoCapitalize="none"
+            onChangeText={setSearchQuery}
+            placeholder="Buscar por orden, diagnostico, placa o cliente"
+            placeholderTextColor={colors.textTertiary}
+            style={[
+              styles.input,
+              styles.searchInput,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.border,
+                color: colors.text,
+              },
+            ]}
+            value={searchQuery}
+          />
+          <Pressable
+            onPress={() => setIsDateFilterVisible(true)}
+            style={[
+              styles.iconAction,
+              {
+                backgroundColor: colors.cardMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons
+              color={colors.primary}
+              name="calendar-outline"
+              size={rf(18)}
+            />
+          </Pressable>
+          <Pressable
+            onPress={refreshData}
+            style={[
+              styles.iconAction,
+              {
+                backgroundColor: colors.cardMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Ionicons
+              color={colors.accent}
+              name="refresh-outline"
+              size={rf(18)}
+            />
+          </Pressable>
+        </View>
+
+        <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}> 
+          Rango activo: {formatDateRangeLabel(dateRange)}
+        </Text>
 
         <View style={styles.filterRow}>
           {[{ key: "all", label: "Todas" }, ...workOrderStatusOptions].map(
@@ -893,7 +961,7 @@ export default function WorkOrdersScreen({
                       <Text
                         style={[styles.detailMetaLabel, { color: colors.text }]}
                       >
-                        Mecanicos:
+                        Responsables:
                       </Text>{" "}
                       {assignedMechanics || "Sin mecanicos asignados"}
                     </Text>
@@ -1097,7 +1165,7 @@ export default function WorkOrdersScreen({
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Mecanicos asignados
+              Responsables asignados
             </Text>
             <View style={styles.filterRow}>
               {assignedMechanics.length ? (
@@ -1135,11 +1203,14 @@ export default function WorkOrdersScreen({
                       { color: colors.textSecondary },
                     ]}
                   >
-                    Sin mecanicos asignados
+                    Sin responsables asignados
                   </Text>
                 </View>
               )}
             </View>
+            <Text style={[styles.rowMeta, { color: colors.textSecondary }]}> 
+              Usa editar responsables y orden para asignar o quitar personal antes de iniciar la orden.
+            </Text>
           </View>
 
           <View style={styles.detailActionRow}>
@@ -1156,7 +1227,9 @@ export default function WorkOrdersScreen({
               <Text
                 style={[styles.secondaryActionText, { color: colors.primary }]}
               >
-                Editar orden
+                {assignedMechanics.length
+                  ? "Editar responsables y orden"
+                  : "Asignar responsables"}
               </Text>
             </Pressable>
             <Pressable
@@ -1874,6 +1947,17 @@ export default function WorkOrdersScreen({
           ? renderListScreen()
           : renderDetailScreen()}
       </ScrollView>
+
+      <DateRangeFilterModal
+        initialRange={dateRange}
+        onApply={(nextRange) => {
+          const sharedRange = setSharedOperationalDateRange(nextRange);
+          setDateRange(sharedRange);
+        }}
+        onClose={() => setIsDateFilterVisible(false)}
+        title="Filtrar ordenes por fecha"
+        visible={isDateFilterVisible}
+      />
     </SafeAreaView>
   );
 }
@@ -1893,12 +1977,32 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
+  searchRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    alignItems: "stretch",
+  },
   input: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: rf(14),
+  },
+  searchInput: {
+    flex: 1,
+  },
+  iconAction: {
+    width: rf(46),
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rangeSummary: {
+    fontSize: rf(12),
+    lineHeight: rf(17),
+    fontWeight: "700",
   },
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   filterChip: {
