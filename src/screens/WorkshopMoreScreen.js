@@ -222,19 +222,6 @@ export default function WorkshopMoreScreen({
             },
           ]}
         >
-          <View
-            style={[
-              styles.heroIcon,
-              { backgroundColor: colors.cardMuted, borderColor: colors.border },
-            ]}
-          >
-            <Ionicons
-              color={colors.primary}
-              name="options-outline"
-              size={rf(22)}
-            />
-          </View>
-
           <View style={styles.heroCopy}>
             <Text style={[styles.heroEyebrow, { color: colors.primary }]}>
               Centro de configuracion
@@ -440,14 +427,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
     gap: spacing.lg,
-  },
-  heroIcon: {
-    width: rf(54),
-    height: rf(54),
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   heroCopy: {
     gap: spacing.xs,

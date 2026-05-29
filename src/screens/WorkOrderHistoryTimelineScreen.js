@@ -224,6 +224,55 @@ export default function WorkOrderHistoryTimelineScreen({
     [staffProfiles],
   );
 
+  const assignedMechanics = useMemo(
+    () =>
+      (selectedWorkOrder?.assignedMechanicUids || [])
+        .map((uid) => staffLookup[uid])
+        .filter(Boolean),
+    [selectedWorkOrder?.assignedMechanicUids, staffLookup],
+  );
+
+  const deliveryEntry = useMemo(
+    () =>
+      [...progressEntries]
+        .reverse()
+        .find((entry) => entry.deliveryClosedOrder || entry.type === "delivery") ||
+      null,
+    [progressEntries],
+  );
+
+  const deliveryTimestamp =
+    selectedWorkOrder?.deliveredAt || deliveryEntry?.createdAt || null;
+
+  const responsibleTechnicianLabel =
+    assignedMechanics[0]?.fullName ||
+    assignedMechanics[0]?.email ||
+    assignedMechanics[0]?.userCode ||
+    staffLookup[deliveryEntry?.authorUid]?.fullName ||
+    staffLookup[deliveryEntry?.authorUid]?.email ||
+    deliveryEntry?.authorUid ||
+    "Sin tecnico asignado";
+
+  const intervenedSparePartsCount = useMemo(() => {
+    const uniquePartKeys = new Set();
+
+    progressEntries.forEach((entry) => {
+      if (entry.type !== "parts" || !entry.sparePartUpdates?.length) {
+        return;
+      }
+
+      entry.sparePartUpdates.forEach((item) => {
+        const uniqueKey = item.sparePartId || item.sparePartName;
+
+        if (uniqueKey) {
+          uniquePartKeys.add(uniqueKey);
+        }
+      });
+    });
+
+    return uniquePartKeys.size;
+  }, [progressEntries]);
+
   return (
     <SafeAreaView
       edges={["left", "right", "bottom"]}
@@ -277,6 +326,9 @@ export default function WorkOrderHistoryTimelineScreen({
               >
                 Cliente: {client?.fullName || "Sin cliente asociado"}
               </Text>
+              <Text style={[styles.summaryDelivery, { color: colors.success }]}> 
+                Entregada: {formatDateTime(deliveryTimestamp)}
+              </Text>
             </View>
           </View>
 
@@ -315,6 +367,48 @@ export default function WorkOrderHistoryTimelineScreen({
                 style={[styles.countLabel, { color: colors.textSecondary }]}
               >
                 Registros
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.countRow}>
+            <View
+              style={[
+                styles.countCard,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text
+                numberOfLines={2}
+                style={[styles.countSupportValue, { color: colors.text }]}
+              >
+                {responsibleTechnicianLabel}
+              </Text>
+              <Text
+                style={[styles.countLabel, { color: colors.textSecondary }]}
+              >
+                Tecnico responsable
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.countCard,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.countValue, { color: colors.text }]}>
+                {intervenedSparePartsCount}
+              </Text>
+              <Text
+                style={[styles.countLabel, { color: colors.textSecondary }]}
+              >
+                Repuestos intervenidos
               </Text>
             </View>
           </View>
@@ -613,6 +707,12 @@ const styles = StyleSheet.create({
     fontSize: rf(13),
     lineHeight: rf(18),
   },
+  summaryDelivery: {
+    fontSize: rf(12),
+    fontWeight: "800",
+    lineHeight: rf(18),
+    marginTop: spacing.xs,
+  },
   countRow: {
     flexDirection: "row",
     gap: spacing.md,
@@ -627,6 +727,11 @@ const styles = StyleSheet.create({
   countValue: {
     fontSize: rf(24),
     fontWeight: "900",
+  },
+  countSupportValue: {
+    fontSize: rf(14),
+    lineHeight: rf(19),
+    fontWeight: "800",
   },
   countLabel: {
     fontSize: rf(12),
