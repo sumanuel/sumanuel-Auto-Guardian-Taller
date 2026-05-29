@@ -21,7 +21,6 @@ import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
 import {
-  deleteDiagnostic,
   diagnosticStatusOptions,
   listDiagnostics,
 } from "../services/diagnostics/diagnosticService";
@@ -241,31 +240,6 @@ export default function DiagnosticsScreen({
     searchQuery,
     vehicleLookup,
   ]);
-
-  const handleDelete = (diagnostic) => {
-    Alert.alert(
-      "Eliminar diagnostico",
-      `Se eliminara ${diagnostic.id || "este diagnostico"} del tablero operativo.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteDiagnostic(getEntityId(diagnostic));
-              await refreshData();
-            } catch (error) {
-              Alert.alert(
-                "Diagnosticos",
-                error?.message || "No se pudo eliminar el diagnostico.",
-              );
-            }
-          },
-        },
-      ],
-    );
-  };
 
   const openDiagnosticDetail = (diagnostic) => {
     setSelectedDiagnostic(diagnostic);
@@ -704,22 +678,6 @@ export default function DiagnosticsScreen({
                       />
                     </Pressable>
                   ) : null}
-                  <Pressable
-                    onPress={() => handleDelete(diagnostic)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.danger}
-                      name="trash-outline"
-                      size={rf(17)}
-                    />
-                  </Pressable>
                   {hasQuotePdf ? (
                     <Pressable
                       onPress={() => handleOpenQuotePdf(diagnostic)}
@@ -738,7 +696,7 @@ export default function DiagnosticsScreen({
                       />
                     </Pressable>
                   ) : null}
-                  {hasQuotePdf ? (
+                  {hasQuotePdf && !isClosedDiagnostic ? (
                     <Pressable
                       onPress={() =>
                         handleSendQuoteWhatsapp(diagnostic, client)

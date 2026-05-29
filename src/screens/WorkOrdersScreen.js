@@ -31,7 +31,6 @@ import {
 } from "../services/spareParts/sparePartService";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import {
-  deleteWorkOrder,
   listWorkOrders,
   updateWorkOrderOperationalState,
   workOrderStatusOptions,
@@ -454,36 +453,6 @@ export default function WorkOrdersScreen({
 
     setSelectedWorkOrder(null);
     setScreenMode(SCREEN_MODES.LIST);
-  };
-
-  const handleDelete = (workOrder) => {
-    Alert.alert(
-      "Eliminar orden",
-      `Se eliminara ${workOrder.id || "esta orden"} del tablero operativo.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteWorkOrder(getEntityId(workOrder));
-
-              if (selectedWorkOrderId === getEntityId(workOrder)) {
-                handleBackToList();
-              }
-
-              await refreshData();
-            } catch (error) {
-              Alert.alert(
-                "Ordenes",
-                error?.message || "No se pudo eliminar la orden.",
-              );
-            }
-          },
-        },
-      ],
-    );
   };
 
   const handleProgressSubmit = async () => {
@@ -992,22 +961,6 @@ export default function WorkOrdersScreen({
                     <Ionicons
                       color={colors.textTertiary}
                       name="create-outline"
-                      size={rf(17)}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => handleDelete(workOrder)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.danger}
-                      name="trash-outline"
                       size={rf(17)}
                     />
                   </Pressable>
@@ -1945,7 +1898,7 @@ export default function WorkOrdersScreen({
           subtitle={
             screenMode === SCREEN_MODES.DETAIL
               ? "Desde aqui puedes revisar contexto, mecanicos asignados y avances cronologicos."
-              : "Abre la orden desde un diagnostico activo y vuelve a la lista para editar, eliminar o continuar con repuestos."
+              : "Abre la orden desde un diagnostico activo y vuelve a la lista para editar o continuar con repuestos."
           }
           title={
             screenMode === SCREEN_MODES.DETAIL

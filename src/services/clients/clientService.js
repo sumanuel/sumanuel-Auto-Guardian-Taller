@@ -1,4 +1,11 @@
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 import { firestore } from "../firebase/config";
 import {
   createEntityRecord,
@@ -81,6 +88,40 @@ export async function deleteClient(clientId) {
 
   if (!currentClient || currentClient.workshopId !== workshopId) {
     throw new Error("El cliente no pertenece al taller activo.");
+  }
+
+  const diagnosticsRef = collection(
+    firestore,
+    firestoreCollections.diagnostics.name,
+  );
+  const workOrdersRef = collection(
+    firestore,
+    firestoreCollections.workOrders.name,
+  );
+
+  const [diagnosticsSnapshot, workOrdersSnapshot] = await Promise.all([
+    getDocs(
+      query(
+        diagnosticsRef,
+        where("workshopId", "==", workshopId),
+        where("clientId", "==", clientId),
+        limit(1),
+      ),
+    ),
+    getDocs(
+      query(
+        workOrdersRef,
+        where("workshopId", "==", workshopId),
+        where("clientId", "==", clientId),
+        limit(1),
+      ),
+    ),
+  ]);
+
+  if (!diagnosticsSnapshot.empty || !workOrdersSnapshot.empty) {
+    throw new Error(
+      "Este cliente ya tiene diagnosticos u ordenes registradas y no se puede eliminar.",
+    );
   }
 
   await deleteEntityRecord("clients", clientId);
