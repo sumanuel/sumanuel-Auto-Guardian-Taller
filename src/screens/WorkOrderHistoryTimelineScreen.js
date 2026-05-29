@@ -329,7 +329,9 @@ export default function WorkOrderHistoryTimelineScreen({
             ]}
           >
             <Text style={[styles.statusChipText, { color: colors.success }]}>
-              {resolveWorkOrderStatusLabel(selectedWorkOrder?.status || "delivered")}
+              {resolveWorkOrderStatusLabel(
+                selectedWorkOrder?.status || "delivered",
+              )}
             </Text>
           </View>
         </View>
@@ -343,12 +345,14 @@ export default function WorkOrderHistoryTimelineScreen({
             },
           ]}
         >
-          <View style={[styles.cardHeader, { borderBottomColor: colors.border }]}>
+          <View
+            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
+          >
             <View style={styles.cardHeaderCopy}>
               <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
                 Historial
               </Text>
-              <Text style={[styles.rowTitle, { color: colors.text }]}> 
+              <Text style={[styles.rowTitle, { color: colors.text }]}>
                 Cronologia final
               </Text>
             </View>
@@ -361,10 +365,10 @@ export default function WorkOrderHistoryTimelineScreen({
             <ActivityIndicator color={colors.primary} />
           ) : !selectedWorkOrder ? (
             <View style={styles.emptyWrap}>
-              <Text style={[styles.emptyEyebrow, { color: colors.warning }]}> 
+              <Text style={[styles.emptyEyebrow, { color: colors.warning }]}>
                 Orden
               </Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}> 
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 No se pudo encontrar la orden historica que intentas revisar.
               </Text>
             </View>
@@ -506,7 +510,8 @@ export default function WorkOrderHistoryTimelineScreen({
                         </View>
                       ) : null}
 
-                      {entry.type === "parts" && entry.sparePartUpdates?.length ? (
+                      {entry.type === "parts" &&
+                      entry.sparePartUpdates?.length ? (
                         <View style={styles.timelineNestedList}>
                           {entry.sparePartUpdates.map((item) => (
                             <Text
@@ -516,7 +521,8 @@ export default function WorkOrderHistoryTimelineScreen({
                                 { color: colors.textSecondary },
                               ]}
                             >
-                              {item.sparePartName}: {sparePartStatusOptions.find(
+                              {item.sparePartName}:{" "}
+                              {sparePartStatusOptions.find(
                                 (option) => option.key === item.status,
                               )?.label || item.status}
                             </Text>
@@ -525,7 +531,9 @@ export default function WorkOrderHistoryTimelineScreen({
                       ) : null}
 
                       {entry.deliveryClosedOrder ? (
-                        <Text style={[styles.rowMeta, { color: colors.success }]}>
+                        <Text
+                          style={[styles.rowMeta, { color: colors.success }]}
+                        >
                           Orden cerrada y entregada.
                         </Text>
                       ) : null}
@@ -533,7 +541,8 @@ export default function WorkOrderHistoryTimelineScreen({
                       <Text
                         style={[styles.rowMeta, { color: colors.textTertiary }]}
                       >
-                        Estado capturado: {resolveWorkOrderStatusLabel(entry.statusSnapshot)}
+                        Estado capturado:{" "}
+                        {resolveWorkOrderStatusLabel(entry.statusSnapshot)}
                       </Text>
                     </View>
                   </View>
@@ -542,11 +551,12 @@ export default function WorkOrderHistoryTimelineScreen({
             </View>
           ) : (
             <View style={styles.emptyWrap}>
-              <Text style={[styles.emptyEyebrow, { color: colors.primary }]}> 
+              <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
                 Cronologia
               </Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}> 
-                Esta orden entregada no tiene registros de cronologia disponibles.
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                Esta orden entregada no tiene registros de cronologia
+                disponibles.
               </Text>
             </View>
           )}
