@@ -149,6 +149,8 @@ function getQueueTypeLabel(itemType) {
 }
 
 export default function WorkshopHomeScreen({
+  onOpenDiagnosticDetail,
+  onOpenWorkOrderDetail,
   onOpenClients,
   onOpenVehicles,
   userProfile,
@@ -226,6 +228,7 @@ export default function WorkshopHomeScreen({
 
       return {
         key: `diagnostic-${getRecordKey(diagnostic) || sequentialCode}`,
+        recordId: getRecordKey(diagnostic),
         type: "diagnostic",
         title:
           [vehicle?.brand, vehicle?.model, vehicle?.year]
@@ -257,6 +260,7 @@ export default function WorkshopHomeScreen({
 
       return {
         key: `work-order-${getRecordKey(workOrder) || sequentialCode}`,
+        recordId: getRecordKey(workOrder),
         type: "work-order",
         title:
           [vehicle?.brand, vehicle?.model, vehicle?.year]
@@ -662,8 +666,16 @@ export default function WorkshopHomeScreen({
               const caseColor = getQueueCaseColor(item, colors);
 
               return (
-                <View
+                <Pressable
                   key={item.key}
+                  onPress={() => {
+                    if (item.type === "diagnostic") {
+                      onOpenDiagnosticDetail?.(item.recordId);
+                      return;
+                    }
+
+                    onOpenWorkOrderDetail?.(item.recordId);
+                  }}
                   style={[
                     styles.queueRow,
                     {
@@ -734,7 +746,7 @@ export default function WorkshopHomeScreen({
                         : "Sigue el avance de ejecucion y prepara la entrega del vehiculo."}
                     </Text>
                   </View>
-                </View>
+                </Pressable>
               );
             })
           ) : (

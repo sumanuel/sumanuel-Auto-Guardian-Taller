@@ -30,7 +30,11 @@ function buildVehicleTitle(vehicle) {
   );
 }
 
-export default function VehiclesDirectoryScreen({ onBack }) {
+export default function VehiclesDirectoryScreen({
+  onBack,
+  onOpenClientDetail,
+  onOpenVehicleHistory,
+}) {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -168,6 +172,7 @@ export default function VehiclesDirectoryScreen({ onBack }) {
               return (
                 <Pressable
                   key={vehicle.refId || vehicle.id}
+                  onPress={() => onOpenClientDetail?.(vehicle.clientId)}
                   style={[
                     styles.vehicleCard,
                     {
@@ -241,6 +246,47 @@ export default function VehiclesDirectoryScreen({ onBack }) {
                       </Text>{" "}
                       {vehicle.vin || "Sin VIN"}
                     </Text>
+                  </View>
+
+                  <View style={styles.actionRow}>
+                    <Pressable
+                      onPress={() => onOpenClientDetail?.(vehicle.clientId)}
+                      style={[
+                        styles.secondaryAction,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.secondaryActionText,
+                          { color: colors.text },
+                        ]}
+                      >
+                        Abrir cliente
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => onOpenVehicleHistory?.(vehicle)}
+                      style={[
+                        styles.secondaryAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.primary,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.secondaryActionText,
+                          { color: colors.primary },
+                        ]}
+                      >
+                        Historial operativo
+                      </Text>
+                    </Pressable>
                   </View>
                 </Pressable>
               );
@@ -351,12 +397,31 @@ const styles = StyleSheet.create({
   metaGrid: {
     gap: spacing.xs,
   },
+  actionRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
   metaLine: {
     fontSize: rf(13),
     lineHeight: rf(18),
   },
   metaLabel: {
     fontWeight: "800",
+  },
+  secondaryAction: {
+    flex: 1,
+    minHeight: rf(42),
+    borderWidth: 1,
+    borderRadius: borderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+  },
+  secondaryActionText: {
+    fontSize: rf(12),
+    fontWeight: "800",
+    textAlign: "center",
   },
   emptyCard: {
     borderWidth: 1,

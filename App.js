@@ -85,6 +85,7 @@ function AppContent() {
   });
   const [diagnosticsViewState, setDiagnosticsViewState] = useState({
     selectedDiagnosticId: null,
+    searchQuery: "",
   });
   const [workOrderFormContext, setWorkOrderFormContext] = useState({
     workOrder: null,
@@ -170,6 +171,7 @@ function AppContent() {
     });
     setDiagnosticsViewState({
       selectedDiagnosticId: null,
+      searchQuery: "",
     });
     setWorkOrderFormContext({
       workOrder: null,
@@ -362,6 +364,7 @@ function AppContent() {
 
     if (nextTab === APP_SCREENS.DIAGNOSTICS) {
       setDiagnosticsViewState({ selectedDiagnosticId: null });
+      setDiagnosticsViewState({ selectedDiagnosticId: null, searchQuery: "" });
       setActiveScreen(APP_SCREENS.DIAGNOSTICS);
       return;
     }
@@ -451,6 +454,20 @@ function AppContent() {
       return (
         <VehiclesDirectoryScreen
           onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onOpenClientDetail={(clientId) => {
+            setClientsViewState({
+              selectedClientId: clientId || null,
+              screenMode: "detail",
+            });
+            setActiveScreen(APP_SCREENS.CLIENTS);
+          }}
+          onOpenVehicleHistory={(vehicle) => {
+            setDiagnosticsViewState({
+              selectedDiagnosticId: null,
+              searchQuery: vehicle?.plate || vehicle?.id || vehicle?.refId || "",
+            });
+            setActiveScreen(APP_SCREENS.DIAGNOSTICS);
+          }}
         />
       );
     }
@@ -751,6 +768,13 @@ function AppContent() {
 
     return (
       <WorkshopHomeScreen
+        onOpenDiagnosticDetail={(diagnosticId) => {
+          setDiagnosticsViewState({
+            selectedDiagnosticId: diagnosticId || null,
+            searchQuery: "",
+          });
+          setActiveScreen(APP_SCREENS.DIAGNOSTICS);
+        }}
         onOpenClients={() => setActiveScreen(APP_SCREENS.CLIENTS)}
         onOpenDiagnostics={() => setActiveScreen(APP_SCREENS.DIAGNOSTICS)}
         onOpenVehicles={() => setActiveScreen(APP_SCREENS.VEHICLES)}
@@ -763,6 +787,12 @@ function AppContent() {
           setActiveScreen(APP_SCREENS.SPARE_PARTS);
         }}
         onOpenTeamAccess={() => setActiveScreen(APP_SCREENS.COLLABORATORS)}
+        onOpenWorkOrderDetail={(workOrderId) => {
+          setWorkOrdersViewState({
+            selectedWorkOrderId: workOrderId || null,
+          });
+          setActiveScreen(APP_SCREENS.WORK_ORDERS);
+        }}
         onOpenWorkOrders={() => setActiveScreen(APP_SCREENS.WORK_ORDERS)}
         onSignOut={signOutUser}
         userProfile={userProfile}

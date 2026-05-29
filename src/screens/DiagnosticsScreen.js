@@ -124,6 +124,9 @@ export default function DiagnosticsScreen({
     if (!viewState?.selectedDiagnosticId) {
       setSelectedDiagnostic(null);
       setScreenMode(SCREEN_MODES.LIST);
+    }
+
+    if (!viewState?.selectedDiagnosticId) {
       return;
     }
 
@@ -139,6 +142,16 @@ export default function DiagnosticsScreen({
     setSelectedDiagnostic(matchedDiagnostic);
     setScreenMode(SCREEN_MODES.DETAIL);
   }, [diagnostics, viewState?.selectedDiagnosticId]);
+
+  useEffect(() => {
+    if (viewState?.searchQuery === undefined) {
+      return;
+    }
+
+    setSearchQuery(viewState.searchQuery || "");
+    setScreenMode(SCREEN_MODES.LIST);
+    setSelectedDiagnostic(null);
+  }, [viewState?.searchQuery]);
 
   useEffect(() => {
     if (screenMode !== SCREEN_MODES.DETAIL) {
