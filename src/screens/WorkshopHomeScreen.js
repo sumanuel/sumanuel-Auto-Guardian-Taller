@@ -27,6 +27,7 @@ import {
 import { firestoreCollections } from "../services/firestore/collections";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 import {
+  createLastDaysRange,
   formatDateRangeLabel,
   getSharedOperationalDateRange,
   isWithinDateRange,
@@ -178,6 +179,12 @@ export default function WorkshopHomeScreen({
     getSharedOperationalDateRange(),
   );
   const [isDateFilterVisible, setIsDateFilterVisible] = useState(false);
+
+  const resetDateRangeToLastThirtyDays = () => {
+    const nextRange = setSharedOperationalDateRange(createLastDaysRange(30));
+    setDateRange(nextRange);
+    return nextRange;
+  };
 
   const refreshData = async () => {
     setLoading(true);
@@ -615,7 +622,10 @@ export default function WorkshopHomeScreen({
               </Pressable>
 
               <Pressable
-                onPress={refreshData}
+                onPress={() => {
+                  resetDateRangeToLastThirtyDays();
+                  refreshData();
+                }}
                 style={[
                   styles.iconAction,
                   {

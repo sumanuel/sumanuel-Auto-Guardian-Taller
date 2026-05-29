@@ -29,6 +29,7 @@ import { ensureDiagnosticQuotePdfFile } from "../services/diagnostics/diagnostic
 import { listVehicles } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 import {
+  createLastDaysRange,
   formatDateRangeLabel,
   getSharedOperationalDateRange,
   getTimestampMillis,
@@ -87,6 +88,12 @@ export default function DiagnosticsScreen({
     getSharedOperationalDateRange(),
   );
   const [isDateFilterVisible, setIsDateFilterVisible] = useState(false);
+
+  const resetDateRangeToLastThirtyDays = () => {
+    const nextRange = setSharedOperationalDateRange(createLastDaysRange(30));
+    setDateRange(nextRange);
+    return nextRange;
+  };
 
   const selectedDiagnosticId = getEntityId(selectedDiagnostic);
 
@@ -413,7 +420,10 @@ export default function DiagnosticsScreen({
             />
           </Pressable>
           <Pressable
-            onPress={refreshData}
+            onPress={() => {
+              resetDateRangeToLastThirtyDays();
+              refreshData();
+            }}
             style={[
               styles.iconAction,
               {
