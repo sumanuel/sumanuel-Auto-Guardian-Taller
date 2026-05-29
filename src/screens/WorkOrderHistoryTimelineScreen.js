@@ -244,6 +244,10 @@ export default function WorkOrderHistoryTimelineScreen({
 
   const deliveryTimestamp =
     selectedWorkOrder?.deliveredAt || deliveryEntry?.createdAt || null;
+  const startedTimestamp =
+    selectedWorkOrder?.startedAt || selectedWorkOrder?.createdAt || null;
+  const responsibilityLabel =
+    assignedMechanics.length > 1 ? "Equipo responsable" : "Tecnico responsable";
 
   const responsibleTechnicianLabel =
     assignedMechanics[0]?.fullName ||
@@ -327,9 +331,21 @@ export default function WorkOrderHistoryTimelineScreen({
               >
                 Cliente: {client?.fullName || "Sin cliente asociado"}
               </Text>
-              <Text style={[styles.summaryDelivery, { color: colors.success }]}>
-                Entregada: {formatDateTime(deliveryTimestamp)}
-              </Text>
+              <View style={styles.summaryDatesRow}>
+                <Text
+                  style={[
+                    styles.summaryDatePill,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Inicio: {formatDateTime(startedTimestamp)}
+                </Text>
+                <Text
+                  style={[styles.summaryDatePill, { color: colors.success }]}
+                >
+                  Entrega: {formatDateTime(deliveryTimestamp)}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -391,7 +407,7 @@ export default function WorkOrderHistoryTimelineScreen({
               <Text
                 style={[styles.countLabel, { color: colors.textSecondary }]}
               >
-                Tecnico responsable
+                {responsibilityLabel}
               </Text>
             </View>
             <View
@@ -713,6 +729,17 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     lineHeight: rf(18),
     marginTop: spacing.xs,
+  },
+  summaryDatesRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  summaryDatePill: {
+    fontSize: rf(12),
+    fontWeight: "800",
+    lineHeight: rf(18),
   },
   countRow: {
     flexDirection: "row",
