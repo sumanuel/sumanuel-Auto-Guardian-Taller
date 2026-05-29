@@ -52,11 +52,11 @@ export default function VehiclesDirectoryScreen({
       try {
         const [nextClients, nextVehicles, nextDiagnostics, nextWorkOrders] =
           await Promise.all([
-          listClients(),
-          listVehicles(),
-          listDiagnostics(),
-          listWorkOrders(),
-        ]);
+            listClients(),
+            listVehicles(),
+            listDiagnostics(),
+            listWorkOrders(),
+          ]);
         setClients(nextClients);
         setVehicles(nextVehicles);
         setDiagnostics(nextDiagnostics);
@@ -110,11 +110,13 @@ export default function VehiclesDirectoryScreen({
         const vehicleId = vehicle.id || vehicle.refId;
         const activeDiagnostics = diagnostics.filter(
           (diagnostic) =>
-            diagnostic.vehicleId === vehicleId && diagnostic.status !== "closed",
+            diagnostic.vehicleId === vehicleId &&
+            diagnostic.status !== "closed",
         );
         const activeWorkOrders = workOrders.filter(
           (workOrder) =>
-            workOrder.vehicleId === vehicleId && workOrder.status !== "delivered",
+            workOrder.vehicleId === vehicleId &&
+            workOrder.status !== "delivered",
         );
 
         accumulator[vehicleId] = {

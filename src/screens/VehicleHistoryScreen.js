@@ -60,14 +60,16 @@ function buildVehicleTitle(vehicle) {
 function resolveStatusLabel(item) {
   if (item.type === "diagnostic") {
     return (
-      diagnosticStatusOptions.find((option) => option.key === item.status)?.label ||
+      diagnosticStatusOptions.find((option) => option.key === item.status)
+        ?.label ||
       item.status ||
       "Sin estado"
     );
   }
 
   return (
-    workOrderStatusOptions.find((option) => option.key === item.status)?.label ||
+    workOrderStatusOptions.find((option) => option.key === item.status)
+      ?.label ||
     item.status ||
     "Sin estado"
   );
@@ -123,7 +125,9 @@ export default function VehicleHistoryScreen({
   const client = useMemo(
     () =>
       clients.find(
-        (item) => getEntityId(item) === resolvedVehicle?.clientId || item.id === resolvedVehicle?.clientId,
+        (item) =>
+          getEntityId(item) === resolvedVehicle?.clientId ||
+          item.id === resolvedVehicle?.clientId,
       ) || null,
     [clients, resolvedVehicle?.clientId],
   );
@@ -211,10 +215,12 @@ export default function VehicleHistoryScreen({
               <Text style={[styles.summaryTitle, { color: colors.text }]}>
                 {buildVehicleTitle(resolvedVehicle)}
               </Text>
-              <Text style={[styles.summaryPlate, { color: colors.accent }]}> 
+              <Text style={[styles.summaryPlate, { color: colors.accent }]}>
                 Placa: {resolvedVehicle?.plate || "Sin placa"}
               </Text>
-              <Text style={[styles.summaryMeta, { color: colors.textSecondary }]}> 
+              <Text
+                style={[styles.summaryMeta, { color: colors.textSecondary }]}
+              >
                 Cliente: {client?.fullName || "Sin cliente asociado"}
               </Text>
             </View>
@@ -224,26 +230,36 @@ export default function VehicleHistoryScreen({
             <View
               style={[
                 styles.countCard,
-                { backgroundColor: colors.cardMuted, borderColor: colors.border },
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
               ]}
             >
               <Text style={[styles.countValue, { color: colors.text }]}>
                 {activeDiagnosticCount}
               </Text>
-              <Text style={[styles.countLabel, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.countLabel, { color: colors.textSecondary }]}
+              >
                 Diag. activas
               </Text>
             </View>
             <View
               style={[
                 styles.countCard,
-                { backgroundColor: colors.cardMuted, borderColor: colors.border },
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
               ]}
             >
               <Text style={[styles.countValue, { color: colors.text }]}>
                 {activeWorkOrderCount}
               </Text>
-              <Text style={[styles.countLabel, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.countLabel, { color: colors.textSecondary }]}
+              >
                 Ordenes activas
               </Text>
             </View>
@@ -256,7 +272,9 @@ export default function VehicleHistoryScreen({
           {timeline.length ? (
             timeline.map((item) => {
               const isDiagnostic = item.type === "diagnostic";
-              const accentColor = isDiagnostic ? colors.primary : colors.warning;
+              const accentColor = isDiagnostic
+                ? colors.primary
+                : colors.warning;
 
               return (
                 <Pressable
@@ -286,10 +304,14 @@ export default function VehicleHistoryScreen({
                     >
                       <Ionicons
                         color={accentColor}
-                        name={isDiagnostic ? "pulse-outline" : "clipboard-outline"}
+                        name={
+                          isDiagnostic ? "pulse-outline" : "clipboard-outline"
+                        }
                         size={rf(14)}
                       />
-                      <Text style={[styles.typeBadgeText, { color: accentColor }]}> 
+                      <Text
+                        style={[styles.typeBadgeText, { color: accentColor }]}
+                      >
                         {isDiagnostic ? "Diagnostico" : "Orden"}
                       </Text>
                     </View>
@@ -302,7 +324,9 @@ export default function VehicleHistoryScreen({
                         },
                       ]}
                     >
-                      <Text style={[styles.statusBadgeText, { color: accentColor }]}>
+                      <Text
+                        style={[styles.statusBadgeText, { color: accentColor }]}
+                      >
                         {resolveStatusLabel(item)}
                       </Text>
                     </View>
@@ -311,10 +335,20 @@ export default function VehicleHistoryScreen({
                   <Text style={[styles.timelineCode, { color: colors.text }]}>
                     {item.id || item.refId || "Sin codigo"}
                   </Text>
-                  <Text style={[styles.timelineDate, { color: colors.textSecondary }]}> 
+                  <Text
+                    style={[
+                      styles.timelineDate,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     {formatDateTime(item.updatedAt || item.createdAt)}
                   </Text>
-                  <Text style={[styles.timelineDescription, { color: colors.textSecondary }]}> 
+                  <Text
+                    style={[
+                      styles.timelineDescription,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     {isDiagnostic
                       ? item.concerns || "Sin hallazgos registrados"
                       : `Progreso ${item.progressPercent || 0}%`}
@@ -332,11 +366,12 @@ export default function VehicleHistoryScreen({
                 },
               ]}
             >
-              <Text style={[styles.emptyEyebrow, { color: colors.primary }]}> 
+              <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
                 Operacion
               </Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}> 
-                Esta unidad todavia no tiene diagnosticos ni ordenes registradas.
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                Esta unidad todavia no tiene diagnosticos ni ordenes
+                registradas.
               </Text>
             </View>
           )}
