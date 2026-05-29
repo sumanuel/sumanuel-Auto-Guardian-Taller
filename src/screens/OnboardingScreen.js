@@ -63,19 +63,18 @@ export default function OnboardingScreen({ onComplete }) {
 
   const palette = useMemo(
     () => ({
-      page: isDarkMode ? "#090b0d" : "#101317",
-      hero: isDarkMode ? "#12161b" : "#171b20",
-      panel: isDarkMode ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.06)",
-      panelStrong: isDarkMode
-        ? "rgba(255,255,255,0.08)"
-        : "rgba(255,255,255,0.1)",
-      border: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.12)",
-      text: "#f5f7fa",
-      muted: "rgba(245,247,250,0.74)",
+      page: colors.background,
+      hero: colors.cardBackground,
+      panel: colors.cardMuted,
+      panelStrong: colors.backgroundAccent,
+      border: colors.border,
+      text: colors.text,
+      muted: colors.textSecondary,
+      subtle: colors.textTertiary,
       accent: colors.accent,
       primary: colors.primary,
     }),
-    [colors.accent, colors.primary, isDarkMode],
+    [colors],
   );
 
   const completeOnboarding = async () => {
@@ -302,7 +301,7 @@ export default function OnboardingScreen({ onComplete }) {
             {isActiveLastSlide(currentSlide) ? "Entrar" : "Continuar"}
           </Text>
           <Ionicons
-            color="#ffffff"
+            color={colors.white}
             name="arrow-forward-outline"
             size={rf(18)}
           />

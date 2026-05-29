@@ -433,7 +433,7 @@ function AppContent() {
   if (showOnboarding) {
     return (
       <>
-        <StatusBar style="light" />
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
         <OnboardingScreen onComplete={() => setShowOnboarding(false)} />
       </>
     );
