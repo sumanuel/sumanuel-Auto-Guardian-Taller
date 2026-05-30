@@ -16,7 +16,7 @@ import {
   USER_ROLES,
   USER_STATUSES,
 } from "../../constants/accessControl";
-import { firestore } from "../firebase/config";
+import { auth, firestore } from "../firebase/config";
 import { patchEntityRecord } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
 import { reserveSequentialId } from "../firestore/sequentialIds";
@@ -252,6 +252,26 @@ export async function updateStaffProfile(uid, payload) {
     throw new Error("No hay un taller activo para actualizar el colaborador.");
   }
 
+  const currentMembership = await getWorkshopMembership(activeWorkshopId, uid);
+
+  if (!currentMembership) {
+    throw new Error("La membresia del colaborador no existe en este taller.");
+  }
+
+  const currentActorUid = auth.currentUser?.uid || "";
+  const currentActorMembership = currentActorUid
+    ? await getWorkshopMembership(activeWorkshopId, currentActorUid)
+    : null;
+
+  if (
+    currentActorMembership?.role === USER_ROLES.ADMINISTRATOR &&
+    currentMembership.role === USER_ROLES.OWNER
+  ) {
+    throw new Error(
+      "Un administrador no puede editar ni suspender la ficha del dueno del taller.",
+    );
+  }
+
   const documentRef = doc(firestore, userProfileCollection.name, uid);
   const profilePayload = {
     updatedAt: serverTimestamp(),
@@ -270,12 +290,6 @@ export async function updateStaffProfile(uid, payload) {
   }
 
   await updateDoc(documentRef, profilePayload);
-
-  const currentMembership = await getWorkshopMembership(activeWorkshopId, uid);
-
-  if (!currentMembership) {
-    throw new Error("La membresia del colaborador no existe en este taller.");
-  }
 
   if (payload.status !== undefined) {
     await upsertWorkshopMembership({

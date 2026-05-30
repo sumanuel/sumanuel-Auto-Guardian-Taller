@@ -1,6 +1,6 @@
 # Firebase Security Auto-Guardian-Taller
 
-Ultima actualizacion: 21-05-2026
+Ultima actualizacion: 30-05-2026
 
 ## Que cubren estas reglas
 
@@ -9,7 +9,7 @@ Ultima actualizacion: 21-05-2026
 - Activacion por invitacion: se permite consultar una invitacion pendiente por correo invitado y aceptarla durante el alta; el codigo consecutivo queda como referencia visible opcional.
 - Emision de invitaciones en app: el administrador crea una invitacion operativa asociada al correo normalizado del colaborador, y este la activa dentro de la app con ese mismo correo.
 - Roles operativos: administrator, reception y mechanic.
-- Colecciones operativas protegidas: userProfiles, staffInvitations, clients, vehicles, diagnostics, workOrders, progressEntries, spareParts, mail y \_counters.
+- Colecciones operativas protegidas: userProfiles, workshopMemberships, staffInvitations, clients, vehicles, diagnostics, workOrders, progressEntries, spareParts, mail y \_counters.
 - Storage base: reglas iniciales para fotos y archivos por perfil, vehiculo, diagnostico, orden y avance.
 
 ## Archivos creados
@@ -25,6 +25,8 @@ Ultima actualizacion: 21-05-2026
 - El login y la recuperacion se prueban apenas Firebase Auth este habilitado en consola.
 - Para crear invitaciones y administrar usuarios hace falta al menos un primer usuario con role administrator en userProfiles.
 - Los contadores consecutivos en \_counters se permiten desde cliente para pruebas funcionales. A mediano plazo conviene mover esa numeracion a Cloud Functions o backend propio para endurecer seguridad y evitar abuso.
+- Desde 30-05-2026 las altas y cambios de colaboradores quedaron limitados por taller activo en userProfiles, workshopMemberships y staffInvitations; workshopMemberships ya no acepta escrituras abiertas de cualquier usuario autenticado.
+- Desde 30-05-2026 el perfil mechanic solo puede mutar en Firestore los diagnosticos asignados a su UID y el estado operativo de ordenes donde ya figura como responsable asignado.
 - El envio real de correos de invitacion es opcional; requiere instalar la extension Firebase Trigger Email o una integracion equivalente que consuma la coleccion mail.
 - La extension Firebase Trigger Email no puede instalarse mientras el proyecto siga fuera del plan Blaze, porque necesita habilitar Secret Manager.
 

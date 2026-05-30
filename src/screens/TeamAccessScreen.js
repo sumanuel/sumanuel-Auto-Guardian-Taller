@@ -80,6 +80,12 @@ function buildWorkshopForm(workshop) {
   };
 }
 
+function isProtectedCollaboratorForRole(profile, currentRole) {
+  return (
+    currentRole === USER_ROLES.ADMINISTRATOR && profile?.role === USER_ROLES.OWNER
+  );
+}
+
 async function pickWorkshopLogo() {
   const permissionResult =
     await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -427,6 +433,14 @@ export default function TeamAccessScreen({
   };
 
   const handleToggleStatus = async (profile) => {
+    if (isProtectedCollaboratorForRole(profile, currentRole)) {
+      Alert.alert(
+        "Equipo",
+        "El perfil del dueno solo puede ser gestionado por ese mismo nivel de acceso.",
+      );
+      return;
+    }
+
     const nextStatus = profile.status === "active" ? "suspended" : "active";
 
     try {
@@ -447,6 +461,14 @@ export default function TeamAccessScreen({
   };
 
   const handleEditStaffProfile = (profile) => {
+    if (isProtectedCollaboratorForRole(profile, currentRole)) {
+      Alert.alert(
+        "Equipo",
+        "El perfil del dueno no puede ser editado desde una cuenta administradora.",
+      );
+      return;
+    }
+
     setEditingStaffId(profile.uid);
     setStaffForm(buildStaffForm(profile));
   };
@@ -1700,7 +1722,13 @@ export default function TeamAccessScreen({
                   <ActivityIndicator color={colors.primary} />
                 ) : staffProfiles.length ? (
                   <View style={styles.listBody}>
-                    {staffProfiles.map((profile) => (
+                    {staffProfiles.map((profile) => {
+                      const isProtectedProfile = isProtectedCollaboratorForRole(
+                        profile,
+                        currentRole,
+                      );
+
+                      return (
                       <View
                         key={profile.uid}
                         style={[
@@ -1771,62 +1799,74 @@ export default function TeamAccessScreen({
                             >
                               {profile.phone || "Sin telefono operativo"}
                             </Text>
+                            {isProtectedProfile ? (
+                              <Text
+                                style={[
+                                  styles.rowMeta,
+                                  { color: colors.warning },
+                                ]}
+                              >
+                                El dueno no puede ser editado ni suspendido desde una cuenta administradora.
+                              </Text>
+                            ) : null}
                           </View>
                         </View>
 
-                        <View style={styles.staffActions}>
-                          <Pressable
-                            onPress={() => handleEditStaffProfile(profile)}
-                            style={[
-                              styles.approveAction,
-                              {
-                                borderColor: colors.primary,
-                                backgroundColor: colors.cardBackground,
-                              },
-                            ]}
-                          >
-                            <Text
+                        {isProtectedProfile ? null : (
+                          <View style={styles.staffActions}>
+                            <Pressable
+                              onPress={() => handleEditStaffProfile(profile)}
                               style={[
-                                styles.approveActionText,
-                                { color: colors.primary },
-                              ]}
-                            >
-                              Editar ficha
-                            </Text>
-                          </Pressable>
-
-                          <Pressable
-                            onPress={() => handleToggleStatus(profile)}
-                            style={[
-                              styles.approveAction,
-                              {
-                                borderColor:
-                                  profile.status === "active"
-                                    ? colors.warning
-                                    : colors.success,
-                                backgroundColor: colors.cardBackground,
-                              },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.approveActionText,
+                                styles.approveAction,
                                 {
-                                  color:
-                                    profile.status === "active"
-                                      ? colors.warning
-                                      : colors.success,
+                                  borderColor: colors.primary,
+                                  backgroundColor: colors.cardBackground,
                                 },
                               ]}
                             >
-                              {profile.status === "active"
-                                ? "Suspender"
-                                : "Reactivar"}
-                            </Text>
-                          </Pressable>
-                        </View>
+                              <Text
+                                style={[
+                                  styles.approveActionText,
+                                  { color: colors.primary },
+                                ]}
+                              >
+                                Editar ficha
+                              </Text>
+                            </Pressable>
+
+                            <Pressable
+                              onPress={() => handleToggleStatus(profile)}
+                              style={[
+                                styles.approveAction,
+                                {
+                                  borderColor:
+                                    profile.status === "active"
+                                      ? colors.warning
+                                      : colors.success,
+                                  backgroundColor: colors.cardBackground,
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.approveActionText,
+                                  {
+                                    color:
+                                      profile.status === "active"
+                                        ? colors.warning
+                                        : colors.success,
+                                  },
+                                ]}
+                              >
+                                {profile.status === "active"
+                                  ? "Suspender"
+                                  : "Reactivar"}
+                              </Text>
+                            </Pressable>
+                          </View>
+                        )}
                       </View>
-                    ))}
+                    );})}
                   </View>
                 ) : (
                   <View
