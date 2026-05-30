@@ -13,7 +13,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
-import { canManageClients, canManageVehicles } from "../constants/accessControl";
+import {
+  canManageClients,
+  canManageVehicles,
+} from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { deleteClient, listClients } from "../services/clients/clientService";
 import {

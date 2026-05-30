@@ -601,7 +601,9 @@ export default function DiagnosticFormScreen({
                 )}
               </View>
             ) : (
-              <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.helperText, { color: colors.textSecondary }]}
+              >
                 Como mecanico, el diagnostico queda asignado a tu usuario y no
                 puedes reasignarlo desde esta pantalla.
               </Text>

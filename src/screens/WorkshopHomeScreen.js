@@ -454,92 +454,94 @@ export default function WorkshopHomeScreen({
             </View>
           </View>
 
-          {!isMechanicUser ? <View style={styles.metricsGrid}>
-            <Pressable
-              onPress={onOpenVehicles}
-              style={[
-                styles.metricTile,
-                styles.metricActionTile,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <View style={styles.metricTileHeader}>
-                <View
-                  style={[
-                    styles.metricIconWrap,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
+          {!isMechanicUser ? (
+            <View style={styles.metricsGrid}>
+              <Pressable
+                onPress={onOpenVehicles}
+                style={[
+                  styles.metricTile,
+                  styles.metricActionTile,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <View style={styles.metricTileHeader}>
+                  <View
+                    style={[
+                      styles.metricIconWrap,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.accent}
+                      name="car-sport-outline"
+                      size={rf(18)}
+                    />
+                  </View>
                   <Ionicons
-                    color={colors.accent}
-                    name="car-sport-outline"
-                    size={rf(18)}
+                    color={colors.textTertiary}
+                    name="chevron-forward"
+                    size={rf(16)}
                   />
                 </View>
-                <Ionicons
-                  color={colors.textTertiary}
-                  name="chevron-forward"
-                  size={rf(16)}
-                />
-              </View>
-              <Text style={[styles.metricValue, { color: colors.text }]}>
-                {vehicles.length}
-              </Text>
-              <Text
-                style={[styles.metricLabel, { color: colors.textSecondary }]}
-              >
-                Vehiculos
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={onOpenClients}
-              style={[
-                styles.metricTile,
-                styles.metricActionTile,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <View style={styles.metricTileHeader}>
-                <View
-                  style={[
-                    styles.metricIconWrap,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.border,
-                    },
-                  ]}
+                <Text style={[styles.metricValue, { color: colors.text }]}>
+                  {vehicles.length}
+                </Text>
+                <Text
+                  style={[styles.metricLabel, { color: colors.textSecondary }]}
                 >
+                  Vehiculos
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={onOpenClients}
+                style={[
+                  styles.metricTile,
+                  styles.metricActionTile,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <View style={styles.metricTileHeader}>
+                  <View
+                    style={[
+                      styles.metricIconWrap,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.primary}
+                      name="people-outline"
+                      size={rf(18)}
+                    />
+                  </View>
                   <Ionicons
-                    color={colors.primary}
-                    name="people-outline"
-                    size={rf(18)}
+                    color={colors.textTertiary}
+                    name="chevron-forward"
+                    size={rf(16)}
                   />
                 </View>
-                <Ionicons
-                  color={colors.textTertiary}
-                  name="chevron-forward"
-                  size={rf(16)}
-                />
-              </View>
-              <Text style={[styles.metricValue, { color: colors.text }]}>
-                {clients.length}
-              </Text>
-              <Text
-                style={[styles.metricLabel, { color: colors.textSecondary }]}
-              >
-                Clientes
-              </Text>
-            </Pressable>
-          </View> : null}
+                <Text style={[styles.metricValue, { color: colors.text }]}>
+                  {clients.length}
+                </Text>
+                <Text
+                  style={[styles.metricLabel, { color: colors.textSecondary }]}
+                >
+                  Clientes
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
 
         <View

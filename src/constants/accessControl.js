@@ -104,7 +104,9 @@ export function canManageCollaborators(role) {
 
 export function isDiagnosticAssignedToUser(diagnostic, uid) {
   const normalizedUid = String(uid || "").trim();
-  return Boolean(normalizedUid) && diagnostic?.assignedMechanicUid === normalizedUid;
+  return (
+    Boolean(normalizedUid) && diagnostic?.assignedMechanicUid === normalizedUid
+  );
 }
 
 export function isWorkOrderAssignedToUser(workOrder, uid) {

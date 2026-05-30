@@ -90,12 +90,12 @@ Ultima actualizacion: 30-05-2026
 
 ## Fase 3. Mecanicos y equipo
 
-| ID   | Aspecto                                           | Estado     | Prioridad | Dependencias | Completado |
-| ---- | ------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
-| F3-1 | CRUD de mecanicos y personal tecnico              | Completado | Alta      | F0-4         | 21-05-2026 |
-| F3-2 | Flujo de invitacion en app para mecanicos         | Completado | Alta      | F0-5         | 21-05-2026 |
-| F3-3 | Aceptacion de invitacion y activacion de cuenta   | Completado | Alta      | F3-2, F1-1   | 21-05-2026 |
-| F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Completado | Alta      | F3-1, F4-1   | 21-05-2026 |
+| ID   | Aspecto                                                                                             | Estado     | Prioridad | Dependencias | Completado |
+| ---- | --------------------------------------------------------------------------------------------------- | ---------- | --------- | ------------ | ---------- |
+| F3-1 | CRUD de mecanicos y personal tecnico                                                                | Completado | Alta      | F0-4         | 21-05-2026 |
+| F3-2 | Flujo de invitacion en app para mecanicos                                                           | Completado | Alta      | F0-5         | 21-05-2026 |
+| F3-3 | Aceptacion de invitacion y activacion de cuenta                                                     | Completado | Alta      | F3-2, F1-1   | 21-05-2026 |
+| F3-4 | Asignacion de mecanicos a diagnosticos y trabajos                                                   | Completado | Alta      | F3-1, F4-1   | 21-05-2026 |
 | F3-5 | Restringir al mecanico a casos asignados y bloquear gestion administrativa u operativa no permitida | Completado | Alta      | F3-4, F5-1   | 30-05-2026 |
 
 ## Fase 4. Diagnostico y plan de trabajo

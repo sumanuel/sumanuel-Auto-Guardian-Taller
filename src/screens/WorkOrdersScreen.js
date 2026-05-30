@@ -301,14 +301,13 @@ export default function WorkOrdersScreen({
       setSpareParts(nextSpareParts);
 
       if (selectedWorkOrderId) {
-        const refreshedOrder = (isMechanicUser
-          ? nextOrders.filter((workOrder) =>
-              isWorkOrderAssignedToUser(workOrder, currentUserUid),
-            )
-          : nextOrders
-        ).find(
-          (item) => getEntityId(item) === selectedWorkOrderId,
-        );
+        const refreshedOrder = (
+          isMechanicUser
+            ? nextOrders.filter((workOrder) =>
+                isWorkOrderAssignedToUser(workOrder, currentUserUid),
+              )
+            : nextOrders
+        ).find((item) => getEntityId(item) === selectedWorkOrderId);
 
         if (refreshedOrder) {
           setSelectedWorkOrder(refreshedOrder);
@@ -1213,7 +1212,10 @@ export default function WorkOrdersScreen({
                 ]}
               >
                 <Text
-                  style={[styles.secondaryActionText, { color: colors.primary }]}
+                  style={[
+                    styles.secondaryActionText,
+                    { color: colors.primary },
+                  ]}
                 >
                   {assignedMechanics.length
                     ? "Editar responsables y orden"

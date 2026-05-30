@@ -129,14 +129,13 @@ export default function DiagnosticsScreen({
       setVehicles(nextVehicles);
 
       if (selectedDiagnosticId) {
-        const refreshedDiagnostic = (isMechanicUser
-          ? nextDiagnostics.filter((diagnostic) =>
-              isDiagnosticAssignedToUser(diagnostic, currentUserUid),
-            )
-          : nextDiagnostics
-        ).find(
-          (item) => getEntityId(item) === selectedDiagnosticId,
-        );
+        const refreshedDiagnostic = (
+          isMechanicUser
+            ? nextDiagnostics.filter((diagnostic) =>
+                isDiagnosticAssignedToUser(diagnostic, currentUserUid),
+              )
+            : nextDiagnostics
+        ).find((item) => getEntityId(item) === selectedDiagnosticId);
 
         if (refreshedDiagnostic) {
           setSelectedDiagnostic(refreshedDiagnostic);
