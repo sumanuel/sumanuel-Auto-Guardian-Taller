@@ -82,7 +82,8 @@ function buildWorkshopForm(workshop) {
 
 function isProtectedCollaboratorForRole(profile, currentRole) {
   return (
-    currentRole === USER_ROLES.ADMINISTRATOR && profile?.role === USER_ROLES.OWNER
+    currentRole === USER_ROLES.ADMINISTRATOR &&
+    profile?.role === USER_ROLES.OWNER
   );
 }
 
@@ -1729,144 +1730,149 @@ export default function TeamAccessScreen({
                       );
 
                       return (
-                      <View
-                        key={profile.uid}
-                        style={[
-                          styles.listRow,
-                          {
-                            backgroundColor: colors.cardMuted,
-                            borderColor: colors.border,
-                          },
-                        ]}
-                      >
-                        <View style={styles.listCopy}>
-                          <View
-                            style={[
-                              styles.listRowHeader,
-                              { borderBottomColor: colors.border },
-                            ]}
-                          >
-                            <View style={styles.listHeaderCopy}>
+                        <View
+                          key={profile.uid}
+                          style={[
+                            styles.listRow,
+                            {
+                              backgroundColor: colors.cardMuted,
+                              borderColor: colors.border,
+                            },
+                          ]}
+                        >
+                          <View style={styles.listCopy}>
+                            <View
+                              style={[
+                                styles.listRowHeader,
+                                { borderBottomColor: colors.border },
+                              ]}
+                            >
+                              <View style={styles.listHeaderCopy}>
+                                <Text
+                                  style={[
+                                    styles.rowEyebrow,
+                                    { color: colors.accent },
+                                  ]}
+                                >
+                                  Colaborador
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.rowTitle,
+                                    { color: colors.text },
+                                  ]}
+                                >
+                                  {profile.fullName || "Usuario sin nombre"}
+                                </Text>
+                              </View>
                               <Text
                                 style={[
-                                  styles.rowEyebrow,
+                                  styles.rowTag,
                                   { color: colors.accent },
                                 ]}
                               >
-                                Colaborador
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.rowTitle,
-                                  { color: colors.text },
-                                ]}
-                              >
-                                {profile.fullName || "Usuario sin nombre"}
+                                {statusLabels[profile.status] ||
+                                  statusLabels[profile.membershipStatus] ||
+                                  profile.status ||
+                                  "Sin estado"}
                               </Text>
                             </View>
-                            <Text
-                              style={[styles.rowTag, { color: colors.accent }]}
-                            >
-                              {statusLabels[profile.status] ||
-                                statusLabels[profile.membershipStatus] ||
-                                profile.status ||
-                                "Sin estado"}
-                            </Text>
-                          </View>
-                          <View style={styles.listRowBody}>
-                            <Text
-                              style={[
-                                styles.rowMeta,
-                                { color: colors.textSecondary },
-                              ]}
-                            >
-                              {profile.userCode || "Sin codigo"} ·{" "}
-                              {profile.email}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.rowMeta,
-                                { color: colors.textTertiary },
-                              ]}
-                            >
-                              {roleLabels[profile.role] || profile.role}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.rowMeta,
-                                { color: colors.textTertiary },
-                              ]}
-                            >
-                              {profile.phone || "Sin telefono operativo"}
-                            </Text>
-                            {isProtectedProfile ? (
+                            <View style={styles.listRowBody}>
                               <Text
                                 style={[
                                   styles.rowMeta,
-                                  { color: colors.warning },
+                                  { color: colors.textSecondary },
                                 ]}
                               >
-                                El dueno no puede ser editado ni suspendido desde una cuenta administradora.
+                                {profile.userCode || "Sin codigo"} ·{" "}
+                                {profile.email}
                               </Text>
-                            ) : null}
+                              <Text
+                                style={[
+                                  styles.rowMeta,
+                                  { color: colors.textTertiary },
+                                ]}
+                              >
+                                {roleLabels[profile.role] || profile.role}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.rowMeta,
+                                  { color: colors.textTertiary },
+                                ]}
+                              >
+                                {profile.phone || "Sin telefono operativo"}
+                              </Text>
+                              {isProtectedProfile ? (
+                                <Text
+                                  style={[
+                                    styles.rowMeta,
+                                    { color: colors.warning },
+                                  ]}
+                                >
+                                  El dueno no puede ser editado ni suspendido
+                                  desde una cuenta administradora.
+                                </Text>
+                              ) : null}
+                            </View>
                           </View>
-                        </View>
 
-                        {isProtectedProfile ? null : (
-                          <View style={styles.staffActions}>
-                            <Pressable
-                              onPress={() => handleEditStaffProfile(profile)}
-                              style={[
-                                styles.approveAction,
-                                {
-                                  borderColor: colors.primary,
-                                  backgroundColor: colors.cardBackground,
-                                },
-                              ]}
-                            >
-                              <Text
+                          {isProtectedProfile ? null : (
+                            <View style={styles.staffActions}>
+                              <Pressable
+                                onPress={() => handleEditStaffProfile(profile)}
                                 style={[
-                                  styles.approveActionText,
-                                  { color: colors.primary },
-                                ]}
-                              >
-                                Editar ficha
-                              </Text>
-                            </Pressable>
-
-                            <Pressable
-                              onPress={() => handleToggleStatus(profile)}
-                              style={[
-                                styles.approveAction,
-                                {
-                                  borderColor:
-                                    profile.status === "active"
-                                      ? colors.warning
-                                      : colors.success,
-                                  backgroundColor: colors.cardBackground,
-                                },
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.approveActionText,
+                                  styles.approveAction,
                                   {
-                                    color:
-                                      profile.status === "active"
-                                        ? colors.warning
-                                        : colors.success,
+                                    borderColor: colors.primary,
+                                    backgroundColor: colors.cardBackground,
                                   },
                                 ]}
                               >
-                                {profile.status === "active"
-                                  ? "Suspender"
-                                  : "Reactivar"}
-                              </Text>
-                            </Pressable>
-                          </View>
-                        )}
-                      </View>
-                    );})}
+                                <Text
+                                  style={[
+                                    styles.approveActionText,
+                                    { color: colors.primary },
+                                  ]}
+                                >
+                                  Editar ficha
+                                </Text>
+                              </Pressable>
+
+                              <Pressable
+                                onPress={() => handleToggleStatus(profile)}
+                                style={[
+                                  styles.approveAction,
+                                  {
+                                    borderColor:
+                                      profile.status === "active"
+                                        ? colors.warning
+                                        : colors.success,
+                                    backgroundColor: colors.cardBackground,
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.approveActionText,
+                                    {
+                                      color:
+                                        profile.status === "active"
+                                          ? colors.warning
+                                          : colors.success,
+                                    },
+                                  ]}
+                                >
+                                  {profile.status === "active"
+                                    ? "Suspender"
+                                    : "Reactivar"}
+                                </Text>
+                              </Pressable>
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })}
                   </View>
                 ) : (
                   <View
