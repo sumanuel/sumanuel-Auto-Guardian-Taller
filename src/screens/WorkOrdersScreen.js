@@ -15,6 +15,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import {
+  isMechanicRole,
+  isWorkOrderAssignedToUser,
+} from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { listStaffProfiles } from "../services/admin/staffAdmin";
 import { listClients } from "../services/clients/clientService";
@@ -221,6 +225,8 @@ export default function WorkOrdersScreen({
   viewState,
 }) {
   const { colors } = useTheme();
+  const isMechanicUser = isMechanicRole(userProfile?.role);
+  const currentUserUid = userProfile?.uid || "";
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
   const [loading, setLoading] = useState(false);
   const [progressLoading, setProgressLoading] = useState(false);
@@ -258,6 +264,15 @@ export default function WorkOrdersScreen({
     () => buildLookup(staffProfiles, "uid"),
     [staffProfiles],
   );
+  const visibleWorkOrders = useMemo(
+    () =>
+      isMechanicUser
+        ? workOrders.filter((workOrder) =>
+            isWorkOrderAssignedToUser(workOrder, currentUserUid),
+          )
+        : workOrders,
+    [currentUserUid, isMechanicUser, workOrders],
+  );
 
   const refreshData = async () => {
     setLoading(true);
@@ -286,7 +301,12 @@ export default function WorkOrdersScreen({
       setSpareParts(nextSpareParts);
 
       if (selectedWorkOrderId) {
-        const refreshedOrder = nextOrders.find(
+        const refreshedOrder = (isMechanicUser
+          ? nextOrders.filter((workOrder) =>
+              isWorkOrderAssignedToUser(workOrder, currentUserUid),
+            )
+          : nextOrders
+        ).find(
           (item) => getEntityId(item) === selectedWorkOrderId,
         );
 
@@ -316,7 +336,7 @@ export default function WorkOrdersScreen({
       return;
     }
 
-    const matchedWorkOrder = workOrders.find(
+    const matchedWorkOrder = visibleWorkOrders.find(
       (workOrder) => getEntityId(workOrder) === viewState.selectedWorkOrderId,
     );
 
@@ -326,7 +346,7 @@ export default function WorkOrdersScreen({
 
     setSelectedWorkOrder(matchedWorkOrder);
     setScreenMode(SCREEN_MODES.DETAIL);
-  }, [viewState?.selectedWorkOrderId, workOrders]);
+  }, [viewState?.selectedWorkOrderId, visibleWorkOrders]);
 
   useEffect(() => {
     if (screenMode !== SCREEN_MODES.DETAIL) {
@@ -396,7 +416,7 @@ export default function WorkOrdersScreen({
   const filteredOrders = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return workOrders.filter((workOrder) => {
+    return visibleWorkOrders.filter((workOrder) => {
       if (activeFilter !== "all" && workOrder.status !== activeFilter) {
         return false;
       }
@@ -437,7 +457,7 @@ export default function WorkOrdersScreen({
     dateRange,
     searchQuery,
     vehicleLookup,
-    workOrders,
+    visibleWorkOrders,
   ]);
 
   const openWorkOrderDetail = (workOrder) => {
@@ -947,24 +967,26 @@ export default function WorkOrdersScreen({
                   </View>
                 </Pressable>
 
-                <View style={styles.iconActionRow}>
-                  <Pressable
-                    onPress={() => onOpenWorkOrderForm?.(workOrder)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.textTertiary}
-                      name="create-outline"
-                      size={rf(17)}
-                    />
-                  </Pressable>
-                </View>
+                {!isMechanicUser ? (
+                  <View style={styles.iconActionRow}>
+                    <Pressable
+                      onPress={() => onOpenWorkOrderForm?.(workOrder)}
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.textTertiary}
+                        name="create-outline"
+                        size={rf(17)}
+                      />
+                    </Pressable>
+                  </View>
+                ) : null}
               </View>
             );
           })}
@@ -983,8 +1005,9 @@ export default function WorkOrdersScreen({
             Operacion
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            No hay ordenes para el filtro actual. Cambia el estado o crea la
-            primera orden desde un diagnostico activo.
+            {isMechanicUser
+              ? "No tienes ordenes asignadas para el filtro actual. Cambia el estado o espera una nueva asignacion."
+              : "No hay ordenes para el filtro actual. Cambia el estado o crea la primera orden desde un diagnostico activo."}
           </Text>
         </View>
       )}
@@ -1178,24 +1201,26 @@ export default function WorkOrdersScreen({
           </View>
 
           <View style={styles.detailActionRow}>
-            <Pressable
-              onPress={() => onOpenWorkOrderForm?.(selectedWorkOrder)}
-              style={[
-                styles.secondaryAction,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text
-                style={[styles.secondaryActionText, { color: colors.primary }]}
+            {!isMechanicUser ? (
+              <Pressable
+                onPress={() => onOpenWorkOrderForm?.(selectedWorkOrder)}
+                style={[
+                  styles.secondaryAction,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.border,
+                  },
+                ]}
               >
-                {assignedMechanics.length
-                  ? "Editar responsables y orden"
-                  : "Asignar responsables"}
-              </Text>
-            </Pressable>
+                <Text
+                  style={[styles.secondaryActionText, { color: colors.primary }]}
+                >
+                  {assignedMechanics.length
+                    ? "Editar responsables y orden"
+                    : "Asignar responsables"}
+                </Text>
+              </Pressable>
+            ) : null}
             <Pressable
               onPress={() => onOpenSpareParts?.(selectedWorkOrder)}
               style={[

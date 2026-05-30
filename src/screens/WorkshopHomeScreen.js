@@ -13,6 +13,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import {
+  isDiagnosticAssignedToUser,
+  isMechanicRole,
+  isWorkOrderAssignedToUser,
+} from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
 import {
@@ -167,6 +172,8 @@ export default function WorkshopHomeScreen({
   userProfile,
 }) {
   const { colors } = useTheme();
+  const isMechanicUser = isMechanicRole(userProfile?.role);
+  const currentUserUid = userProfile?.uid || "";
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -234,6 +241,26 @@ export default function WorkshopHomeScreen({
     }
   }, [selectedStatus, selectedType]);
 
+  const visibleDiagnostics = useMemo(
+    () =>
+      isMechanicUser
+        ? diagnostics.filter((diagnostic) =>
+            isDiagnosticAssignedToUser(diagnostic, currentUserUid),
+          )
+        : diagnostics,
+    [currentUserUid, diagnostics, isMechanicUser],
+  );
+
+  const visibleWorkOrders = useMemo(
+    () =>
+      isMechanicUser
+        ? workOrders.filter((workOrder) =>
+            isWorkOrderAssignedToUser(workOrder, currentUserUid),
+          )
+        : workOrders,
+    [currentUserUid, isMechanicUser, workOrders],
+  );
+
   const queue = useMemo(() => {
     const vehicleLookup = vehicles.reduce((accumulator, vehicle) => {
       const vehicleKey = getVehicleKey(vehicle);
@@ -245,7 +272,7 @@ export default function WorkshopHomeScreen({
       return accumulator;
     }, {});
 
-    const latestDiagnostics = diagnostics.map((diagnostic) => {
+    const latestDiagnostics = visibleDiagnostics.map((diagnostic) => {
       const vehicle = vehicleLookup[diagnostic.vehicleId];
       const sequentialCode = formatOperationalCode(
         diagnostic,
@@ -277,7 +304,7 @@ export default function WorkshopHomeScreen({
       };
     });
 
-    const latestWorkOrders = workOrders.map((workOrder) => {
+    const latestWorkOrders = visibleWorkOrders.map((workOrder) => {
       const vehicle = vehicleLookup[workOrder.vehicleId];
       const sequentialCode = formatOperationalCode(
         workOrder,
@@ -313,7 +340,7 @@ export default function WorkshopHomeScreen({
     return [...latestDiagnostics, ...latestWorkOrders].sort(
       (left, right) => right.createdAt - left.createdAt,
     );
-  }, [diagnostics, vehicles, workOrders]);
+  }, [vehicles, visibleDiagnostics, visibleWorkOrders]);
 
   const statusFilterOptions = useMemo(() => {
     if (selectedType === "diagnostic") {
@@ -366,13 +393,13 @@ export default function WorkshopHomeScreen({
   const tabCounters = useMemo(
     () => ({
       all: queue.length,
-      diagnostic: diagnostics.length,
-      "work-order": workOrders.length,
+      diagnostic: visibleDiagnostics.length,
+      "work-order": visibleWorkOrders.length,
     }),
-    [diagnostics.length, queue.length, workOrders.length],
+    [queue.length, visibleDiagnostics.length, visibleWorkOrders.length],
   );
 
-  const activeOrdersCount = workOrders.filter(
+  const activeOrdersCount = visibleWorkOrders.filter(
     (workOrder) => workOrder.status !== "delivered",
   ).length;
 
@@ -384,7 +411,11 @@ export default function WorkshopHomeScreen({
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <WorkshopScreenHeader
           section="Centro de control"
-          subtitle="Supervisa recepcion, diagnosticos, ordenes y alertas desde una sola vista operativa."
+          subtitle={
+            isMechanicUser
+              ? "Supervisa solo los diagnosticos y ordenes que estan bajo tu responsabilidad operativa."
+              : "Supervisa recepcion, diagnosticos, ordenes y alertas desde una sola vista operativa."
+          }
           title="Auto-Guardian"
         />
 
@@ -423,7 +454,7 @@ export default function WorkshopHomeScreen({
             </View>
           </View>
 
-          <View style={styles.metricsGrid}>
+          {!isMechanicUser ? <View style={styles.metricsGrid}>
             <Pressable
               onPress={onOpenVehicles}
               style={[
@@ -508,7 +539,7 @@ export default function WorkshopHomeScreen({
                 Clientes
               </Text>
             </Pressable>
-          </View>
+          </View> : null}
         </View>
 
         <View
@@ -671,7 +702,9 @@ export default function WorkshopHomeScreen({
                   ]}
                 >
                   {selectedType === "all"
-                    ? "Vista compacta para detectar rapido diagnosticos y ordenes activas."
+                    ? isMechanicUser
+                      ? "Vista compacta con tus casos y ordenes asignadas."
+                      : "Vista compacta para detectar rapido diagnosticos y ordenes activas."
                     : "Filtra por estado solo cuando estes revisando un flujo operativo especifico."}
                 </Text>
               </View>
@@ -843,8 +876,9 @@ export default function WorkshopHomeScreen({
                 <Text
                   style={[styles.queueDetail, { color: colors.textSecondary }]}
                 >
-                  No hay coincidencias para esta vista. Cambia de tab o ajusta
-                  la placa buscada para recuperar actividad operativa.
+                  {isMechanicUser
+                    ? "No tienes diagnosticos ni ordenes asignadas para esta vista. Ajusta los filtros o espera una nueva asignacion."
+                    : "No hay coincidencias para esta vista. Cambia de tab o ajusta la placa buscada para recuperar actividad operativa."}
                 </Text>
               </View>
             </View>

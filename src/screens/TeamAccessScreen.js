@@ -490,7 +490,7 @@ export default function TeamAccessScreen({
   const handleResetWorkshopData = () => {
     Alert.alert(
       "Reiniciar taller",
-      "Se eliminaran clientes, vehiculos, diagnosticos, ordenes, avances, repuestos y stock del taller activo. Esta accion no se puede deshacer.",
+      "Se eliminaran clientes, vehiculos, diagnosticos, ordenes, avances, repuestos, stock y movimientos del taller activo. La identidad comercial, el taller y los colaboradores se conservan. Esta accion no se puede deshacer.",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -978,7 +978,7 @@ export default function TeamAccessScreen({
                   style={[styles.panelText, { color: colors.textSecondary }]}
                 >
                   Borra toda la data operativa del taller activo y conserva la
-                  identidad comercial y los colaboradores.
+                  identidad comercial, el taller activo y los colaboradores.
                 </Text>
                 <Pressable
                   disabled={resetSubmitting || authBusy}

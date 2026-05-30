@@ -1,6 +1,6 @@
 # Roadmap Auto-Guardian-Taller
 
-Ultima actualizacion: 29-05-2026
+Ultima actualizacion: 30-05-2026
 
 ## Como se actualiza este roadmap
 
@@ -41,6 +41,7 @@ Ultima actualizacion: 29-05-2026
 - Completado: gestion del taller activo con nombre, contacto, direccion, RIF, logo, notas comerciales y reinicio de datos operativos.
 - Completado: inventario general de stock y herramientas con CRUD y movimientos de entrada y salida.
 - En progreso: dashboard operativo del home con mejor jerarquia visual, tabs y lectura rapida por diagnosticos y ordenes.
+- Completado: endurecimiento del perfil mecanico para operar solo sobre diagnosticos y ordenes asignadas, sin acceso de gestion sobre clientes, vehiculos, taller ni colaboradores.
 
 ## Fase 0. Fundacion tecnica
 
@@ -95,6 +96,7 @@ Ultima actualizacion: 29-05-2026
 | F3-2 | Flujo de invitacion en app para mecanicos         | Completado | Alta      | F0-5         | 21-05-2026 |
 | F3-3 | Aceptacion de invitacion y activacion de cuenta   | Completado | Alta      | F3-2, F1-1   | 21-05-2026 |
 | F3-4 | Asignacion de mecanicos a diagnosticos y trabajos | Completado | Alta      | F3-1, F4-1   | 21-05-2026 |
+| F3-5 | Restringir al mecanico a casos asignados y bloquear gestion administrativa u operativa no permitida | Completado | Alta      | F3-4, F5-1   | 30-05-2026 |
 
 ## Fase 4. Diagnostico y plan de trabajo
 
@@ -170,6 +172,7 @@ Ultima actualizacion: 29-05-2026
 - 28-05-2026: se cierra la migracion al esquema multi-taller, se publican reglas e indices y la operacion queda consolidada en el taller unico Taller el suma con taller activo y membresias reales.
 - 28-05-2026: la administracion del taller gana RIF, logo, notas comerciales, PDF con datos del taller activo y un modulo de stock y herramientas con CRUD y movimientos de entrada y salida.
 - 29-05-2026: Mas opciones separa Datos del taller y Colaboradores, la ficha del taller muestra placeholder cuando aun no tiene logo y el home se reorganiza con tabs para Todos, Diagnosticos y Ordenes con una lectura mas clara del flujo operativo.
+- 30-05-2026: el perfil mecanico queda acotado a diagnosticos y ordenes asignadas, el home y los listados operativos filtran por asignacion, y la gestion de clientes, vehiculos, taller y colaboradores deja de estar disponible para ese rol; ademas se revisa el alcance del reinicio del taller para reflejar que conserva identidad comercial, taller y colaboradores.
 
 ## Decisiones base cerradas
 

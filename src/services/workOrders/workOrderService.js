@@ -1,6 +1,10 @@
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { serverTimestamp } from "firebase/firestore";
-import { firestore } from "../firebase/config";
+import { auth, firestore } from "../firebase/config";
+import {
+  isMechanicRole,
+  isWorkOrderAssignedToUser,
+} from "../../constants/accessControl";
 import {
   createEntityRecord,
   deleteEntityRecord,
@@ -12,7 +16,10 @@ import {
   closeDiagnostic,
   isDiagnosticClosed,
 } from "../diagnostics/diagnosticService";
-import { requireActiveWorkshopId } from "../workshops/workshopSession";
+import {
+  getActiveWorkshopSession,
+  requireActiveWorkshopId,
+} from "../workshops/workshopSession";
 
 const workOrdersCollection = firestoreCollections.workOrders;
 
@@ -97,7 +104,14 @@ export async function createWorkOrder({
   status,
 }) {
   const workshopId = requireActiveWorkshopId();
+  const activeSession = getActiveWorkshopSession();
   const normalizedDiagnosticId = normalizeOptional(diagnosticId);
+
+  if (isMechanicRole(activeSession?.role)) {
+    throw new Error(
+      "El perfil de mecanico no puede crear ordenes ni reasignar responsables desde esta pantalla.",
+    );
+  }
 
   if (normalizedDiagnosticId) {
     const diagnostic = await getEntityRecord(
@@ -144,10 +158,17 @@ export async function createWorkOrder({
 
 export async function updateWorkOrder(workOrderId, payload) {
   const workshopId = requireActiveWorkshopId();
+  const activeSession = getActiveWorkshopSession();
   const currentWorkOrder = await getEntityRecord("workOrders", workOrderId);
 
   if (!currentWorkOrder || currentWorkOrder.workshopId !== workshopId) {
     throw new Error("La orden no pertenece al taller activo.");
+  }
+
+  if (isMechanicRole(activeSession?.role)) {
+    throw new Error(
+      "El perfil de mecanico no puede editar responsables ni la ficha general de la orden.",
+    );
   }
 
   const normalizedAssignedStaff = normalizeUidList(
@@ -171,10 +192,21 @@ export async function updateWorkOrderOperationalState(
   { status, progressPercent },
 ) {
   const workshopId = requireActiveWorkshopId();
+  const activeSession = getActiveWorkshopSession();
+  const currentUid = auth.currentUser?.uid || "";
   const currentWorkOrder = await getEntityRecord("workOrders", workOrderId);
 
   if (!currentWorkOrder || currentWorkOrder.workshopId !== workshopId) {
     throw new Error("No se encontro la orden a actualizar.");
+  }
+
+  if (
+    isMechanicRole(activeSession?.role) &&
+    !isWorkOrderAssignedToUser(currentWorkOrder, currentUid)
+  ) {
+    throw new Error(
+      "Solo puedes actualizar el estado de ordenes asignadas a tu usuario.",
+    );
   }
 
   const nextStatus = normalizeWorkOrderStatus(status);

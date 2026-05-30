@@ -30,6 +30,7 @@ import VehicleHistoryScreen from "./src/screens/VehicleHistoryScreen";
 import VehiclesDirectoryScreen from "./src/screens/VehiclesDirectoryScreen";
 import WorkOrderHistoryTimelineScreen from "./src/screens/WorkOrderHistoryTimelineScreen";
 import WorkshopTabBar from "./src/components/common/WorkshopTabBar";
+import { isMechanicRole } from "./src/constants/accessControl";
 import { findActiveDiagnosticByVehicleId } from "./src/services/diagnostics/diagnosticService";
 
 const APP_SCREENS = {
@@ -66,8 +67,10 @@ function AppContent() {
   const { isDarkMode, toggleTheme } = useTheme();
   const {
     acceptPendingInvitation,
+    activeWorkshopId,
     authUser,
     authReady,
+    memberships,
     pendingInvitation,
     signOutUser,
     userProfile,
@@ -186,6 +189,11 @@ function AppContent() {
   }, [activeScreen]);
 
   const profileStatus = userProfile?.status;
+  const activeMembership = memberships.find(
+    (membership) => membership.workshopId === activeWorkshopId,
+  );
+  const currentRole = activeMembership?.role || userProfile?.role || "";
+  const isMechanicUser = isMechanicRole(currentRole);
 
   useEffect(() => {
     setActiveScreen(APP_SCREENS.HOME);
@@ -251,6 +259,30 @@ function AppContent() {
       selectedStockItemId: null,
     });
   }, [authUser?.uid]);
+
+  useEffect(() => {
+    if (!isMechanicUser) {
+      return;
+    }
+
+    if (
+      [
+        APP_SCREENS.CLIENTS,
+        APP_SCREENS.CLIENT_FORM,
+        APP_SCREENS.VEHICLES,
+        APP_SCREENS.VEHICLE_FORM,
+        APP_SCREENS.WORKSHOP_SETTINGS,
+        APP_SCREENS.COLLABORATORS,
+      ].includes(activeScreen)
+    ) {
+      setActiveScreen(APP_SCREENS.HOME);
+      return;
+    }
+
+    if (activeScreen === APP_SCREENS.WORK_ORDER_FORM) {
+      setActiveScreen(APP_SCREENS.WORK_ORDERS);
+    }
+  }, [activeScreen, isMechanicUser]);
 
   function navigateBackFromDiagnostics() {
     setDiagnosticsViewState((current) => ({
@@ -464,6 +496,11 @@ function AppContent() {
   }
 
   const handleTabChange = (nextTab) => {
+    if (isMechanicUser && nextTab === APP_SCREENS.CLIENTS) {
+      setActiveScreen(APP_SCREENS.HOME);
+      return;
+    }
+
     if (nextTab === APP_SCREENS.HOME) {
       setActiveScreen(APP_SCREENS.HOME);
       return;
@@ -784,6 +821,7 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.WORK_ORDER_FORM);
           }}
+          userProfile={userProfile}
           viewState={diagnosticsViewState}
         />
       );
@@ -898,6 +936,7 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.WORK_ORDERS);
           }}
+          userProfile={userProfile}
         />
       );
     }
@@ -1103,7 +1142,20 @@ function AppContent() {
       <StatusBar style={isDarkMode ? "light" : "dark"} />
       <View style={styles.shell}>
         <View style={styles.content}>{renderAuthenticatedScreen()}</View>
-        <WorkshopTabBar activeTab={activeTab} onChange={handleTabChange} />
+        <WorkshopTabBar
+          activeTab={activeTab}
+          onChange={handleTabChange}
+          visibleTabs={
+            isMechanicUser
+              ? [
+                  APP_SCREENS.HOME,
+                  APP_SCREENS.DIAGNOSTICS,
+                  APP_SCREENS.WORK_ORDERS,
+                  APP_SCREENS.MORE,
+                ]
+              : undefined
+          }
+        />
       </View>
     </>
   );

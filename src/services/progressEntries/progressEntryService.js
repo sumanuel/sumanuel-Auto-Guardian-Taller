@@ -1,9 +1,16 @@
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { firestore } from "../firebase/config";
+import { auth, firestore } from "../firebase/config";
+import {
+  isMechanicRole,
+  isWorkOrderAssignedToUser,
+} from "../../constants/accessControl";
 import { createEntityRecord } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
 import { getEntityRecord } from "../firestore/repository";
-import { requireActiveWorkshopId } from "../workshops/workshopSession";
+import {
+  getActiveWorkshopSession,
+  requireActiveWorkshopId,
+} from "../workshops/workshopSession";
 
 const progressEntriesCollection = firestoreCollections.progressEntries;
 
@@ -93,6 +100,8 @@ export async function createProgressEntry({
   deliveryClosedOrder,
 }) {
   const workshopId = requireActiveWorkshopId();
+  const activeSession = getActiveWorkshopSession();
+  const currentUid = auth.currentUser?.uid || "";
   const normalizedWorkOrderId = normalizeOptional(workOrderId);
 
   if (!normalizedWorkOrderId) {
@@ -103,6 +112,15 @@ export async function createProgressEntry({
 
   if (!workOrder || workOrder.workshopId !== workshopId) {
     throw new Error("La orden del avance no pertenece al taller activo.");
+  }
+
+  if (
+    isMechanicRole(activeSession?.role) &&
+    !isWorkOrderAssignedToUser(workOrder, currentUid)
+  ) {
+    throw new Error(
+      "Solo puedes registrar avances en ordenes asignadas a tu usuario.",
+    );
   }
 
   return createEntityRecord("progressEntries", {

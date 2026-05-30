@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { hasPermission, isMechanicRole } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
@@ -45,6 +46,11 @@ export default function DiagnosticFormScreen({
 }) {
   const { colors } = useTheme();
   const { activeWorkshop } = useAuth();
+  const isMechanicUser = isMechanicRole(userProfile?.role);
+  const canManageDiagnostics = hasPermission(
+    userProfile?.role,
+    "diagnostics.manage",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [clients, setClients] = useState([]);
   const [mechanics, setMechanics] = useState([]);
@@ -76,6 +82,17 @@ export default function DiagnosticFormScreen({
       }),
     );
   }, [initialDiagnostic, initialDraft]);
+
+  useEffect(() => {
+    if (!isMechanicUser || !userProfile?.uid) {
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      assignedMechanicUid: userProfile.uid,
+    }));
+  }, [isMechanicUser, userProfile?.uid]);
 
   useEffect(() => {
     const loadOptions = async () => {
@@ -535,53 +552,60 @@ export default function DiagnosticFormScreen({
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
               Mecanico asignado
             </Text>
-            <View style={styles.optionWrap}>
-              {mechanics.length ? (
-                mechanics.map((mechanic) => {
-                  const selected = form.assignedMechanicUid === mechanic.uid;
+            {canManageDiagnostics ? (
+              <View style={styles.optionWrap}>
+                {mechanics.length ? (
+                  mechanics.map((mechanic) => {
+                    const selected = form.assignedMechanicUid === mechanic.uid;
 
-                  return (
-                    <Pressable
-                      key={mechanic.uid}
-                      onPress={() =>
-                        setForm((current) => ({
-                          ...current,
-                          assignedMechanicUid: selected ? "" : mechanic.uid,
-                        }))
-                      }
-                      style={[
-                        styles.optionChip,
-                        {
-                          backgroundColor: selected
-                            ? colors.primaryStrong
-                            : colors.cardMuted,
-                          borderColor: selected
-                            ? colors.primaryStrong
-                            : colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
+                    return (
+                      <Pressable
+                        key={mechanic.uid}
+                        onPress={() =>
+                          setForm((current) => ({
+                            ...current,
+                            assignedMechanicUid: selected ? "" : mechanic.uid,
+                          }))
+                        }
                         style={[
-                          styles.optionText,
-                          { color: selected ? colors.white : colors.text },
+                          styles.optionChip,
+                          {
+                            backgroundColor: selected
+                              ? colors.primaryStrong
+                              : colors.cardMuted,
+                            borderColor: selected
+                              ? colors.primaryStrong
+                              : colors.border,
+                          },
                         ]}
                       >
-                        {mechanic.fullName ||
-                          mechanic.email ||
-                          mechanic.userCode}
-                      </Text>
-                    </Pressable>
-                  );
-                })
-              ) : (
-                <Text
-                  style={[styles.helperText, { color: colors.textSecondary }]}
-                >
-                  No hay mecanicos disponibles para asignar.
-                </Text>
-              )}
-            </View>
+                        <Text
+                          style={[
+                            styles.optionText,
+                            { color: selected ? colors.white : colors.text },
+                          ]}
+                        >
+                          {mechanic.fullName ||
+                            mechanic.email ||
+                            mechanic.userCode}
+                        </Text>
+                      </Pressable>
+                    );
+                  })
+                ) : (
+                  <Text
+                    style={[styles.helperText, { color: colors.textSecondary }]}
+                  >
+                    No hay mecanicos disponibles para asignar.
+                  </Text>
+                )}
+              </View>
+            ) : (
+              <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+                Como mecanico, el diagnostico queda asignado a tu usuario y no
+                puedes reasignarlo desde esta pantalla.
+              </Text>
+            )}
           </View>
 
           <View style={styles.formGroup}>

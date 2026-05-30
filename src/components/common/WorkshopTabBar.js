@@ -32,9 +32,12 @@ const tabConfig = [
   },
 ];
 
-export default function WorkshopTabBar({ activeTab, onChange }) {
+export default function WorkshopTabBar({ activeTab, onChange, visibleTabs }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const renderedTabs = Array.isArray(visibleTabs)
+    ? tabConfig.filter((tab) => visibleTabs.includes(tab.key))
+    : tabConfig;
 
   return (
     <View
@@ -56,7 +59,7 @@ export default function WorkshopTabBar({ activeTab, onChange }) {
           },
         ]}
       >
-        {tabConfig.map((tab) => {
+        {renderedTabs.map((tab) => {
           const selected = activeTab === tab.key;
 
           return (

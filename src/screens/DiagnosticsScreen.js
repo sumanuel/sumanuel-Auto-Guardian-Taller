@@ -18,6 +18,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import {
+  isDiagnosticAssignedToUser,
+  isMechanicRole,
+} from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
 import {
@@ -72,9 +76,12 @@ export default function DiagnosticsScreen({
   onBack,
   onOpenDiagnosticForm,
   onOpenWorkOrderForm,
+  userProfile,
   viewState,
 }) {
   const { colors } = useTheme();
+  const isMechanicUser = isMechanicRole(userProfile?.role);
+  const currentUserUid = userProfile?.uid || "";
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
   const [loading, setLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState([]);
@@ -98,6 +105,15 @@ export default function DiagnosticsScreen({
 
   const clientLookup = useMemo(() => buildLookup(clients), [clients]);
   const vehicleLookup = useMemo(() => buildLookup(vehicles), [vehicles]);
+  const visibleDiagnostics = useMemo(
+    () =>
+      isMechanicUser
+        ? diagnostics.filter((diagnostic) =>
+            isDiagnosticAssignedToUser(diagnostic, currentUserUid),
+          )
+        : diagnostics,
+    [currentUserUid, diagnostics, isMechanicUser],
+  );
 
   const refreshData = async () => {
     setLoading(true);
@@ -113,7 +129,12 @@ export default function DiagnosticsScreen({
       setVehicles(nextVehicles);
 
       if (selectedDiagnosticId) {
-        const refreshedDiagnostic = nextDiagnostics.find(
+        const refreshedDiagnostic = (isMechanicUser
+          ? nextDiagnostics.filter((diagnostic) =>
+              isDiagnosticAssignedToUser(diagnostic, currentUserUid),
+            )
+          : nextDiagnostics
+        ).find(
           (item) => getEntityId(item) === selectedDiagnosticId,
         );
 
@@ -148,7 +169,7 @@ export default function DiagnosticsScreen({
       return;
     }
 
-    const matchedDiagnostic = diagnostics.find(
+    const matchedDiagnostic = visibleDiagnostics.find(
       (diagnostic) =>
         getEntityId(diagnostic) === viewState.selectedDiagnosticId,
     );
@@ -159,7 +180,7 @@ export default function DiagnosticsScreen({
 
     setSelectedDiagnostic(matchedDiagnostic);
     setScreenMode(SCREEN_MODES.DETAIL);
-  }, [diagnostics, viewState?.selectedDiagnosticId]);
+  }, [viewState?.selectedDiagnosticId, visibleDiagnostics]);
 
   useEffect(() => {
     if (viewState?.searchQuery === undefined) {
@@ -196,7 +217,7 @@ export default function DiagnosticsScreen({
   const filteredDiagnostics = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return diagnostics.filter((diagnostic) => {
+    return visibleDiagnostics.filter((diagnostic) => {
       if (activeFilter !== "all" && diagnostic.status !== activeFilter) {
         return false;
       }
@@ -236,7 +257,7 @@ export default function DiagnosticsScreen({
     activeFilter,
     clientLookup,
     dateRange,
-    diagnostics,
+    visibleDiagnostics,
     searchQuery,
     vehicleLookup,
   ]);
@@ -627,7 +648,7 @@ export default function DiagnosticsScreen({
                         </Text>
                       </View>
                     ) : null}
-                    {!isClosedDiagnostic ? (
+                    {!isClosedDiagnostic && !isMechanicUser ? (
                       <Pressable
                         onPress={() =>
                           onOpenWorkOrderForm?.(null, {
@@ -735,8 +756,9 @@ export default function DiagnosticsScreen({
             Taller
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            No hay diagnosticos para el filtro actual. Ajusta el estado o
-            registra una nueva revision desde la ficha del cliente.
+            {isMechanicUser
+              ? "No tienes diagnosticos asignados para el filtro actual. Ajusta el estado o espera una nueva asignacion."
+              : "No hay diagnosticos para el filtro actual. Ajusta el estado o registra una nueva revision desde la ficha del cliente."}
           </Text>
         </View>
       )}
@@ -863,7 +885,7 @@ export default function DiagnosticsScreen({
               </Text>
             </Pressable>
           ) : null}
-          {!isClosedDiagnostic ? (
+          {!isClosedDiagnostic && !isMechanicUser ? (
             <Pressable
               onPress={() =>
                 onOpenWorkOrderForm?.(null, {

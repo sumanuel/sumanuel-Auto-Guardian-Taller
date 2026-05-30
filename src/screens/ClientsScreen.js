@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { canManageClients, canManageVehicles } from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { deleteClient, listClients } from "../services/clients/clientService";
 import {
@@ -39,6 +40,9 @@ export default function ClientsScreen({
   viewState,
 }) {
   const { colors } = useTheme();
+  const currentRole = userProfile?.role || "";
+  const canEditClients = canManageClients(currentRole);
+  const canEditVehicles = canManageVehicles(currentRole);
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
   const [clients, setClients] = useState([]);
   const [allVehicles, setAllVehicles] = useState([]);
@@ -435,7 +439,7 @@ export default function ClientsScreen({
                           </Text>
                         </View>
                       ))
-                    ) : (
+                    ) : canEditVehicles ? (
                       <Pressable
                         onPress={() => onOpenVehicleForm?.(client, null)}
                         style={[
@@ -455,46 +459,48 @@ export default function ClientsScreen({
                           Asociar vehiculo ahora
                         </Text>
                       </Pressable>
-                    )}
+                    ) : null}
                   </View>
                 </Pressable>
 
-                <View style={styles.iconActionRow}>
-                  <Pressable
-                    onPress={() =>
-                      onOpenClientForm?.(client, { returnTo: "detail" })
-                    }
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.textTertiary}
-                      name="create-outline"
-                      size={rf(17)}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => handleDeleteClient(client)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.danger}
-                      name="trash-outline"
-                      size={rf(17)}
-                    />
-                  </Pressable>
-                </View>
+                {canEditClients ? (
+                  <View style={styles.iconActionRow}>
+                    <Pressable
+                      onPress={() =>
+                        onOpenClientForm?.(client, { returnTo: "detail" })
+                      }
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.textTertiary}
+                        name="create-outline"
+                        size={rf(17)}
+                      />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => handleDeleteClient(client)}
+                      style={[
+                        styles.iconAction,
+                        {
+                          backgroundColor: colors.cardBackground,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        color={colors.danger}
+                        name="trash-outline"
+                        size={rf(17)}
+                      />
+                    </Pressable>
+                  </View>
+                ) : null}
               </View>
             );
           })}
@@ -515,7 +521,9 @@ export default function ClientsScreen({
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {clients.length
               ? "No hay coincidencias con la busqueda actual. Prueba con otra identificacion o nombre."
-              : "No hay clientes registrados. Usa el boton flotante para abrir la primera ficha de recepcion."}
+              : canEditClients
+                ? "No hay clientes registrados. Usa el boton flotante para abrir la primera ficha de recepcion."
+                : "No hay clientes visibles en este momento."}
           </Text>
         </View>
       )}
@@ -593,18 +601,20 @@ export default function ClientsScreen({
           </Text>
         ) : null}
 
-        <View style={styles.actionRow}>
-          <Pressable
-            onPress={() => onOpenVehicleForm?.(selectedClient, null)}
-            style={[styles.secondaryAction, { borderColor: colors.accent }]}
-          >
-            <Text
-              style={[styles.secondaryActionText, { color: colors.accent }]}
+        {canEditVehicles ? (
+          <View style={styles.actionRow}>
+            <Pressable
+              onPress={() => onOpenVehicleForm?.(selectedClient, null)}
+              style={[styles.secondaryAction, { borderColor: colors.accent }]}
             >
-              Asociar vehiculo
-            </Text>
-          </Pressable>
-        </View>
+              <Text
+                style={[styles.secondaryActionText, { color: colors.accent }]}
+              >
+                Asociar vehiculo
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.sectionHeader}>
@@ -677,69 +687,73 @@ export default function ClientsScreen({
                       ? `${vehicle.mileage} km`
                       : "Sin kilometraje"}
                   </Text>
-                  <Pressable
-                    onPress={() =>
-                      onOpenDiagnosticForm?.(null, {
-                        seedData: {
-                          clientId: selectedClient?.id || "",
-                          vehicleId: vehicle.id || vehicle.refId || "",
+                  {canEditVehicles ? (
+                    <Pressable
+                      onPress={() =>
+                        onOpenDiagnosticForm?.(null, {
+                          seedData: {
+                            clientId: selectedClient?.id || "",
+                            vehicleId: vehicle.id || vehicle.refId || "",
+                          },
+                        })
+                      }
+                      style={[
+                        styles.diagnosticLinkWrap,
+                        {
+                          backgroundColor: colors.cardMuted,
+                          borderColor: colors.border,
                         },
-                      })
-                    }
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.diagnosticLinkText,
+                          { color: colors.accent },
+                        ]}
+                      >
+                        Abrir diagnostico de esta unidad
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              </View>
+
+              {canEditVehicles ? (
+                <View style={styles.iconActionRow}>
+                  <Pressable
+                    onPress={() => onOpenVehicleForm?.(selectedClient, vehicle)}
                     style={[
-                      styles.diagnosticLinkWrap,
+                      styles.iconAction,
                       {
-                        backgroundColor: colors.cardMuted,
+                        backgroundColor: colors.cardBackground,
                         borderColor: colors.border,
                       },
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.diagnosticLinkText,
-                        { color: colors.accent },
-                      ]}
-                    >
-                      Abrir diagnostico de esta unidad
-                    </Text>
+                    <Ionicons
+                      color={colors.textTertiary}
+                      name="create-outline"
+                      size={rf(17)}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleDeleteVehicle(vehicle)}
+                    style={[
+                      styles.iconAction,
+                      {
+                        backgroundColor: colors.cardBackground,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      color={colors.danger}
+                      name="trash-outline"
+                      size={rf(17)}
+                    />
                   </Pressable>
                 </View>
-              </View>
-
-              <View style={styles.iconActionRow}>
-                <Pressable
-                  onPress={() => onOpenVehicleForm?.(selectedClient, vehicle)}
-                  style={[
-                    styles.iconAction,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    color={colors.textTertiary}
-                    name="create-outline"
-                    size={rf(17)}
-                  />
-                </Pressable>
-                <Pressable
-                  onPress={() => handleDeleteVehicle(vehicle)}
-                  style={[
-                    styles.iconAction,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    color={colors.danger}
-                    name="trash-outline"
-                    size={rf(17)}
-                  />
-                </Pressable>
-              </View>
+              ) : null}
             </View>
           ))}
         </View>
@@ -757,8 +771,9 @@ export default function ClientsScreen({
             Vehiculos
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            Este cliente todavia no tiene vehiculos asociados. Registra la
-            unidad para continuar con diagnosticos u ordenes.
+            {canEditVehicles
+              ? "Este cliente todavia no tiene vehiculos asociados. Registra la unidad para continuar con diagnosticos u ordenes."
+              : "Este cliente todavia no tiene vehiculos visibles para tu perfil."}
           </Text>
         </View>
       )}
@@ -779,7 +794,7 @@ export default function ClientsScreen({
           : renderDetailScreen()}
       </ScrollView>
 
-      {screenMode === SCREEN_MODES.LIST ? (
+      {screenMode === SCREEN_MODES.LIST && canEditClients ? (
         <Pressable
           onPress={() => onOpenClientForm?.(null, { returnTo: "list" })}
           style={[

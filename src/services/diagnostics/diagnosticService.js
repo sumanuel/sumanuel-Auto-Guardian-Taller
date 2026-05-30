@@ -6,7 +6,11 @@ import {
   serverTimestamp,
   where,
 } from "firebase/firestore";
-import { firestore } from "../firebase/config";
+import { auth, firestore } from "../firebase/config";
+import {
+  isDiagnosticAssignedToUser,
+  isMechanicRole,
+} from "../../constants/accessControl";
 import {
   createEntityRecord,
   deleteEntityRecord,
@@ -14,7 +18,10 @@ import {
   patchEntityRecord,
 } from "../firestore/repository";
 import { firestoreCollections } from "../firestore/collections";
-import { requireActiveWorkshopId } from "../workshops/workshopSession";
+import {
+  getActiveWorkshopSession,
+  requireActiveWorkshopId,
+} from "../workshops/workshopSession";
 
 const diagnosticsCollection = firestoreCollections.diagnostics;
 const workOrdersCollection = firestoreCollections.workOrders;
@@ -135,6 +142,8 @@ export async function createDiagnostic({
   notes,
 }) {
   const workshopId = requireActiveWorkshopId();
+  const activeSession = getActiveWorkshopSession();
+  const currentUid = auth.currentUser?.uid || "";
   const existingActiveDiagnostic =
     await findActiveDiagnosticByVehicleId(vehicleId);
   const blockingWorkOrder = await findBlockingWorkOrderByVehicleId(vehicleId);
@@ -151,12 +160,16 @@ export async function createDiagnostic({
     );
   }
 
+  const resolvedAssignedMechanicUid = isMechanicRole(activeSession?.role)
+    ? currentUid
+    : normalizeOptional(assignedMechanicUid);
+
   return createEntityRecord("diagnostics", {
     workshopId,
     clientId: normalizeOptional(clientId),
     vehicleId: normalizeOptional(vehicleId),
     openedByUid: normalizeOptional(openedByUid),
-    assignedMechanicUid: normalizeOptional(assignedMechanicUid),
+    assignedMechanicUid: resolvedAssignedMechanicUid,
     status: normalizeOptional(status) || "received",
     concerns: normalizeOptional(concerns),
     serviceItems: normalizeListInput(serviceItemsText),
@@ -169,6 +182,8 @@ export async function createDiagnostic({
 
 export async function updateDiagnostic(diagnosticId, payload) {
   const workshopId = requireActiveWorkshopId();
+  const activeSession = getActiveWorkshopSession();
+  const currentUid = auth.currentUser?.uid || "";
   const currentDiagnostic = await getEntityRecord("diagnostics", diagnosticId);
 
   if (!currentDiagnostic || currentDiagnostic.workshopId !== workshopId) {
@@ -177,6 +192,15 @@ export async function updateDiagnostic(diagnosticId, payload) {
 
   if (isDiagnosticClosed(currentDiagnostic.status)) {
     throw new Error("Este diagnostico ya esta cerrado y no se puede editar.");
+  }
+
+  if (
+    isMechanicRole(activeSession?.role) &&
+    !isDiagnosticAssignedToUser(currentDiagnostic, currentUid)
+  ) {
+    throw new Error(
+      "Solo puedes editar diagnosticos que esten asignados a tu usuario.",
+    );
   }
 
   const existingActiveDiagnostic = await findActiveDiagnosticByVehicleId(
@@ -207,7 +231,9 @@ export async function updateDiagnostic(diagnosticId, payload) {
     workshopId,
     clientId: normalizeOptional(payload.clientId),
     vehicleId: normalizeOptional(payload.vehicleId),
-    assignedMechanicUid: normalizeOptional(payload.assignedMechanicUid),
+    assignedMechanicUid: isMechanicRole(activeSession?.role)
+      ? normalizeOptional(currentDiagnostic.assignedMechanicUid)
+      : normalizeOptional(payload.assignedMechanicUid),
     status: normalizeOptional(payload.status) || "received",
     concerns: normalizeOptional(payload.concerns),
     serviceItems: normalizeListInput(payload.serviceItemsText),
