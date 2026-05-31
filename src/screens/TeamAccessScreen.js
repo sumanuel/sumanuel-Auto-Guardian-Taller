@@ -175,6 +175,11 @@ export default function TeamAccessScreen({
   const canResetWorkshopData = currentRole === USER_ROLES.OWNER;
   const showWorkshopSection = screenMode !== "collaborators";
   const showCollaboratorsSection = screenMode !== "workshop";
+  const canViewWorkshopAdminPanel = canManageWorkshop || canResetWorkshopData;
+  const showWorkshopRestrictedNotice =
+    showWorkshopSection && !canViewWorkshopAdminPanel;
+  const showCollaboratorsRestrictedNotice =
+    showCollaboratorsSection && !canManageCollaborators;
   const [adminRefreshing, setAdminRefreshing] = useState(false);
   const [adminSubmitting, setAdminSubmitting] = useState(false);
   const [resetSubmitting, setResetSubmitting] = useState(false);
@@ -677,7 +682,7 @@ export default function TeamAccessScreen({
           </View>
         </View>
 
-        {showWorkshopSection ? (
+        {showWorkshopSection && canViewWorkshopAdminPanel ? (
           <View
             style={[
               styles.panel,
@@ -1027,6 +1032,27 @@ export default function TeamAccessScreen({
           </View>
         ) : null}
 
+        {showWorkshopRestrictedNotice ? (
+          <View
+            style={[
+              styles.accessNotice,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.panelTitle, { color: colors.text }]}>
+              Gestion del taller restringida
+            </Text>
+            <Text style={[styles.panelText, { color: colors.textSecondary }]}>
+              {currentRole === USER_ROLES.ADMINISTRATOR
+                ? "Tu perfil puede operar el equipo y el flujo diario, pero no cambiar la identidad comercial ni reiniciar la data del taller."
+                : "Este perfil no administra configuracion del taller. Usa esta pantalla solo como contexto del taller activo."}
+            </Text>
+          </View>
+        ) : null}
+
         {showCollaboratorsSection && pendingInvitation ? (
           <View
             style={[
@@ -1067,7 +1093,7 @@ export default function TeamAccessScreen({
           </View>
         ) : null}
 
-        {showCollaboratorsSection && !canManageCollaborators && (
+        {showCollaboratorsRestrictedNotice && (
           <View
             style={[
               styles.accessNotice,
@@ -1081,11 +1107,11 @@ export default function TeamAccessScreen({
               Acceso restringido
             </Text>
             <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-              Esta pantalla abre para todo el equipo, pero la gestion de
-              invitaciones y colaboradores solo esta habilitada para perfiles
-              con permiso administrativo. Esto replica el patron de tienda-app:
-              se entra a la seccion y el control de permisos se resuelve
-              adentro, no con un boton muerto en el home.
+              {currentRole === USER_ROLES.RECEPTION
+                ? "Recepcion no puede emitir invitaciones, aprobar accesos ni editar fichas del equipo."
+                : currentRole === USER_ROLES.MECHANIC
+                  ? "Mecanico no puede gestionar invitaciones ni colaboradores desde esta pantalla."
+                  : "La gestion de invitaciones y colaboradores solo esta habilitada para perfiles con permiso administrativo."}
             </Text>
           </View>
         )}
