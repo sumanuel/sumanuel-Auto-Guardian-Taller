@@ -129,7 +129,14 @@ export function AuthProvider({ children }) {
       return null;
     }
 
-    const profile = await getUserProfileByUid(auth.currentUser.uid);
+    let profile;
+
+    try {
+      profile = await getUserProfileByUid(auth.currentUser.uid);
+    } catch (error) {
+      console.error("Error loading own user profile document:", error);
+      throw error;
+    }
 
     if (!profile) {
       setUserProfile(null);
@@ -166,12 +173,24 @@ export function AuthProvider({ children }) {
       }
 
       try {
-        const profile = await getUserProfileByUid(nextUser.uid);
-        const nextPendingInvitation = await getPendingInvitationByEmail(
-          nextUser.email || "",
-        );
+        let profile = null;
 
-        setPendingInvitation(nextPendingInvitation);
+        try {
+          profile = await getUserProfileByUid(nextUser.uid);
+        } catch (error) {
+          console.error("Error loading own user profile document:", error);
+          throw error;
+        }
+
+        try {
+          const nextPendingInvitation = await getPendingInvitationByEmail(
+            nextUser.email || "",
+          );
+          setPendingInvitation(nextPendingInvitation);
+        } catch (error) {
+          console.error("Error loading pending invitation:", error);
+          setPendingInvitation(null);
+        }
 
         if (!profile) {
           setUserProfile(null);
@@ -180,12 +199,26 @@ export function AuthProvider({ children }) {
           setActiveWorkshop(null);
           clearActiveWorkshopSession();
         } else {
-          const nextContext = await applyWorkshopContext({
-            profile,
-            nextUser,
-          });
-          setUserProfile(nextContext.profile);
-          await touchUserProfileLogin(nextUser.uid);
+          try {
+            const nextContext = await applyWorkshopContext({
+              profile,
+              nextUser,
+            });
+            setUserProfile(nextContext.profile);
+          } catch (error) {
+            console.error("Error loading workshop context:", error);
+            setUserProfile(profile);
+            setMemberships([]);
+            setActiveWorkshopId(null);
+            setActiveWorkshop(null);
+            clearActiveWorkshopSession();
+          }
+
+          try {
+            await touchUserProfileLogin(nextUser.uid);
+          } catch (error) {
+            console.error("Error updating last login timestamp:", error);
+          }
         }
       } catch (error) {
         console.error("Error loading user profile:", error);

@@ -184,19 +184,6 @@ async function hydrateMembership(membership, userContext = {}) {
     normalizeOptional(workshop.name) ||
     normalizeOptional(membership.workshopName);
 
-  if (
-    resolvedWorkshopName &&
-    membership.workshopName !== resolvedWorkshopName
-  ) {
-    await updateDoc(
-      doc(firestore, membershipCollection.name, membership.refId),
-      {
-        workshopName: resolvedWorkshopName,
-        updatedAt: serverTimestamp(),
-      },
-    );
-  }
-
   return {
     ...membership,
     workshopName: resolvedWorkshopName,
@@ -218,19 +205,32 @@ export async function ensureOwnerWorkshopMembershipLinks({ uid, status } = {}) {
     return 0;
   }
 
+  let createdLinks = 0;
+
   await Promise.all(
-    ownedWorkshops.map((workshop) =>
-      upsertWorkshopMembership({
+    ownedWorkshops.map(async (workshop) => {
+      const existingMembership = await getWorkshopMembership(
+        workshop.id,
+        normalizedUserUid,
+      );
+
+      if (existingMembership) {
+        return existingMembership;
+      }
+
+      createdLinks += 1;
+
+      return upsertWorkshopMembership({
         workshopId: workshop.id,
         userUid: normalizedUserUid,
         role: USER_ROLES.OWNER,
         status: normalizeOptional(status) || USER_STATUSES.ACTIVE,
         invitedByUid: normalizedUserUid,
-      }),
-    ),
+      });
+    }),
   );
 
-  return ownedWorkshops.length;
+  return createdLinks;
 }
 
 export function getWorkshopMembershipId(workshopId, userUid) {

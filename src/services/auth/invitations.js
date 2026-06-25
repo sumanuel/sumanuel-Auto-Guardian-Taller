@@ -25,7 +25,18 @@ export async function getInvitationByEmail(email) {
     invitationCollection.name,
     normalizedEmail,
   );
-  const snapshot = await getDoc(documentRef);
+  let snapshot;
+
+  try {
+    snapshot = await getDoc(documentRef);
+  } catch (error) {
+    // During auth bootstrap, missing permission on invitations should not block profile loading.
+    if (error?.code === "permission-denied") {
+      return null;
+    }
+
+    throw error;
+  }
 
   if (!snapshot.exists()) {
     return null;

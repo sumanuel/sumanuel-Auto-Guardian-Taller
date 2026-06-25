@@ -591,6 +591,7 @@ function AppContent() {
                   setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
                   return;
                 }
+                userProfile = { userProfile };
               }
 
               setDiagnosticFormContext({

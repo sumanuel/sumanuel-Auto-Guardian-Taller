@@ -40,6 +40,7 @@ export default function ClientsScreen({
   onOpenClientForm,
   onOpenDiagnosticForm,
   onOpenVehicleForm,
+  userProfile,
   viewState,
 }) {
   const { colors } = useTheme();

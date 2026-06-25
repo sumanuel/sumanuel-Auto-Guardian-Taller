@@ -196,14 +196,15 @@ export default function WorkshopMoreScreen({
   const appVersion = Constants?.expoConfig?.version || "-";
   const activeMembership = getPrimaryMembership(memberships, activeWorkshopId);
   const workshopName = activeWorkshop?.name || activeMembership?.workshopName;
+  const resolvedRole = activeMembership?.role || userProfile?.role || "";
   const roleLabel =
-    activeMembership?.role === "owner"
+    resolvedRole === "owner"
       ? "Propietario"
-      : activeMembership?.role === "administrator"
+      : resolvedRole === "administrator"
         ? "Administrador"
-        : activeMembership?.role === "reception"
+        : resolvedRole === "reception"
           ? "Recepcion"
-          : activeMembership?.role === "mechanic"
+          : resolvedRole === "mechanic"
             ? "Mecanico"
             : "Sin rol";
 

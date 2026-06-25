@@ -18,6 +18,13 @@ service cloud.firestore {
       return /databases/$(database)/documents/staffInvitations/$(invitationId);
     }
 
+    function isOwnInvitationPath(invitationId) {
+      return signedIn()
+        && invitationId is string
+        && request.auth.token.email is string
+        && invitationId == request.auth.token.email.lower();
+    }
+
     function workshopPath(workshopId) {
       return /databases/$(database)/documents/workshops/$(workshopId);
     }
@@ -28,6 +35,12 @@ service cloud.firestore {
 
     function workshopMembershipPath(workshopId, uid) {
       return /databases/$(database)/documents/workshopMemberships/$(workshopMembershipId(workshopId, uid));
+    }
+
+    function isOwnMembershipPath(membershipId) {
+      return signedIn()
+        && membershipId is string
+        && membershipId.matches('^.+__' + currentUid() + '$');
     }
 
     function workOrderPath(workOrderId) {
@@ -431,7 +444,12 @@ service cloud.firestore {
     }
 
     match /workshopMemberships/{membershipId} {
-      allow get, list: if signedIn() && (
+      allow get: if signedIn() && (
+        isOwnMembershipPath(membershipId)
+        || resource.data.userUid == currentUid()
+        || canManageCollaboratorsInWorkshop(resource.data.workshopId)
+      );
+      allow list: if signedIn() && (
         resource.data.userUid == currentUid()
         || canManageCollaboratorsInWorkshop(resource.data.workshopId)
       );
@@ -443,7 +461,9 @@ service cloud.firestore {
     }
 
     match /staffInvitations/{invitationId} {
-      allow get: if (resource.data.workshopId is string && canManageCollaboratorsInWorkshop(resource.data.workshopId)) || (signedIn() && request.auth.token.email == resource.data.email && resource.data.status == 'pending');
+      allow get: if isOwnInvitationPath(invitationId)
+        || (resource.data.workshopId is string && canManageCollaboratorsInWorkshop(resource.data.workshopId))
+        || (signedIn() && request.auth.token.email == resource.data.email && resource.data.status == 'pending');
       allow list: if canManageCollaboratorsInCurrentWorkshop() && resource.data.workshopId == currentWorkshopId();
       allow create: if request.resource.data.workshopId is string
         && canManageCollaboratorsInWorkshop(request.resource.data.workshopId)
