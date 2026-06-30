@@ -23,7 +23,7 @@ export const userProfileModel = {
     "lastLoginAt",
   ],
   defaults: {
-    role: USER_ROLES.MECHANIC,
+    role: USER_ROLES.RECEPTION,
     status: USER_STATUSES.PENDING_APPROVAL,
   },
 };

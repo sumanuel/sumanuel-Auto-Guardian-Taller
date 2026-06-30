@@ -169,10 +169,11 @@ export default function WorkshopHomeScreen({
   onOpenWorkOrderDetail,
   onOpenClients,
   onOpenVehicles,
+  currentRole,
   userProfile,
 }) {
   const { colors } = useTheme();
-  const isMechanicUser = isMechanicRole(userProfile?.role);
+  const isMechanicUser = isMechanicRole(currentRole);
   const currentUserUid = userProfile?.uid || "";
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState([]);

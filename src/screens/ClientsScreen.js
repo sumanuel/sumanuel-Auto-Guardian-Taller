@@ -40,11 +40,11 @@ export default function ClientsScreen({
   onOpenClientForm,
   onOpenDiagnosticForm,
   onOpenVehicleForm,
+  currentRole,
   userProfile,
   viewState,
 }) {
   const { colors } = useTheme();
-  const currentRole = userProfile?.role || "";
   const canEditClients = canManageClients(currentRole);
   const canEditVehicles = canManageVehicles(currentRole);
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);

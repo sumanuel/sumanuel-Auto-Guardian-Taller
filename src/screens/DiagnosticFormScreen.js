@@ -42,13 +42,14 @@ export default function DiagnosticFormScreen({
   initialDraft,
   onBack,
   onSaved,
+  currentRole,
   userProfile,
 }) {
   const { colors } = useTheme();
   const { activeWorkshop } = useAuth();
-  const isMechanicUser = isMechanicRole(userProfile?.role);
+  const isMechanicUser = isMechanicRole(currentRole);
   const canManageDiagnostics = hasPermission(
-    userProfile?.role,
+    currentRole,
     "diagnostics.manage",
   );
   const [submitting, setSubmitting] = useState(false);

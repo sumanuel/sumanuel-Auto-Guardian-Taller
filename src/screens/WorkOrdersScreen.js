@@ -221,11 +221,12 @@ export default function WorkOrdersScreen({
   onOpenSpareParts,
   onOpenSparePartForm,
   onOpenWorkOrderForm,
+  currentRole,
   userProfile,
   viewState,
 }) {
   const { colors } = useTheme();
-  const isMechanicUser = isMechanicRole(userProfile?.role);
+  const isMechanicUser = isMechanicRole(currentRole);
   const currentUserUid = userProfile?.uid || "";
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
   const [loading, setLoading] = useState(false);

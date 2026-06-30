@@ -1,6 +1,6 @@
 # Arquitectura Multi-Taller Auto-Guardian-Taller
 
-Ultima actualizacion: 28-05-2026
+Ultima actualizacion: 30-06-2026
 
 ## Objetivo
 
@@ -222,33 +222,45 @@ Comportamiento esperado:
 
 - Ve y actualiza sus asignaciones y avances operativos.
 
-## UI recomendada
+## UI implementada
 
-### Nueva pantalla o evolucion de TeamAccess
+### WorkshopSetupScreen (nuevo archivo)
 
-La pantalla actual [src/screens/TeamAccessScreen.js](src/screens/TeamAccessScreen.js) debe evolucionar hacia una pantalla tipo `Talleres y colaboradores`.
+[src/screens/WorkshopSetupScreen.js](src/screens/WorkshopSetupScreen.js) — Formulario de configuracion inicial del taller que se muestra automaticamente despues del onboarding cuando el taller no tiene nombre definido (nombre por defecto `"Mi taller"`) o cuando la membresia indica `workshopMissing: true`.
 
-Bloques recomendados:
+Campos:
+- Nombre del taller (obligatorio)
+- Telefono
+- Direccion
+- RIF
 
-- Taller activo
-- Mis talleres
-- Cambiar de taller
-- Crear nuevo taller
-- Invitaciones pendientes para este usuario
-- Miembros del taller activo
-- Invitaciones emitidas por el taller activo
+Comportamiento:
+- Si el usuario presiona "Ahora no", se crea el taller con nombre `"Taller de {nombre}"` y se salta la configuracion.
+- Siempre se puede editar despues desde `Datos del taller` en la pantalla `Mas opciones`.
 
-### Ajustes de navegacion
+### WorkshopManagementScreen (nuevo archivo)
 
-- En `More` debe existir la entrada `Talleres y colaboradores`.
-- El home debe mostrar el nombre del taller activo.
-- Los listados operativos deben recalcularse al cambiar el taller activo.
+[src/screens/WorkshopManagementScreen.js](src/screens/WorkshopManagementScreen.js) — Pantalla tipo selector de talleres, inspirada en `StoreManagementScreen` de tienda-app.
+
+Funcionalidad:
+- Lista todas las membresias del usuario.
+- Muestra el taller activo con badge "Activo".
+- Boton "Entrar" en los talleres inactivos para cambiar el contexto.
+- Muestra el rol del usuario en cada taller.
+- Acceso desde `Mas opciones` mediante la tarjeta "Talleres" que ahora incluye un enlace "Gestionar".
+
+### Flujo de navegacion implementado
+
+- En `More`: la tarjeta de talleres ahora es un `Pressable` que navega a `WorkshopManagementScreen`.
+- El home (`WorkshopHomeScreen`) y los listados (`DiagnosticsScreen`, `WorkOrdersScreen`) usan `currentRole` pasado como prop desde `App.js`, resuelto desde `activeMembership?.role || userProfile?.role`, eliminando el bug donde se usaba `userProfile?.role` directamente.
+- `DiagnosticFormScreen` tambien recibe `currentRole` como prop.
 
 ### Registro y activacion
 
-- Registro publico: crear usuario global y luego crear taller propio.
-- Registro por invitacion: crear usuario global y luego aceptar membresia al taller invitante.
+- Registro publico: crear usuario global, luego crear taller propio.
+- Registro por invitacion: crear usuario global, luego aceptar membresia al taller invitante.
 - Usuario ya autenticado con invitacion pendiente: aceptar y agregar el taller a su lista de membresias.
+- Post-onboarding: si el taller tiene nombre por defecto, se redirige automaticamente a `WorkshopSetupScreen`.
 
 ## Reglas de Firestore recomendadas
 
@@ -325,16 +337,17 @@ Recomendacion practica:
 - Publicar nuevas reglas multi-tenant.
 - Eliminar dependencias del `role` global heredado.
 
-## Orden de implementacion sugerido
+## Orden de implementacion (estado actual: paso 3 completado)
 
-1. Crear el nuevo modelo de datos de talleres y membresias.
-2. Refactorizar `AuthContext` para manejar `activeWorkshopId` y `memberships`.
-3. Crear pantalla `Talleres y colaboradores` con selector de taller activo.
-4. Adaptar invitaciones para apuntar a taller.
-5. Agregar `workshopId` a las entidades operativas y refactorizar servicios.
-6. Ajustar reglas de Firestore.
-7. Ejecutar migracion de datos existentes.
-8. Eliminar dependencias del modelo anterior.
+1. Crear el nuevo modelo de datos de talleres y membresias. ✅ Completado
+2. Refactorizar `AuthContext` para manejar `activeWorkshopId` y `memberships`. ✅ Completado
+3. Crear pantalla `Talleres y colaboradores` con selector de taller activo. ✅ Completado (WorkshopManagementScreen)
+4. Formulario de configuracion inicial del taller post-onboarding. ✅ Completado (WorkshopSetupScreen)
+5. Adaptar invitaciones para apuntar a taller. ✅ Completado
+6. Agregar `workshopId` a las entidades operativas y refactorizar servicios. ✅ Completado
+7. Ajustar reglas de Firestore. ✅ Completado
+8. Ejecutar migracion de datos existentes. ✅ Completado
+9. Eliminar dependencias del modelo anterior (role global como fuente de permisos). ✅ Completado (currentRole desde membership activa)
 
 ## Riesgos principales
 

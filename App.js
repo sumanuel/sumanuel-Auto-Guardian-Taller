@@ -29,6 +29,8 @@ import VehicleFormScreen from "./src/screens/VehicleFormScreen";
 import VehicleHistoryScreen from "./src/screens/VehicleHistoryScreen";
 import VehiclesDirectoryScreen from "./src/screens/VehiclesDirectoryScreen";
 import WorkOrderHistoryTimelineScreen from "./src/screens/WorkOrderHistoryTimelineScreen";
+import WorkshopManagementScreen from "./src/screens/WorkshopManagementScreen";
+import WorkshopSetupScreen from "./src/screens/WorkshopSetupScreen";
 import WorkshopTabBar from "./src/components/common/WorkshopTabBar";
 import { isMechanicRole } from "./src/constants/accessControl";
 import { findActiveDiagnosticByVehicleId } from "./src/services/diagnostics/diagnosticService";
@@ -53,6 +55,8 @@ const APP_SCREENS = {
   WORKSHOP_SETTINGS: "workshop-settings",
   COLLABORATORS: "collaborators",
   MORE: "more",
+  WORKSHOP_MANAGEMENT: "workshop-management",
+  WORKSHOP_SETUP: "workshop-setup",
 };
 
 const ROOT_TABS = new Set([
@@ -140,6 +144,7 @@ function AppContent() {
   });
   const [onboardingReady, setOnboardingReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [workshopSetupPending, setWorkshopSetupPending] = useState(false);
 
   useEffect(() => {
     const loadOnboardingState = async () => {
@@ -153,6 +158,24 @@ function AppContent() {
 
     loadOnboardingState();
   }, []);
+
+  const defaultWorkshopName = activeWorkshop?.name || activeMembership?.workshopName || "";
+  const isDefaultWorkshopName = !defaultWorkshopName || defaultWorkshopName === "Mi taller";
+  const isWorkshopMissing = activeMembership?.workshopMissing;
+
+  useEffect(() => {
+    if (!authReady || !authUser || !userProfile || profileStatus !== "active") {
+      return;
+    }
+
+    if (showOnboarding) {
+      return;
+    }
+
+    if ((isDefaultWorkshopName || isWorkshopMissing) && !workshopSetupPending) {
+      setWorkshopSetupPending(true);
+    }
+  }, [authReady, authUser, userProfile, profileStatus, showOnboarding, isDefaultWorkshopName, isWorkshopMissing, workshopSetupPending]);
 
   const activeTab = useMemo(() => {
     if (ROOT_TABS.has(activeScreen)) {
@@ -427,6 +450,11 @@ function AppContent() {
           return true;
         }
 
+        if (activeScreen === APP_SCREENS.WORKSHOP_MANAGEMENT) {
+          setActiveScreen(APP_SCREENS.MORE);
+          return true;
+        }
+
         if (activeScreen === APP_SCREENS.MORE) {
           setActiveScreen(APP_SCREENS.HOME);
           return true;
@@ -489,6 +517,25 @@ function AppContent() {
           onAcceptInvitation={acceptPendingInvitation}
           onSignOut={signOutUser}
           pendingInvitation={pendingInvitation}
+          userProfile={userProfile}
+        />
+      </>
+    );
+  }
+
+  if (workshopSetupPending) {
+    return (
+      <>
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
+        <WorkshopSetupScreen
+          onBack={() => {
+            setWorkshopSetupPending(false);
+            setActiveScreen(APP_SCREENS.HOME);
+          }}
+          onSaved={() => {
+            setWorkshopSetupPending(false);
+            setActiveScreen(APP_SCREENS.HOME);
+          }}
           userProfile={userProfile}
         />
       </>
@@ -609,6 +656,7 @@ function AppContent() {
               );
             }
           }}
+          currentRole={currentRole}
           userProfile={userProfile}
           viewState={clientsViewState}
         />
@@ -822,6 +870,7 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.WORK_ORDER_FORM);
           }}
+          currentRole={currentRole}
           userProfile={userProfile}
           viewState={diagnosticsViewState}
         />
@@ -872,6 +921,7 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           }}
+          currentRole={currentRole}
           userProfile={userProfile}
         />
       );
@@ -908,6 +958,7 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.WORK_ORDER_FORM);
           }}
+          currentRole={currentRole}
           userProfile={userProfile}
           viewState={workOrdersViewState}
         />
@@ -1034,6 +1085,16 @@ function AppContent() {
       );
     }
 
+    if (activeScreen === APP_SCREENS.WORKSHOP_MANAGEMENT) {
+      return (
+        <WorkshopManagementScreen
+          onBack={() => setActiveScreen(APP_SCREENS.MORE)}
+          currentRole={currentRole}
+          userProfile={userProfile}
+        />
+      );
+    }
+
     if (activeScreen === APP_SCREENS.WORKSHOP_SETTINGS) {
       return (
         <TeamAccessScreen
@@ -1066,6 +1127,9 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.STOCK_ITEMS);
           }}
+          onOpenWorkshopManagement={() =>
+            setActiveScreen(APP_SCREENS.WORKSHOP_MANAGEMENT)
+          }
           onOpenWorkshopSettings={() =>
             setActiveScreen(APP_SCREENS.WORKSHOP_SETTINGS)
           }
@@ -1133,6 +1197,7 @@ function AppContent() {
           setActiveScreen(APP_SCREENS.WORK_ORDERS);
         }}
         onSignOut={signOutUser}
+        currentRole={currentRole}
         userProfile={userProfile}
       />
     );

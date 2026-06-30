@@ -1,6 +1,6 @@
 # Roadmap Auto-Guardian-Taller
 
-Ultima actualizacion: 30-05-2026
+Ultima actualizacion: 30-06-2026
 
 ## Como se actualiza este roadmap
 
@@ -40,8 +40,12 @@ Ultima actualizacion: 30-05-2026
 - Completado: evolucion del modelo inicial a arquitectura multi-taller con workshops, memberships, taller activo, migracion y reglas desplegadas.
 - Completado: gestion del taller activo con nombre, contacto, direccion, RIF, logo, notas comerciales y reinicio de datos operativos.
 - Completado: inventario general de stock y herramientas con CRUD y movimientos de entrada y salida.
-- En progreso: dashboard operativo del home con mejor jerarquia visual, tabs y lectura rapida por diagnosticos y ordenes.
+- Completado: dashboard operativo del home con mejor jerarquia visual, tabs y lectura rapida por diagnosticos y ordenes.
 - Completado: endurecimiento del perfil mecanico para operar solo sobre diagnosticos y ordenes asignadas, sin acceso de gestion sobre clientes, vehiculos, taller ni colaboradores.
+- Completado: fix del bug del perfil mecanico — ahora el rol se resuelve desde `activeMembership?.role` en vez de `userProfile?.role`, permitiendo que un usuario sea OWNER en su taller y MECHANIC en otro sin conflictos.
+- Completado: configuracion de taller `WorkshopSetupScreen` — formulario post-onboarding para definir nombre, telefono, direccion y RIF del taller.
+- Completado: selector de talleres `WorkshopManagementScreen` — pantalla tipo tienda-app para cambiar entre talleres activos.
+- Completado: fix de seguridad — `defaultPublicRole` cambiado de `ADMINISTRATOR` a `RECEPTION`.
 
 ## Fase 0. Fundacion tecnica
 
@@ -173,6 +177,10 @@ Ultima actualizacion: 30-05-2026
 - 28-05-2026: la administracion del taller gana RIF, logo, notas comerciales, PDF con datos del taller activo y un modulo de stock y herramientas con CRUD y movimientos de entrada y salida.
 - 29-05-2026: Mas opciones separa Datos del taller y Colaboradores, la ficha del taller muestra placeholder cuando aun no tiene logo y el home se reorganiza con tabs para Todos, Diagnosticos y Ordenes con una lectura mas clara del flujo operativo.
 - 30-05-2026: el perfil mecanico queda acotado a diagnosticos y ordenes asignadas, el home y los listados operativos filtran por asignacion, y la gestion de clientes, vehiculos, taller y colaboradores deja de estar disponible para ese rol; ademas se revisa el alcance del reinicio del taller para reflejar que conserva identidad comercial, taller y colaboradores.
+- 30-06-2026: fix del bug del perfil mecanico — las pantallas ahora usan `currentRole` (desde `activeMembership?.role`) en vez de `userProfile?.role`, eliminando la inconsistencia al cambiar de taller.
+- 30-06-2026: se crea `WorkshopSetupScreen` — formulario post-onboarding para configurar nombre, telefono, direccion y RIF del taller.
+- 30-06-2026: se crea `WorkshopManagementScreen` — selector de talleres tipo tienda-app, accesible desde `Mas opciones`.
+- 30-06-2026: se corrige `defaultPublicRole` de `ADMINISTRATOR` a `RECEPTION` en `accessControl.js`.
 
 ## Decisiones base cerradas
 

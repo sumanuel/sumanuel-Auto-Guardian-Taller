@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
-import { hasPermission } from "../constants/accessControl";
+import { hasPermission, isMechanicRole } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../utils/responsive";
@@ -185,6 +185,7 @@ export default function WorkshopMoreScreen({
   onOpenCollaborators,
   onOpenOnboarding,
   onOpenStockItems,
+  onOpenWorkshopManagement,
   onOpenWorkshopSettings,
   onSignOut,
   onToggleTheme,
@@ -249,12 +250,13 @@ export default function WorkshopMoreScreen({
           </View>
 
           <View style={styles.heroStats}>
-            <View
+            <Pressable
+              onPress={onOpenWorkshopManagement}
               style={[
                 styles.heroStat,
                 {
                   backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
+                  borderColor: colors.primary,
                 },
               ]}
             >
@@ -266,7 +268,10 @@ export default function WorkshopMoreScreen({
               >
                 Talleres
               </Text>
-            </View>
+              <Text style={[styles.heroStatAction, { color: colors.primary }]}>
+                Gestionar
+              </Text>
+            </Pressable>
             <View
               style={[
                 styles.heroStat,
@@ -578,6 +583,11 @@ const styles = StyleSheet.create({
   heroStatLabel: {
     fontSize: rf(12),
     fontWeight: "600",
+  },
+  heroStatAction: {
+    fontSize: rf(11),
+    fontWeight: "800",
+    marginTop: 2,
   },
   aboutCard: {
     borderWidth: 1,
