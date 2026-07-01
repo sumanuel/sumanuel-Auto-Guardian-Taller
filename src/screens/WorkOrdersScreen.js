@@ -282,13 +282,13 @@ export default function WorkOrdersScreen({
 
     try {
       const [
-        nextOrders,
-        nextClients,
-        nextVehicles,
-        nextDiagnostics,
-        nextStaff,
-        nextSpareParts,
-      ] = await Promise.all([
+        nextOrdersResult,
+        nextClientsResult,
+        nextVehiclesResult,
+        nextDiagnosticsResult,
+        nextStaffResult,
+        nextSparePartsResult,
+      ] = await Promise.allSettled([
         listWorkOrders(),
         listClients(),
         listVehicles(),
@@ -296,6 +296,29 @@ export default function WorkOrdersScreen({
         listStaffProfiles(),
         listSpareParts(),
       ]);
+
+      if (nextOrdersResult.status !== "fulfilled") {
+        throw nextOrdersResult.reason;
+      }
+
+      const nextOrders = nextOrdersResult.value;
+      const nextClients =
+        nextClientsResult.status === "fulfilled" ? nextClientsResult.value : [];
+      const nextVehicles =
+        nextVehiclesResult.status === "fulfilled"
+          ? nextVehiclesResult.value
+          : [];
+      const nextDiagnostics =
+        nextDiagnosticsResult.status === "fulfilled"
+          ? nextDiagnosticsResult.value
+          : [];
+      const nextStaff =
+        nextStaffResult.status === "fulfilled" ? nextStaffResult.value : [];
+      const nextSpareParts =
+        nextSparePartsResult.status === "fulfilled"
+          ? nextSparePartsResult.value
+          : [];
+
       setWorkOrders(nextOrders);
       setClients(nextClients);
       setVehicles(nextVehicles);
@@ -320,6 +343,7 @@ export default function WorkOrdersScreen({
         }
       }
     } catch (error) {
+      console.error("WorkOrdersScreen refresh failed:", error);
       Alert.alert(
         "Ordenes",
         "No se pudo cargar el tablero operativo de ordenes.",

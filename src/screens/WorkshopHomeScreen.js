@@ -200,18 +200,46 @@ export default function WorkshopHomeScreen({
     setLoading(true);
 
     try {
-      const [nextClients, nextVehicles, nextDiagnostics, nextWorkOrders] =
-        await Promise.all([
-          listClients(),
-          listVehicles(),
-          listDiagnostics(),
-          listWorkOrders(),
-        ]);
+      const [
+        nextClientsResult,
+        nextVehiclesResult,
+        nextDiagnosticsResult,
+        nextWorkOrdersResult,
+      ] = await Promise.allSettled([
+        listClients(),
+        listVehicles(),
+        listDiagnostics(),
+        listWorkOrders(),
+      ]);
+
+      if (
+        nextDiagnosticsResult.status !== "fulfilled" &&
+        nextWorkOrdersResult.status !== "fulfilled"
+      ) {
+        throw nextWorkOrdersResult.reason || nextDiagnosticsResult.reason;
+      }
+
+      const nextClients =
+        nextClientsResult.status === "fulfilled" ? nextClientsResult.value : [];
+      const nextVehicles =
+        nextVehiclesResult.status === "fulfilled"
+          ? nextVehiclesResult.value
+          : [];
+      const nextDiagnostics =
+        nextDiagnosticsResult.status === "fulfilled"
+          ? nextDiagnosticsResult.value
+          : [];
+      const nextWorkOrders =
+        nextWorkOrdersResult.status === "fulfilled"
+          ? nextWorkOrdersResult.value
+          : [];
+
       setClients(nextClients);
       setVehicles(nextVehicles);
       setDiagnostics(nextDiagnostics);
       setWorkOrders(nextWorkOrders);
     } catch (error) {
+      console.error("WorkshopHomeScreen refresh failed:", error);
       Alert.alert(
         "Home",
         "No se pudo refrescar la agenda operativa del taller.",
