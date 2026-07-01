@@ -438,14 +438,12 @@ export async function listWorkshopMemberships(workshopId) {
 export async function ensurePersonalWorkshopForUser({ uid, fullName, email }) {
   const existingMemberships = await listRawUserWorkshopMemberships(uid);
 
-  if (existingMemberships.length) {
-    const firstMembership = existingMemberships[0];
-    const workshop = await getWorkshopById(firstMembership.workshopId);
+  for (const membership of existingMemberships) {
+    const workshop = await getWorkshopById(membership.workshopId);
 
-    return {
-      workshop,
-      membership: firstMembership,
-    };
+    if (workshop) {
+      return { workshop, membership };
+    }
   }
 
   const workshop = await createWorkshop({

@@ -17,7 +17,7 @@ import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
-  createWorkshop,
+  ensurePersonalWorkshopForUser,
   updateWorkshop,
 } from "../services/workshops/workshopService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
@@ -42,19 +42,16 @@ export default function WorkshopSetupScreen({ onBack, onSaved, userProfile }) {
     setSubmitting(true);
     try {
       if (!activeWorkshopId) {
-        await createWorkshop({
-          name: userProfile?.fullName ? `Taller de ${userProfile.fullName}` : "Mi taller",
-          ownerUserUid: userProfile?.uid,
-          phone: "",
-          email: userProfile?.email || "",
-          address: "",
-          rif: "",
+        await ensurePersonalWorkshopForUser({
+          uid: userProfile?.uid,
+          fullName: userProfile?.fullName,
+          email: userProfile?.email,
         });
       }
       await refreshWorkshopContext();
       onSaved?.();
     } catch (error) {
-      Alert.alert("Taller", "No se pudo configurar el taller.");
+      Alert.alert("Taller", error?.message || "No se pudo configurar el taller.");
     } finally {
       setSubmitting(false);
     }
@@ -69,14 +66,19 @@ export default function WorkshopSetupScreen({ onBack, onSaved, userProfile }) {
     setSubmitting(true);
     try {
       if (!activeWorkshopId) {
-        await createWorkshop({
-          name: name.trim(),
-          ownerUserUid: userProfile?.uid,
-          phone: phone.trim(),
-          email: userProfile?.email || "",
-          address: address.trim(),
-          rif: rif.trim(),
+        const { workshop } = await ensurePersonalWorkshopForUser({
+          uid: userProfile?.uid,
+          fullName: userProfile?.fullName,
+          email: userProfile?.email,
         });
+        if (workshop?.id) {
+          await updateWorkshop(workshop.id, {
+            name: name.trim(),
+            phone: phone.trim(),
+            address: address.trim(),
+            rif: rif.trim(),
+          });
+        }
       } else {
         await updateWorkshop(activeWorkshopId, {
           name: name.trim(),

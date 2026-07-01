@@ -71,6 +71,7 @@ function AppContent() {
   const { isDarkMode, toggleTheme } = useTheme();
   const {
     acceptPendingInvitation,
+    activeWorkshop,
     activeWorkshopId,
     authUser,
     authReady,
@@ -159,9 +160,9 @@ function AppContent() {
     loadOnboardingState();
   }, []);
 
+  const hasActiveWorkshop = Boolean(activeWorkshopId) && activeMembership && !activeMembership.workshopMissing;
   const defaultWorkshopName = activeWorkshop?.name || activeMembership?.workshopName || "";
-  const isDefaultWorkshopName = !defaultWorkshopName || defaultWorkshopName === "Mi taller";
-  const isWorkshopMissing = activeMembership?.workshopMissing;
+  const needsWorkshopSetup = !hasActiveWorkshop || !defaultWorkshopName || defaultWorkshopName === "Mi taller" || activeMembership?.workshopMissing;
 
   useEffect(() => {
     if (!authReady || !authUser || !userProfile || profileStatus !== "active") {
@@ -172,10 +173,10 @@ function AppContent() {
       return;
     }
 
-    if ((isDefaultWorkshopName || isWorkshopMissing) && !workshopSetupPending) {
+    if (needsWorkshopSetup && !workshopSetupPending) {
       setWorkshopSetupPending(true);
     }
-  }, [authReady, authUser, userProfile, profileStatus, showOnboarding, isDefaultWorkshopName, isWorkshopMissing, workshopSetupPending]);
+  }, [authReady, authUser, userProfile, profileStatus, showOnboarding, needsWorkshopSetup, workshopSetupPending]);
 
   const activeTab = useMemo(() => {
     if (ROOT_TABS.has(activeScreen)) {
