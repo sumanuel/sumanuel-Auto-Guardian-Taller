@@ -79,25 +79,14 @@ export const workOrderStatusOptions = [
 
 export async function listWorkOrders() {
   const activeWorkshopId = requireActiveWorkshopId();
-  const activeSession = getActiveWorkshopSession();
-  const currentUid = auth.currentUser?.uid || "";
   const collectionRef = collection(firestore, workOrdersCollection.name);
-
-  const snapshot =
-    isMechanicRole(activeSession?.role) && currentUid
-      ? await getDocs(
-          query(
-            collectionRef,
-            where("assignedMechanicUids", "array-contains", currentUid),
-          ),
-        )
-      : await getDocs(
-          query(
-            collectionRef,
-            where("workshopId", "==", activeWorkshopId),
-            orderBy("sequentialId", "desc"),
-          ),
-        );
+  const snapshot = await getDocs(
+    query(
+      collectionRef,
+      where("workshopId", "==", activeWorkshopId),
+      orderBy("sequentialId", "desc"),
+    ),
+  );
 
   return snapshot.docs
     .map((item) => ({

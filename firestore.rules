@@ -412,7 +412,8 @@ service cloud.firestore {
     }
 
     function canReadWorkOrder(workOrderData) {
-      return canManageWorkshopEntity(workOrderData.workshopId)
+      return canReadWorkshopEntity(workOrderData.workshopId)
+        || canManageWorkshopEntity(workOrderData.workshopId)
         || isAssignedMechanicInList(workOrderData.assignedMechanicUids);
     }
 
