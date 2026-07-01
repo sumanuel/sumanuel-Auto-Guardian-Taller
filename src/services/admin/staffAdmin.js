@@ -62,6 +62,36 @@ function sortProfiles(items) {
   });
 }
 
+function isPermissionDeniedError(error) {
+  return error?.code === "permission-denied";
+}
+
+async function getCurrentUserProfileForActiveWorkshop(activeWorkshopId) {
+  const currentUserUid = auth.currentUser?.uid || "";
+
+  if (!activeWorkshopId || !currentUserUid) {
+    return [];
+  }
+
+  const [membership, profile] = await Promise.all([
+    getWorkshopMembership(activeWorkshopId, currentUserUid),
+    getUserProfileByUid(currentUserUid),
+  ]);
+
+  if (!membership || !profile) {
+    return [];
+  }
+
+  return [
+    {
+      ...profile,
+      role: membership.role || profile.role,
+      membershipStatus: membership.status,
+      workshopId: membership.workshopId,
+    },
+  ];
+}
+
 async function listProfilesForActiveWorkshop() {
   const activeWorkshopId = getActiveWorkshopId();
 
@@ -69,23 +99,33 @@ async function listProfilesForActiveWorkshop() {
     return [];
   }
 
-  const memberships = await listWorkshopMemberships(activeWorkshopId);
-  const profiles = await Promise.all(
-    memberships.map(async (membership) => {
-      const profile = await getUserProfileByUid(membership.userUid);
+  let profiles;
 
-      if (!profile) {
-        return null;
-      }
+  try {
+    const memberships = await listWorkshopMemberships(activeWorkshopId);
+    profiles = await Promise.all(
+      memberships.map(async (membership) => {
+        const profile = await getUserProfileByUid(membership.userUid);
 
-      return {
-        ...profile,
-        role: membership.role || profile.role,
-        membershipStatus: membership.status,
-        workshopId: membership.workshopId,
-      };
-    }),
-  );
+        if (!profile) {
+          return null;
+        }
+
+        return {
+          ...profile,
+          role: membership.role || profile.role,
+          membershipStatus: membership.status,
+          workshopId: membership.workshopId,
+        };
+      }),
+    );
+  } catch (error) {
+    if (!isPermissionDeniedError(error)) {
+      throw error;
+    }
+
+    profiles = await getCurrentUserProfileForActiveWorkshop(activeWorkshopId);
+  }
 
   return sortProfiles(
     profiles

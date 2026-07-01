@@ -60,19 +60,33 @@ export function isDiagnosticClosed(status) {
 
 export async function listDiagnostics() {
   const activeWorkshopId = requireActiveWorkshopId();
+  const activeSession = getActiveWorkshopSession();
+  const currentUid = auth.currentUser?.uid || "";
   const collectionRef = collection(firestore, diagnosticsCollection.name);
-  const snapshot = await getDocs(
-    query(
-      collectionRef,
-      where("workshopId", "==", activeWorkshopId),
-      orderBy("sequentialId", "desc"),
-    ),
-  );
 
-  return snapshot.docs.map((item) => ({
-    refId: item.id,
-    ...item.data(),
-  }));
+  const snapshot =
+    isMechanicRole(activeSession?.role) && currentUid
+      ? await getDocs(
+          query(collectionRef, where("assignedMechanicUid", "==", currentUid)),
+        )
+      : await getDocs(
+          query(
+            collectionRef,
+            where("workshopId", "==", activeWorkshopId),
+            orderBy("sequentialId", "desc"),
+          ),
+        );
+
+  return snapshot.docs
+    .map((item) => ({
+      refId: item.id,
+      ...item.data(),
+    }))
+    .filter((item) => normalizeOptional(item.workshopId) === activeWorkshopId)
+    .sort(
+      (left, right) =>
+        (Number(right.sequentialId) || 0) - (Number(left.sequentialId) || 0),
+    );
 }
 
 export async function findActiveDiagnosticByVehicleId(
