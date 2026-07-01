@@ -32,6 +32,27 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
   const [address, setAddress] = useState("");
   const [rif, setRif] = useState("");
 
+  const ensureWorkshop = async (workshopName) => {
+    const workshop = await createWorkshop({
+      name: workshopName,
+      ownerUserUid: userProfile?.uid,
+      phone: phone.trim(),
+      email: userProfile?.email || "",
+      address: address.trim(),
+      rif: rif.trim(),
+    });
+
+    await upsertWorkshopMembership({
+      workshopId: workshop.id,
+      userUid: userProfile?.uid,
+      role: USER_ROLES.OWNER,
+      status: "active",
+      invitedByUid: userProfile?.uid,
+    });
+
+    return workshop;
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert("Taller", "Ingresa el nombre del taller.");
@@ -40,27 +61,27 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
 
     setSubmitting(true);
     try {
-      const workshop = await createWorkshop({
-        name: name.trim(),
-        ownerUserUid: userProfile?.uid,
-        phone: phone.trim(),
-        email: userProfile?.email || "",
-        address: address.trim(),
-        rif: rif.trim(),
-      });
-
-      await upsertWorkshopMembership({
-        workshopId: workshop.id,
-        userUid: userProfile?.uid,
-        role: USER_ROLES.OWNER,
-        status: "active",
-        invitedByUid: userProfile?.uid,
-      });
-
-      await refreshWorkshopContext(workshop.id);
+      await ensureWorkshop(name.trim());
+      await refreshWorkshopContext();
       onSaved?.();
     } catch (error) {
       Alert.alert("Taller", error?.message || "No se pudo guardar la informacion del taller.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    setSubmitting(true);
+    try {
+      const defaultName = userProfile?.fullName
+        ? `Taller de ${userProfile.fullName}`
+        : "Mi taller";
+      await ensureWorkshop(defaultName);
+      await refreshWorkshopContext();
+      onSaved?.();
+    } catch (error) {
+      Alert.alert("Taller", error?.message || "No se pudo configurar el taller.");
     } finally {
       setSubmitting(false);
     }
@@ -206,7 +227,7 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
           ) : (
             <View style={styles.actionRow}>
               <Pressable
-                onPress={() => onSaved?.()}
+                onPress={handleSkip}
                 style={[
                   styles.secondaryAction,
                   {

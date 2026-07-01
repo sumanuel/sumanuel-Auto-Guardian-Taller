@@ -23,7 +23,7 @@ const roleLabels = {
   mechanic: "Mecanico",
 };
 
-export default function WorkshopManagementScreen({ onBack }) {
+export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
   const { colors } = useTheme();
   const {
     activeWorkshopId,
@@ -41,6 +41,7 @@ export default function WorkshopManagementScreen({ onBack }) {
     setSwitchingId(workshopId);
     try {
       await switchWorkshop(workshopId);
+      onSwitchWorkshop?.();
     } catch (error) {
       Alert.alert(
         "Talleres",

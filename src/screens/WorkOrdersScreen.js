@@ -19,6 +19,7 @@ import {
   isMechanicRole,
   isWorkOrderAssignedToUser,
 } from "../constants/accessControl";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { listStaffProfiles } from "../services/admin/staffAdmin";
 import { listClients } from "../services/clients/clientService";
@@ -226,6 +227,7 @@ export default function WorkOrdersScreen({
   viewState,
 }) {
   const { colors } = useTheme();
+  const { activeWorkshopId } = useAuth();
   const isMechanicUser = isMechanicRole(currentRole);
   const currentUserUid = userProfile?.uid || "";
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
@@ -329,7 +331,7 @@ export default function WorkOrdersScreen({
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [activeWorkshopId]);
 
   useEffect(() => {
     if (!viewState?.selectedWorkOrderId) {

@@ -533,20 +533,7 @@ export async function resolveUserWorkshopContext({
 
   if (!selectionPool.length) {
     return {
-      memberships: [],
-      activeMembership: null,
-      activeWorkshop: null,
-      requiresWorkshopSetup: true,
-    };
-  }
-
-  const hasOwner = selectionPool.some(
-    (membership) => membership.role === USER_ROLES.OWNER,
-  );
-
-  if (!hasOwner) {
-    return {
-      memberships: selectionPool,
+      memberships: orderedMemberships,
       activeMembership: null,
       activeWorkshop: null,
       requiresWorkshopSetup: true,

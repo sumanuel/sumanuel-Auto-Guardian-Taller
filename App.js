@@ -511,8 +511,10 @@ function AppContent() {
       <>
         <StatusBar style={isDarkMode ? "light" : "dark"} />
         <WorkshopSetupScreen
-          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
-          onSaved={() => setActiveScreen(APP_SCREENS.HOME)}
+          onSaved={async () => {
+            await refreshWorkshopContext();
+            setActiveScreen(APP_SCREENS.HOME);
+          }}
           userProfile={userProfile}
         />
       </>
@@ -1066,6 +1068,7 @@ function AppContent() {
       return (
         <WorkshopManagementScreen
           onBack={() => setActiveScreen(APP_SCREENS.MORE)}
+          onSwitchWorkshop={() => setActiveScreen(APP_SCREENS.HOME)}
           currentRole={currentRole}
           userProfile={userProfile}
         />

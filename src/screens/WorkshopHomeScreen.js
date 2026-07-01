@@ -18,6 +18,7 @@ import {
   isMechanicRole,
   isWorkOrderAssignedToUser,
 } from "../constants/accessControl";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
 import {
@@ -173,6 +174,7 @@ export default function WorkshopHomeScreen({
   userProfile,
 }) {
   const { colors } = useTheme();
+  const { activeWorkshopId } = useAuth();
   const isMechanicUser = isMechanicRole(currentRole);
   const currentUserUid = userProfile?.uid || "";
   const [loading, setLoading] = useState(false);
@@ -221,7 +223,7 @@ export default function WorkshopHomeScreen({
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [activeWorkshopId]);
 
   useEffect(() => {
     if (selectedType === "all") {

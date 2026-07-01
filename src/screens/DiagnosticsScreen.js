@@ -22,6 +22,7 @@ import {
   isDiagnosticAssignedToUser,
   isMechanicRole,
 } from "../constants/accessControl";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
 import {
@@ -81,6 +82,7 @@ export default function DiagnosticsScreen({
   viewState,
 }) {
   const { colors } = useTheme();
+  const { activeWorkshopId } = useAuth();
   const isMechanicUser = isMechanicRole(currentRole);
   const currentUserUid = userProfile?.uid || "";
   const [screenMode, setScreenMode] = useState(SCREEN_MODES.LIST);
@@ -157,7 +159,7 @@ export default function DiagnosticsScreen({
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [activeWorkshopId]);
 
   useEffect(() => {
     if (!viewState?.selectedDiagnosticId) {

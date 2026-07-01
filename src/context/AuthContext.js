@@ -309,7 +309,20 @@ export function AuthProvider({ children }) {
         role: selectedMembership.role,
       });
 
-      await refreshWorkshopContext(selectedMembership.workshopId);
+      try {
+        await refreshWorkshopContext(selectedMembership.workshopId);
+      } catch (error) {
+        console.error("Error switching workshop:", error);
+      }
+
+      setRequiresWorkshopSetup(false);
+      setActiveWorkshopSession({
+        workshopId: selectedMembership.workshopId,
+        workshopName: selectedMembership.workshopName || "Taller",
+        role: selectedMembership.role,
+      });
+      setActiveWorkshopId(selectedMembership.workshopId);
+      setActiveWorkshop(selectedMembership.workshop || null);
     } finally {
       setAuthBusy(false);
     }
