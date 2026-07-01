@@ -13,7 +13,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { USER_ROLES } from "../constants/accessControl";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
   createWorkshop,
@@ -23,6 +25,7 @@ import { borderRadius, rf, spacing } from "../utils/responsive";
 
 export default function WorkshopSetupScreen({ onSaved, userProfile }) {
   const { colors } = useTheme();
+  const { refreshWorkshopContext } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -49,11 +52,12 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
       await upsertWorkshopMembership({
         workshopId: workshop.id,
         userUid: userProfile?.uid,
-        role: "owner",
+        role: USER_ROLES.OWNER,
         status: "active",
         invitedByUid: userProfile?.uid,
       });
 
+      await refreshWorkshopContext(workshop.id);
       onSaved?.();
     } catch (error) {
       Alert.alert("Taller", error?.message || "No se pudo guardar la informacion del taller.");
