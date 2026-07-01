@@ -77,6 +77,7 @@ function AppContent() {
     authReady,
     memberships,
     pendingInvitation,
+    requiresWorkshopSetup,
     signOutUser,
     userProfile,
   } = useAuth();
@@ -145,7 +146,6 @@ function AppContent() {
   });
   const [onboardingReady, setOnboardingReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [workshopSetupPending, setWorkshopSetupPending] = useState(false);
 
   useEffect(() => {
     const loadOnboardingState = async () => {
@@ -159,24 +159,6 @@ function AppContent() {
 
     loadOnboardingState();
   }, []);
-
-  const hasActiveWorkshop = Boolean(activeWorkshopId) && activeMembership && !activeMembership.workshopMissing;
-  const defaultWorkshopName = activeWorkshop?.name || activeMembership?.workshopName || "";
-  const needsWorkshopSetup = !hasActiveWorkshop || !defaultWorkshopName || defaultWorkshopName === "Mi taller" || activeMembership?.workshopMissing;
-
-  useEffect(() => {
-    if (!authReady || !authUser || !userProfile || profileStatus !== "active") {
-      return;
-    }
-
-    if (showOnboarding) {
-      return;
-    }
-
-    if (needsWorkshopSetup && !workshopSetupPending) {
-      setWorkshopSetupPending(true);
-    }
-  }, [authReady, authUser, userProfile, profileStatus, showOnboarding, needsWorkshopSetup, workshopSetupPending]);
 
   const activeTab = useMemo(() => {
     if (ROOT_TABS.has(activeScreen)) {
@@ -524,19 +506,13 @@ function AppContent() {
     );
   }
 
-  if (workshopSetupPending) {
+  if (requiresWorkshopSetup) {
     return (
       <>
         <StatusBar style={isDarkMode ? "light" : "dark"} />
         <WorkshopSetupScreen
-          onBack={() => {
-            setWorkshopSetupPending(false);
-            setActiveScreen(APP_SCREENS.HOME);
-          }}
-          onSaved={() => {
-            setWorkshopSetupPending(false);
-            setActiveScreen(APP_SCREENS.HOME);
-          }}
+          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onSaved={() => setActiveScreen(APP_SCREENS.HOME)}
           userProfile={userProfile}
         />
       </>

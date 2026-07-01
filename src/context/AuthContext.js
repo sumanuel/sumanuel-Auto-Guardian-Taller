@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../services/firebase/config";
+import { USER_ROLES } from "../constants/accessControl";
 import {
   acceptPendingInvitationForCurrentUser,
   registerUserFromInvitation,
@@ -37,6 +38,7 @@ export function AuthProvider({ children }) {
   const [activeWorkshop, setActiveWorkshop] = useState(null);
   const [pendingInvitation, setPendingInvitation] = useState(null);
   const [authBusy, setAuthBusy] = useState(false);
+  const [requiresWorkshopSetup, setRequiresWorkshopSetup] = useState(false);
 
   const applyWorkshopContext = async ({
     profile,
@@ -68,24 +70,21 @@ export function AuthProvider({ children }) {
       membershipStatus: profile.status,
     });
 
-    if (!nextContext.memberships.length) {
-      const bootstrapResult = await ensurePersonalWorkshopForUser({
-        uid: nextUser.uid,
-        fullName: profile.fullName,
-        email: profile.email,
-      });
-
-      nextContext = {
-        memberships: [bootstrapResult.membership],
-        activeMembership: bootstrapResult.membership,
-        activeWorkshop: bootstrapResult.workshop,
+    if (nextContext.requiresWorkshopSetup || !nextContext.memberships.length) {
+      setRequiresWorkshopSetup(true);
+      setMemberships([]);
+      setActiveWorkshopId(null);
+      setActiveWorkshop(null);
+      clearActiveWorkshopSession();
+      return {
+        profile,
+        memberships: [],
+        activeWorkshopId: null,
+        activeWorkshop: null,
       };
     }
 
-    const {
-      activeMembership: selectedMembership,
-      activeWorkshop: nextWorkshop,
-    } = nextContext;
+    const { activeMembership: selectedMembership, activeWorkshop: nextWorkshop } = nextContext;
 
     if (
       selectedMembership &&
@@ -153,7 +152,11 @@ export function AuthProvider({ children }) {
       preferredWorkshopId,
     });
 
-    setUserProfile(nextContext.profile);
+    if (!nextContext || nextContext.requiresWorkshopSetup === undefined) {
+      setRequiresWorkshopSetup(false);
+    }
+
+    setUserProfile(nextContext?.profile || profile);
     return nextContext;
   };
 
@@ -386,6 +389,7 @@ export function AuthProvider({ children }) {
       authUser,
       memberships,
       pendingInvitation,
+      requiresWorkshopSetup,
       createWorkshop,
       refreshWorkshopContext,
       renameActiveWorkshop,
@@ -405,6 +409,7 @@ export function AuthProvider({ children }) {
       authUser,
       memberships,
       pendingInvitation,
+      requiresWorkshopSetup,
       userProfile,
     ],
   );

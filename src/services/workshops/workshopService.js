@@ -438,7 +438,17 @@ export async function listWorkshopMemberships(workshopId) {
 export async function ensurePersonalWorkshopForUser({ uid, fullName, email }) {
   const existingMemberships = await listRawUserWorkshopMemberships(uid);
 
-  for (const membership of existingMemberships) {
+  const sortedMemberships = sortMemberships(existingMemberships);
+
+  for (const membership of sortedMemberships) {
+    const workshop = await getWorkshopById(membership.workshopId);
+
+    if (workshop && membership.role === USER_ROLES.OWNER) {
+      return { workshop, membership };
+    }
+  }
+
+  for (const membership of sortedMemberships) {
     const workshop = await getWorkshopById(membership.workshopId);
 
     if (workshop) {
@@ -521,6 +531,28 @@ export async function resolveUserWorkshopContext({
     ? accessibleMemberships
     : orderedMemberships.filter((membership) => !membership.workshopMissing);
 
+  if (!selectionPool.length) {
+    return {
+      memberships: [],
+      activeMembership: null,
+      activeWorkshop: null,
+      requiresWorkshopSetup: true,
+    };
+  }
+
+  const hasOwner = selectionPool.some(
+    (membership) => membership.role === USER_ROLES.OWNER,
+  );
+
+  if (!hasOwner) {
+    return {
+      memberships: selectionPool,
+      activeMembership: null,
+      activeWorkshop: null,
+      requiresWorkshopSetup: true,
+    };
+  }
+
   const normalizedPreferredWorkshopId = normalizeOptional(preferredWorkshopId);
   const normalizedDefaultWorkshopId = normalizeOptional(defaultWorkshopId);
   const activeMembership =
@@ -538,5 +570,6 @@ export async function resolveUserWorkshopContext({
     memberships: orderedMemberships,
     activeMembership,
     activeWorkshop: activeMembership?.workshop || null,
+    requiresWorkshopSetup: false,
   };
 }

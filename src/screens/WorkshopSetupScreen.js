@@ -14,48 +14,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
-import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
-  ensurePersonalWorkshopForUser,
-  updateWorkshop,
+  createWorkshop,
+  upsertWorkshopMembership,
 } from "../services/workshops/workshopService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
-export default function WorkshopSetupScreen({ onBack, onSaved, userProfile }) {
+export default function WorkshopSetupScreen({ onSaved, userProfile }) {
   const { colors } = useTheme();
-  const { activeWorkshop, activeWorkshopId, memberships, refreshWorkshopContext } = useAuth();
   const [submitting, setSubmitting] = useState(false);
-  const [name, setName] = useState(activeWorkshop?.name || "");
-  const [phone, setPhone] = useState(activeWorkshop?.phone || "");
-  const [address, setAddress] = useState(activeWorkshop?.address || "");
-  const [rif, setRif] = useState(activeWorkshop?.rif || "");
-
-  const alreadyHasWorkshop = activeWorkshop && activeWorkshop.name && activeWorkshop.name !== "Mi taller";
-
-  const handleSkip = async () => {
-    if (alreadyHasWorkshop) {
-      onSaved?.();
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      if (!activeWorkshopId) {
-        await ensurePersonalWorkshopForUser({
-          uid: userProfile?.uid,
-          fullName: userProfile?.fullName,
-          email: userProfile?.email,
-        });
-      }
-      await refreshWorkshopContext();
-      onSaved?.();
-    } catch (error) {
-      Alert.alert("Taller", error?.message || "No se pudo configurar el taller.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [rif, setRif] = useState("");
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -65,29 +37,23 @@ export default function WorkshopSetupScreen({ onBack, onSaved, userProfile }) {
 
     setSubmitting(true);
     try {
-      if (!activeWorkshopId) {
-        const { workshop } = await ensurePersonalWorkshopForUser({
-          uid: userProfile?.uid,
-          fullName: userProfile?.fullName,
-          email: userProfile?.email,
-        });
-        if (workshop?.id) {
-          await updateWorkshop(workshop.id, {
-            name: name.trim(),
-            phone: phone.trim(),
-            address: address.trim(),
-            rif: rif.trim(),
-          });
-        }
-      } else {
-        await updateWorkshop(activeWorkshopId, {
-          name: name.trim(),
-          phone: phone.trim(),
-          address: address.trim(),
-          rif: rif.trim(),
-        });
-      }
-      await refreshWorkshopContext();
+      const workshop = await createWorkshop({
+        name: name.trim(),
+        ownerUserUid: userProfile?.uid,
+        phone: phone.trim(),
+        email: userProfile?.email || "",
+        address: address.trim(),
+        rif: rif.trim(),
+      });
+
+      await upsertWorkshopMembership({
+        workshopId: workshop.id,
+        userUid: userProfile?.uid,
+        role: "owner",
+        status: "active",
+        invitedByUid: userProfile?.uid,
+      });
+
       onSaved?.();
     } catch (error) {
       Alert.alert("Taller", error?.message || "No se pudo guardar la informacion del taller.");
@@ -110,7 +76,6 @@ export default function WorkshopSetupScreen({ onBack, onSaved, userProfile }) {
           keyboardShouldPersistTaps="handled"
         >
           <WorkshopScreenHeader
-            onBack={alreadyHasWorkshop ? onBack : undefined}
             section="Configuracion inicial"
             subtitle="Define los datos de tu taller para que el equipo y los clientes lo identifiquen correctamente."
             title="Datos del taller"
@@ -237,7 +202,7 @@ export default function WorkshopSetupScreen({ onBack, onSaved, userProfile }) {
           ) : (
             <View style={styles.actionRow}>
               <Pressable
-                onPress={handleSkip}
+                onPress={() => onSaved?.()}
                 style={[
                   styles.secondaryAction,
                   {
@@ -247,7 +212,7 @@ export default function WorkshopSetupScreen({ onBack, onSaved, userProfile }) {
                 ]}
               >
                 <Text style={[styles.secondaryActionText, { color: colors.textSecondary }]}>
-                  {alreadyHasWorkshop ? "Cancelar" : "Ahora no"}
+                  Ahora no
                 </Text>
               </Pressable>
 
@@ -257,7 +222,7 @@ export default function WorkshopSetupScreen({ onBack, onSaved, userProfile }) {
               >
                 <Ionicons color={colors.white} name="save-outline" size={rf(18)} />
                 <Text style={styles.primaryActionText}>
-                  {alreadyHasWorkshop ? "Guardar cambios" : "Configurar taller"}
+                  Configurar taller
                 </Text>
               </Pressable>
             </View>
