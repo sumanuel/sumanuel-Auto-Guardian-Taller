@@ -440,7 +440,7 @@ export default function WorkshopHomeScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right", "bottom"]}
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>

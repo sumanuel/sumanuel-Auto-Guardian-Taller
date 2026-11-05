@@ -1020,7 +1020,9 @@ export default function WorkOrdersScreen({
       ];
     }
 
-    if (status === "ready") {
+    // Una orden entregada también puede reabrirse (el cliente vuelve por un
+    // detalle); la lógica de guardado ya lo permite con una nota En proceso.
+    if (status === "ready" || status === "delivered") {
       return [
         {
           key: "reopen",
@@ -1033,10 +1035,6 @@ export default function WorkOrdersScreen({
         },
         noteAction,
       ];
-    }
-
-    if (status === "delivered") {
-      return [];
     }
 
     return [
@@ -2071,12 +2069,13 @@ export default function WorkOrdersScreen({
           ) : null}
 
           {isMechanicUser && progressForm.type === "note" ? (
-            <View style={styles.filterRow}>
+            <View style={styles.quickPhraseGrid}>
               {quickPhrases.map((phrase) => (
                 <BigChip
                   key={phrase}
                   label={phrase}
                   onPress={() => appendQuickPhrase(phrase)}
+                  style={styles.quickPhraseChip}
                 />
               ))}
             </View>
@@ -2423,7 +2422,7 @@ export default function WorkOrdersScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right", "bottom"]}
+      edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
@@ -2729,6 +2728,8 @@ const styles = StyleSheet.create({
   },
   emptyInlineChipText: { fontSize: rf(11), fontWeight: "700" },
   emptyText: { fontSize: rf(14), lineHeight: rf(21) },
+  quickPhraseGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  quickPhraseChip: { flexBasis: "48%", flexGrow: 1, paddingHorizontal: 8 },
   filterChipLarge: {
     minHeight: 56,
     paddingHorizontal: spacing.lg,

@@ -35,6 +35,7 @@ export default function BigChip({
       ]}
     >
       <Text
+        numberOfLines={2}
         style={[styles.label, { color: selected ? colors.white : colors.text }]}
       >
         {label}
