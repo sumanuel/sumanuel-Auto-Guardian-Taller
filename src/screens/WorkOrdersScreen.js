@@ -1,6 +1,8 @@
 import Slider from "@react-native-community/slider";
 import BigChip from "../components/common/BigChip";
 import ConfirmModal from "../components/common/ConfirmModal";
+import PhotoStrip from "../components/common/PhotoStrip";
+import RequestPartModal from "../components/common/RequestPartModal";
 import StatusActionBar from "../components/common/StatusActionBar";
 import StepperPercent from "../components/common/StepperPercent";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,6 +36,13 @@ import {
   progressEntryTypeOptions,
 } from "../services/progressEntries/progressEntryService";
 import {
+  captureWorkPhoto,
+  MAX_ENTRY_PHOTOS,
+  pickWorkPhoto,
+  uploadWorkOrderPhotos,
+} from "../services/media/photoService";
+import {
+  createSparePart,
   listSpareParts,
   sparePartStatusOptions,
   updateSparePart,
@@ -104,6 +113,7 @@ function createEmptyProgressForm(type = "note", progressPercent = 0) {
     operationalStatus: "",
     progressPercent,
     partUpdates: {},
+    photos: [],
   };
 }
 
@@ -548,7 +558,11 @@ export default function WorkOrdersScreen({
       })
       .filter(Boolean);
 
-    if (activeForm.type === "note" && !activeForm.message.trim()) {
+    if (
+      activeForm.type === "note" &&
+      !activeForm.message.trim() &&
+      !(activeForm.photos || []).length
+    ) {
       Alert.alert("Órdenes", "Describe la nota para registrarla.");
       return;
     }
@@ -596,7 +610,12 @@ export default function WorkOrdersScreen({
     setProgressSubmitting(true);
 
     try {
-      let entryMessage = activeForm.message.trim();
+      const uploadedPhotos = (activeForm.photos || []).length
+        ? await uploadWorkOrderPhotos(selectedWorkOrder.id, activeForm.photos)
+        : [];
+      let entryMessage =
+        activeForm.message.trim() ||
+        (uploadedPhotos.length ? "Foto adjunta." : "");
       let statusSnapshot = selectedWorkOrder.status;
       let statusChangedTo = "";
       let progressPercent = null;
@@ -701,6 +720,7 @@ export default function WorkOrdersScreen({
         progressPercent,
         sparePartUpdates,
         deliveryClosedOrder,
+        photos: uploadedPhotos,
       });
 
       await refreshData();
@@ -731,6 +751,8 @@ export default function WorkOrdersScreen({
     }
   };
 
+  const [partModalVisible, setPartModalVisible] = useState(false);
+  const [partSubmitting, setPartSubmitting] = useState(false);
   const scrollRef = useRef(null);
   const formAnchorY = useRef(0);
   const [pendingAction, setPendingAction] = useState(null);
@@ -783,6 +805,77 @@ export default function WorkOrdersScreen({
       operationalStatus: "in-progress",
       message: "Orden reabierta para continuar el trabajo.",
     };
+  };
+
+  const addPhoto = async (source) => {
+    if ((progressForm.photos || []).length >= MAX_ENTRY_PHOTOS) {
+      Alert.alert(
+        "Fotos",
+        `Puedes adjuntar hasta ${MAX_ENTRY_PHOTOS} fotos por registro.`,
+      );
+      return;
+    }
+
+    try {
+      const uri =
+        source === "camera" ? await captureWorkPhoto() : await pickWorkPhoto();
+
+      if (uri) {
+        setProgressForm((current) => ({
+          ...current,
+          photos: [...(current.photos || []), uri],
+        }));
+      }
+    } catch (error) {
+      Alert.alert("Fotos", error?.message || "No se pudo obtener la foto.");
+    }
+  };
+
+  const removePhoto = (index) =>
+    setProgressForm((current) => ({
+      ...current,
+      photos: (current.photos || []).filter((_, i) => i !== index),
+    }));
+
+  const handleRequestPart = async ({ name, quantity }) => {
+    if (!selectedWorkOrder) {
+      return;
+    }
+
+    setPartSubmitting(true);
+
+    try {
+      await createSparePart({
+        workOrderId: selectedWorkOrder.id,
+        diagnosticId: selectedWorkOrder.diagnosticId,
+        name,
+        quantity,
+        status: "requested",
+      });
+
+      await createProgressEntry({
+        workOrderId: selectedWorkOrder.id,
+        diagnosticId: selectedWorkOrder.diagnosticId,
+        vehicleId: selectedWorkOrder.vehicleId,
+        authorUid: userProfile?.uid,
+        type: "parts",
+        message: `Repuesto solicitado: ${name} (x${quantity}).`,
+        statusSnapshot: selectedWorkOrder.status,
+      });
+
+      setPartModalVisible(false);
+      await refreshData();
+      setProgressEntries(
+        await listProgressEntriesByWorkOrderId(selectedWorkOrder.id),
+      );
+    } catch (error) {
+      Alert.alert(
+        "Repuestos",
+        error?.message || "No se pudo registrar la solicitud del repuesto.",
+      );
+    } finally {
+      setPartSubmitting(false);
+    }
   };
 
   const quickActionCopy = {
@@ -1506,6 +1599,30 @@ export default function WorkOrdersScreen({
                 Abrir repuestos de esta orden
               </Text>
             </Pressable>
+            {isMechanicUser && !isProgressLocked ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setPartModalVisible(true)}
+                style={[
+                  styles.secondaryAction,
+                  styles.secondaryActionLarge,
+                  {
+                    backgroundColor: colors.cardMuted,
+                    borderColor: colors.warning,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.secondaryActionText,
+                    styles.secondaryActionTextLarge,
+                    { color: colors.warning },
+                  ]}
+                >
+                  Pedir repuesto
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
 
@@ -1981,6 +2098,63 @@ export default function WorkOrdersScreen({
             />
           ) : null}
 
+          {progressForm.type === "note" || progressForm.type === "delivery" ? (
+            <View style={styles.formGroup}>
+              <View style={styles.filterRow}>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={progressSubmitting}
+                  onPress={() => addPhoto("camera")}
+                  style={[
+                    styles.secondaryAction,
+                    isMechanicUser && styles.secondaryActionLarge,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.secondaryActionText,
+                      isMechanicUser && styles.secondaryActionTextLarge,
+                      { color: colors.primary },
+                    ]}
+                  >
+                    Tomar foto
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={progressSubmitting}
+                  onPress={() => addPhoto("library")}
+                  style={[
+                    styles.secondaryAction,
+                    isMechanicUser && styles.secondaryActionLarge,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.secondaryActionText,
+                      isMechanicUser && styles.secondaryActionTextLarge,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Galería
+                  </Text>
+                </Pressable>
+              </View>
+              <PhotoStrip
+                onRemove={removePhoto}
+                photos={progressForm.photos || []}
+              />
+            </View>
+          ) : null}
+
           <Pressable
             disabled={shouldDisableSubmit}
             onPress={() => handleProgressSubmit()}
@@ -2191,6 +2365,9 @@ export default function WorkOrdersScreen({
                           ))}
                         </View>
                       ) : null}
+                      {entry.photos?.length ? (
+                        <PhotoStrip photos={entry.photos} />
+                      ) : null}
                       {entry.deliveryClosedOrder ? (
                         <Text
                           style={[styles.rowMeta, { color: colors.success }]}
@@ -2277,6 +2454,13 @@ export default function WorkOrdersScreen({
         onCancel={() => setPendingAction(null)}
         onConfirm={() => runQuickAction(pendingAction)}
         visible={Boolean(pendingAction)}
+      />
+
+      <RequestPartModal
+        onCancel={() => setPartModalVisible(false)}
+        onSubmit={handleRequestPart}
+        submitting={partSubmitting}
+        visible={partModalVisible}
       />
 
       <DateRangeFilterModal

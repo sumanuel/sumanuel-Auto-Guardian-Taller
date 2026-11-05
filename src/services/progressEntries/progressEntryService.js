@@ -41,6 +41,19 @@ function normalizeSparePartUpdates(value) {
     .filter((item) => item.sparePartId && item.status);
 }
 
+function normalizePhotos(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => ({
+      url: normalizeOptional(item?.url),
+      path: normalizeOptional(item?.path),
+    }))
+    .filter((item) => item.url);
+}
+
 function timestampToMillis(value) {
   if (value?.toMillis) {
     return value.toMillis();
@@ -98,6 +111,7 @@ export async function createProgressEntry({
   progressPercent,
   sparePartUpdates,
   deliveryClosedOrder,
+  photos,
 }) {
   const workshopId = requireActiveWorkshopId();
   const activeSession = getActiveWorkshopSession();
@@ -134,7 +148,7 @@ export async function createProgressEntry({
     authorUid: normalizeOptional(authorUid),
     type: normalizeOptional(type) || "note",
     message: normalizeOptional(message),
-    photos: [],
+    photos: normalizePhotos(photos),
     statusSnapshot: normalizeOptional(statusSnapshot),
     statusChangedTo: normalizeOptional(statusChangedTo),
     progressPercent: normalizeNumber(progressPercent),

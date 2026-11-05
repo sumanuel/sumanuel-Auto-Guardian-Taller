@@ -85,6 +85,7 @@ export const ROLE_PERMISSIONS = {
     "diagnostics.assigned.view",
     "progress.assigned.manage",
     "spareParts.assigned.view",
+    "spareParts.assigned.request",
   ],
 };
 
