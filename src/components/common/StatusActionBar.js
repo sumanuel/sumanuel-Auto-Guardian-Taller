@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import { TOUCH, tapFeedback } from "../../utils/touch";
 
@@ -10,7 +9,6 @@ import { TOUCH, tapFeedback } from "../../utils/touch";
 // tone: "primary" | "success" | "warning" | "danger" | "neutral"
 export default function StatusActionBar({ actions = [] }) {
   const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
 
   if (!actions.length) {
     return null;
@@ -32,7 +30,6 @@ export default function StatusActionBar({ actions = [] }) {
         {
           backgroundColor: colors.cardBackground,
           borderTopColor: colors.border,
-          paddingBottom: Math.max(insets.bottom, 8),
         },
       ]}
     >
@@ -87,6 +84,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 12,
     paddingTop: 8,
+    paddingBottom: 8,
     borderTopWidth: 1,
   },
   action: {

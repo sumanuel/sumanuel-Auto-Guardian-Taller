@@ -1,7 +1,10 @@
 import Slider from "@react-native-community/slider";
+import BigChip from "../components/common/BigChip";
+import ConfirmModal from "../components/common/ConfirmModal";
+import StatusActionBar from "../components/common/StatusActionBar";
 import StepperPercent from "../components/common/StepperPercent";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -502,7 +505,10 @@ export default function WorkOrdersScreen({
     setScreenMode(SCREEN_MODES.LIST);
   };
 
-  const handleProgressSubmit = async () => {
+  const handleProgressSubmit = async (formOverride) => {
+    const activeForm =
+      formOverride && formOverride.partUpdates ? formOverride : progressForm;
+
     if (!selectedWorkOrder) {
       return;
     }
@@ -511,8 +517,8 @@ export default function WorkOrdersScreen({
       selectedWorkOrder.status,
     );
     const canReopenWithNote =
-      progressForm.type === "note" &&
-      progressForm.operationalStatus === "in-progress";
+      activeForm.type === "note" &&
+      activeForm.operationalStatus === "in-progress";
 
     if (isProgressLocked && !canReopenWithNote) {
       Alert.alert(
@@ -522,7 +528,7 @@ export default function WorkOrdersScreen({
       return;
     }
 
-    const selectedPartUpdates = Object.entries(progressForm.partUpdates || {})
+    const selectedPartUpdates = Object.entries(activeForm.partUpdates || {})
       .map(([sparePartId, status]) => {
         const matchedPart = selectedWorkOrderSpareParts.find(
           (part) => getEntityId(part) === sparePartId,
@@ -542,12 +548,12 @@ export default function WorkOrdersScreen({
       })
       .filter(Boolean);
 
-    if (progressForm.type === "note" && !progressForm.message.trim()) {
+    if (activeForm.type === "note" && !activeForm.message.trim()) {
       Alert.alert("Órdenes", "Describe la nota para registrarla.");
       return;
     }
 
-    if (progressForm.type === "parts" && !selectedPartUpdates.length) {
+    if (activeForm.type === "parts" && !selectedPartUpdates.length) {
       Alert.alert(
         "Órdenes",
         "Selecciona al menos un repuesto y su estado para registrarlo.",
@@ -555,13 +561,13 @@ export default function WorkOrdersScreen({
       return;
     }
 
-    if (progressForm.type === "delivery" && !progressForm.message.trim()) {
+    if (activeForm.type === "delivery" && !activeForm.message.trim()) {
       Alert.alert("Órdenes", "Describe la entrega antes de cerrar la orden.");
       return;
     }
 
     const confirmDelivery = async () => {
-      if (progressForm.type !== "delivery") {
+      if (activeForm.type !== "delivery") {
         return true;
       }
 
@@ -590,15 +596,15 @@ export default function WorkOrdersScreen({
     setProgressSubmitting(true);
 
     try {
-      let entryMessage = progressForm.message.trim();
+      let entryMessage = activeForm.message.trim();
       let statusSnapshot = selectedWorkOrder.status;
       let statusChangedTo = "";
       let progressPercent = null;
       let sparePartUpdates = [];
       let deliveryClosedOrder = false;
-      const nextOperationalStatus = progressForm.operationalStatus || "";
+      const nextOperationalStatus = activeForm.operationalStatus || "";
 
-      if (progressForm.type === "note" && nextOperationalStatus) {
+      if (activeForm.type === "note" && nextOperationalStatus) {
         statusSnapshot = nextOperationalStatus;
         statusChangedTo =
           nextOperationalStatus !== selectedWorkOrder.status
@@ -614,9 +620,7 @@ export default function WorkOrdersScreen({
           isProgressLocked &&
           Number(selectedWorkOrder?.progressPercent) >= 100
         ) {
-          progressPercent = Math.round(
-            Number(progressForm.progressPercent) || 0,
-          );
+          progressPercent = Math.round(Number(activeForm.progressPercent) || 0);
         }
 
         if (
@@ -631,10 +635,10 @@ export default function WorkOrdersScreen({
         }
       }
 
-      if (progressForm.type === "status") {
+      if (activeForm.type === "status") {
         progressPercent = Math.max(
           0,
-          Math.min(100, Math.round(Number(progressForm.progressPercent) || 0)),
+          Math.min(100, Math.round(Number(activeForm.progressPercent) || 0)),
         );
         entryMessage =
           entryMessage || `Avance operativo ajustado a ${progressPercent}%.`;
@@ -644,7 +648,7 @@ export default function WorkOrdersScreen({
         });
       }
 
-      if (progressForm.type === "parts") {
+      if (activeForm.type === "parts") {
         await Promise.all(
           selectedPartUpdates.map((partUpdate) =>
             updateSparePart(partUpdate.refId, {
@@ -674,7 +678,7 @@ export default function WorkOrdersScreen({
             .join(". ");
       }
 
-      if (progressForm.type === "delivery") {
+      if (activeForm.type === "delivery") {
         deliveryClosedOrder = true;
         progressPercent = 100;
         statusSnapshot = "delivered";
@@ -690,7 +694,7 @@ export default function WorkOrdersScreen({
         diagnosticId: selectedWorkOrder.diagnosticId,
         vehicleId: selectedWorkOrder.vehicleId,
         authorUid: userProfile?.uid,
-        type: progressForm.type,
+        type: activeForm.type,
         message: entryMessage,
         statusSnapshot,
         statusChangedTo,
@@ -707,12 +711,12 @@ export default function WorkOrdersScreen({
       setProgressForm(
         createEmptyProgressForm(
           "note",
-          progressForm.type === "delivery"
+          activeForm.type === "delivery"
             ? 100
-            : progressForm.type === "status"
-              ? Math.round(Number(progressForm.progressPercent) || 0)
-              : progressForm.type === "note" &&
-                  progressForm.operationalStatus === "ready"
+            : activeForm.type === "status"
+              ? Math.round(Number(activeForm.progressPercent) || 0)
+              : activeForm.type === "note" &&
+                  activeForm.operationalStatus === "ready"
                 ? 100
                 : Number(selectedWorkOrder?.progressPercent) || 0,
         ),
@@ -726,6 +730,224 @@ export default function WorkOrdersScreen({
       setProgressSubmitting(false);
     }
   };
+
+  const scrollRef = useRef(null);
+  const formAnchorY = useRef(0);
+  const [pendingAction, setPendingAction] = useState(null);
+
+  const scrollToProgressForm = () => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, formAnchorY.current - 12),
+      animated: true,
+    });
+  };
+
+  const buildQuickForm = (kind) => {
+    const currentProgress = Number(selectedWorkOrder?.progressPercent) || 0;
+    const locked = isWorkOrderProgressLocked(selectedWorkOrder?.status);
+
+    if (kind === "start") {
+      return {
+        ...createEmptyProgressForm("note", currentProgress),
+        operationalStatus: "in-progress",
+        message:
+          selectedWorkOrder?.status === "paused"
+            ? "Trabajo reanudado."
+            : "Trabajo iniciado.",
+      };
+    }
+
+    if (kind === "pause") {
+      return {
+        ...createEmptyProgressForm("note", currentProgress),
+        operationalStatus: "paused",
+        message: "Orden en pausa.",
+      };
+    }
+
+    if (kind === "ready") {
+      return {
+        ...createEmptyProgressForm("note", 100),
+        operationalStatus: "ready",
+        message: "Trabajo terminado. Orden lista para entrega.",
+      };
+    }
+
+    return {
+      ...createEmptyProgressForm(
+        "note",
+        locked
+          ? getSuggestedReactivationProgress(currentProgress)
+          : currentProgress,
+      ),
+      operationalStatus: "in-progress",
+      message: "Orden reabierta para continuar el trabajo.",
+    };
+  };
+
+  const quickActionCopy = {
+    pause: {
+      title: "¿Pausar la orden?",
+      message:
+        "La orden quedará en pausa. Después puedes agregar el motivo con una nota.",
+      confirmLabel: "Pausar",
+      tone: "warning",
+    },
+    ready: {
+      title: "¿Marcar como lista?",
+      message:
+        "La orden pasará a Lista con 100% de avance y recepción podrá coordinar la entrega.",
+      confirmLabel: "Sí, está lista",
+      tone: "success",
+    },
+    reopen: {
+      title: "¿Reabrir la orden?",
+      message:
+        "La orden vuelve a En proceso. Ajusta el avance real desde Avance si hace falta.",
+      confirmLabel: "Reabrir",
+      tone: "primary",
+    },
+  };
+
+  const runQuickAction = async (kind) => {
+    setPendingAction(null);
+    await handleProgressSubmit(buildQuickForm(kind));
+  };
+
+  const requestQuickAction = (kind) => {
+    if (kind === "start") {
+      runQuickAction(kind);
+      return;
+    }
+
+    setPendingAction(kind);
+  };
+
+  const openProgressForm = (type) => {
+    setProgressForm(
+      createEmptyProgressForm(
+        type,
+        Number(selectedWorkOrder?.progressPercent) || 0,
+      ),
+    );
+    setTimeout(scrollToProgressForm, 50);
+  };
+
+  const quickPhrases = [
+    "Falta repuesto",
+    "Esperando aprobación del cliente",
+    "Pieza instalada",
+    "Prueba de ruta OK",
+    "Fuga detectada",
+    "Se requiere más tiempo",
+  ];
+
+  const appendQuickPhrase = (phrase) =>
+    setProgressForm((current) => ({
+      ...current,
+      message: current.message
+        ? `${current.message.trim()}. ${phrase}`
+        : phrase,
+    }));
+
+  const statusBarActions = (() => {
+    if (!isMechanicUser || !selectedWorkOrder) {
+      return [];
+    }
+
+    const status =
+      selectedWorkOrder.status === "approved"
+        ? "open"
+        : selectedWorkOrder.status;
+    const busy = progressSubmitting;
+    const noteAction = {
+      key: "note",
+      label: "Nota",
+      icon: "create-outline",
+      tone: "primary",
+      disabled: busy,
+      onPress: () => openProgressForm("note"),
+    };
+    const progressAction = {
+      key: "progress",
+      label: "Avance",
+      icon: "speedometer-outline",
+      tone: "primary",
+      disabled: busy,
+      onPress: () => openProgressForm("status"),
+    };
+
+    if (status === "in-progress") {
+      return [
+        {
+          key: "pause",
+          label: "Pausar",
+          icon: "pause",
+          tone: "warning",
+          disabled: busy,
+          onPress: () => requestQuickAction("pause"),
+        },
+        progressAction,
+        {
+          key: "ready",
+          label: "Listo",
+          icon: "checkmark-circle",
+          tone: "success",
+          active: true,
+          disabled: busy,
+          onPress: () => requestQuickAction("ready"),
+        },
+        noteAction,
+      ];
+    }
+
+    if (status === "paused") {
+      return [
+        {
+          key: "start",
+          label: "Reanudar",
+          icon: "play",
+          tone: "primary",
+          active: true,
+          disabled: busy,
+          onPress: () => requestQuickAction("start"),
+        },
+        noteAction,
+      ];
+    }
+
+    if (status === "ready") {
+      return [
+        {
+          key: "reopen",
+          label: "Reabrir",
+          icon: "refresh",
+          tone: "warning",
+          active: true,
+          disabled: busy,
+          onPress: () => requestQuickAction("reopen"),
+        },
+        noteAction,
+      ];
+    }
+
+    if (status === "delivered") {
+      return [];
+    }
+
+    return [
+      {
+        key: "start",
+        label: "Iniciar",
+        icon: "play",
+        tone: "primary",
+        active: true,
+        disabled: busy,
+        onPress: () => requestQuickAction("start"),
+      },
+      noteAction,
+    ];
+  })();
 
   const renderListScreen = () => (
     <>
@@ -1288,6 +1510,9 @@ export default function WorkOrdersScreen({
         </View>
 
         <View
+          onLayout={(event) => {
+            formAnchorY.current = event.nativeEvent.layout.y;
+          }}
           style={[
             styles.listCard,
             {
@@ -1717,6 +1942,18 @@ export default function WorkOrdersScreen({
             )
           ) : null}
 
+          {isMechanicUser && progressForm.type === "note" ? (
+            <View style={styles.filterRow}>
+              {quickPhrases.map((phrase) => (
+                <BigChip
+                  key={phrase}
+                  label={phrase}
+                  onPress={() => appendQuickPhrase(phrase)}
+                />
+              ))}
+            </View>
+          ) : null}
+
           {progressForm.type !== "status" && progressForm.type !== "parts" ? (
             <TextInput
               multiline
@@ -1746,7 +1983,7 @@ export default function WorkOrdersScreen({
 
           <Pressable
             disabled={shouldDisableSubmit}
-            onPress={handleProgressSubmit}
+            onPress={() => handleProgressSubmit()}
             style={[
               styles.primaryButton,
               isMechanicUser && styles.primaryButtonLarge,
@@ -2003,6 +2240,7 @@ export default function WorkOrdersScreen({
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
@@ -2028,6 +2266,18 @@ export default function WorkOrdersScreen({
           ? renderListScreen()
           : renderDetailScreen()}
       </ScrollView>
+
+      {screenMode === SCREEN_MODES.DETAIL ? (
+        <StatusActionBar actions={statusBarActions} />
+      ) : null}
+
+      <ConfirmModal
+        {...(quickActionCopy[pendingAction] || {})}
+        loading={progressSubmitting}
+        onCancel={() => setPendingAction(null)}
+        onConfirm={() => runQuickAction(pendingAction)}
+        visible={Boolean(pendingAction)}
+      />
 
       <DateRangeFilterModal
         initialRange={dateRange}
