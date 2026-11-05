@@ -6,12 +6,6 @@
     "orientation": "default",
     "icon": "./assets/icon-dark.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-dark.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#09111a"
-    },
     "ios": {
       "supportsTablet": true
     },
@@ -21,8 +15,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon-dark.png",
         "backgroundColor": "#09111a"
-      },
-      "edgeToEdgeEnabled": true
+      }
     },
     "web": {
       "favicon": "./assets/favicon-dark.png"
@@ -38,6 +31,17 @@
         {
           "cameraPermission": "Auto-Guardian usa la cámara para adjuntar fotos del trabajo a las órdenes.",
           "photosPermission": "Auto-Guardian accede a tus fotos para adjuntarlas a las órdenes."
+        }
+      ],
+      "expo-sharing",
+      "expo-status-bar",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-dark.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#09111a"
         }
       ]
     ]

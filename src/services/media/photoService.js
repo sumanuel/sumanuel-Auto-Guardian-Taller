@@ -1,3 +1,4 @@
+import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "../firebase/config";
@@ -65,12 +66,13 @@ export async function uploadWorkOrderPhotos(workOrderId, uris = []) {
 
   return Promise.all(
     uris.map(async (uri, index) => {
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      // File.arrayBuffer() evita depender de fetch(file://), cuyo soporte cambia
+      // entre versiones del SDK (expo/fetch es el fetch global desde SDK 56).
+      const data = await new File(uri).arrayBuffer();
       const path = `progressEntries/${safeOrderId}/${stamp}-${index}.jpg`;
       const fileRef = ref(storage, path);
 
-      await uploadBytes(fileRef, blob, { contentType: "image/jpeg" });
+      await uploadBytes(fileRef, data, { contentType: "image/jpeg" });
 
       return { url: await getDownloadURL(fileRef), path };
     }),
