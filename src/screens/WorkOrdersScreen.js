@@ -53,6 +53,7 @@ import {
   updateWorkOrderOperationalState,
   workOrderStatusOptions,
 } from "../services/workOrders/workOrderService";
+import { isOnlineNow, OFFLINE_WRITE_MESSAGE } from "../utils/connectivity";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 import {
   createLastDaysRange,
@@ -516,6 +517,11 @@ export default function WorkOrdersScreen({
   };
 
   const handleProgressSubmit = async (formOverride) => {
+    if (!(await isOnlineNow())) {
+      Alert.alert("Sin conexión", OFFLINE_WRITE_MESSAGE);
+      return;
+    }
+
     const activeForm =
       formOverride && formOverride.partUpdates ? formOverride : progressForm;
 
@@ -839,6 +845,11 @@ export default function WorkOrdersScreen({
 
   const handleRequestPart = async ({ name, quantity }) => {
     if (!selectedWorkOrder) {
+      return;
+    }
+
+    if (!(await isOnlineNow())) {
+      Alert.alert("Sin conexión", OFFLINE_WRITE_MESSAGE);
       return;
     }
 

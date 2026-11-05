@@ -32,6 +32,7 @@ import VehiclesDirectoryScreen from "./src/screens/VehiclesDirectoryScreen";
 import WorkOrderHistoryTimelineScreen from "./src/screens/WorkOrderHistoryTimelineScreen";
 import WorkshopManagementScreen from "./src/screens/WorkshopManagementScreen";
 import WorkshopSetupScreen from "./src/screens/WorkshopSetupScreen";
+import OfflineBanner from "./src/components/common/OfflineBanner";
 import WorkshopTabBar from "./src/components/common/WorkshopTabBar";
 import { isMechanicRole } from "./src/constants/accessControl";
 import { findActiveDiagnosticByVehicleId } from "./src/services/diagnostics/diagnosticService";
@@ -1191,6 +1192,7 @@ function AppContent() {
       <StatusBar style={isDarkMode ? "light" : "dark"} />
       <View style={styles.shell}>
         <View style={styles.content}>{renderAuthenticatedScreen()}</View>
+        <OfflineBanner />
         <WorkshopTabBar
           activeTab={activeTab}
           large={isMechanicUser}

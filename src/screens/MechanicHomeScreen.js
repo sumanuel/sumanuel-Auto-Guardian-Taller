@@ -26,11 +26,16 @@ import {
   listDiagnostics,
 } from "../services/diagnostics/diagnosticService";
 import { firestoreCollections } from "../services/firestore/collections";
+import {
+  loadOfflineCache,
+  saveOfflineCache,
+} from "../services/cache/offlineCache";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import {
   listWorkOrders,
   workOrderStatusOptions,
 } from "../services/workOrders/workOrderService";
+import { isOnlineNow } from "../utils/connectivity";
 import { spacing } from "../utils/responsive";
 import { TOUCH, tapFeedback } from "../utils/touch";
 
@@ -133,8 +138,44 @@ export default function MechanicHomeScreen({
   const [workOrders, setWorkOrders] = useState([]);
   const [searchVisible, setSearchVisible] = useState(false);
   const [plateQuery, setPlateQuery] = useState("");
+  const [cachedAt, setCachedAt] = useState(null);
+  const cacheKey = `mechanicHome:${activeWorkshopId || "none"}:${currentUserUid}`;
+
+  const applyData = useCallback((data) => {
+    setVehicles(data.vehicles || []);
+    setDiagnostics(data.diagnostics || []);
+    setWorkOrders(data.workOrders || []);
+  }, []);
+
+  const restoreCachedData = useCallback(async () => {
+    const cached = await loadOfflineCache(cacheKey);
+
+    if (!cached?.data) {
+      return false;
+    }
+
+    applyData(cached.data);
+    setCachedAt(cached.savedAt);
+
+    return true;
+  }, [applyData, cacheKey]);
 
   const refreshData = useCallback(async () => {
+    // Sin internet no se espera el timeout de Firestore: se muestra lo último
+    // guardado.
+    if (!(await isOnlineNow())) {
+      const hadCache = await restoreCachedData();
+
+      if (!hadCache) {
+        Alert.alert(
+          "Sin conexión",
+          "No hay datos guardados todavía. Conéctate a internet para cargar tu trabajo.",
+        );
+      }
+
+      return;
+    }
+
     try {
       const [vehiclesResult, diagnosticsResult, workOrdersResult] =
         await Promise.allSettled([
@@ -150,28 +191,55 @@ export default function MechanicHomeScreen({
         throw workOrdersResult.reason || diagnosticsResult.reason;
       }
 
-      setVehicles(
-        vehiclesResult.status === "fulfilled" ? vehiclesResult.value : [],
-      );
-      setDiagnostics(
-        diagnosticsResult.status === "fulfilled" ? diagnosticsResult.value : [],
-      );
-      setWorkOrders(
-        workOrdersResult.status === "fulfilled" ? workOrdersResult.value : [],
-      );
+      const data = {
+        vehicles:
+          vehiclesResult.status === "fulfilled" ? vehiclesResult.value : [],
+        diagnostics:
+          diagnosticsResult.status === "fulfilled"
+            ? diagnosticsResult.value
+            : [],
+        workOrders:
+          workOrdersResult.status === "fulfilled" ? workOrdersResult.value : [],
+      };
+
+      applyData(data);
+      setCachedAt(null);
+      saveOfflineCache(cacheKey, data);
     } catch (error) {
       console.error("MechanicHomeScreen refresh failed:", error);
-      Alert.alert(
-        "Mi trabajo",
-        "No se pudo actualizar tu trabajo. Desliza hacia abajo para reintentar.",
-      );
+
+      if (!(await restoreCachedData())) {
+        Alert.alert(
+          "Mi trabajo",
+          "No se pudo actualizar tu trabajo. Desliza hacia abajo para reintentar.",
+        );
+      }
     }
-  }, []);
+  }, [applyData, cacheKey, restoreCachedData]);
 
   useEffect(() => {
+    let cancelled = false;
+
     setLoading(true);
-    refreshData().finally(() => setLoading(false));
-  }, [activeWorkshopId, refreshData]);
+
+    // Muestra al instante lo último guardado y luego actualiza.
+    loadOfflineCache(cacheKey).then((cached) => {
+      if (!cancelled && cached?.data) {
+        applyData(cached.data);
+        setLoading(false);
+      }
+    });
+
+    refreshData().finally(() => {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeWorkshopId, applyData, cacheKey, refreshData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -386,6 +454,28 @@ export default function MechanicHomeScreen({
           subtitle={`${userProfile?.fullName || "Usuario activo"} · ${getRoleLabel(currentRole)}`}
           title="Mi trabajo de hoy"
         />
+
+        {cachedAt ? (
+          <View
+            style={[
+              styles.cacheNotice,
+              {
+                backgroundColor: colors.cardMuted,
+                borderColor: colors.warning,
+              },
+            ]}
+          >
+            <Ionicons color={colors.warning} name="time-outline" size={22} />
+            <Text style={[styles.cacheText, { color: colors.text }]}>
+              Datos guardados de las{" "}
+              {new Date(cachedAt).toLocaleTimeString("es", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              . Desliza hacia abajo para actualizar cuando haya conexión.
+            </Text>
+          </View>
+        ) : null}
 
         {continueItem && !hasSearch ? (
           <View
@@ -651,6 +741,15 @@ const styles = StyleSheet.create({
     gap: TOUCH.gap,
     paddingBottom: spacing.xxl,
   },
+  cacheNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+  },
+  cacheText: { flex: 1, fontSize: 15, fontWeight: "700" },
   continueCard: {
     borderWidth: 2,
     borderRadius: 20,
