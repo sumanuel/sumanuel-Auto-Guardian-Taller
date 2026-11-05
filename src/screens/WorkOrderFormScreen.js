@@ -75,7 +75,7 @@ export default function WorkOrderFormScreen({
         setAssignableStaff(nextStaff);
         setVehicles(nextVehicles);
       } catch (error) {
-        Alert.alert("Ordenes", "No se pudieron cargar diagnosticos de apoyo.");
+        Alert.alert("Órdenes", "No se pudieron cargar diagnósticos de apoyo.");
       }
     };
 
@@ -111,7 +111,7 @@ export default function WorkOrderFormScreen({
 
   const handleSubmit = async () => {
     if (!form.diagnosticId.trim()) {
-      Alert.alert("Ordenes", "Selecciona el diagnostico base de la orden.");
+      Alert.alert("Órdenes", "Selecciona el diagnóstico base de la orden.");
       return;
     }
 
@@ -130,7 +130,7 @@ export default function WorkOrderFormScreen({
       onSaved?.(savedWorkOrderId);
     } catch (error) {
       Alert.alert(
-        "Ordenes",
+        "Órdenes",
         error?.message || "No se pudo guardar la orden de trabajo.",
       );
     } finally {
@@ -169,7 +169,7 @@ export default function WorkOrderFormScreen({
       >
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Ordenes"
+          section="Órdenes"
           subtitle="La orden queda en una pantalla dedicada y luego vuelve a la lista para seguir con repuestos o cambios de estado."
           title={editingWorkOrderId ? "Editar orden" : "Registrar orden"}
         />
@@ -188,20 +188,20 @@ export default function WorkOrderFormScreen({
           >
             <View style={styles.cardHeaderCopy}>
               <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-                Operacion
+                Operación
               </Text>
               <Text style={[styles.cardTitle, { color: colors.text }]}>
                 Plan de trabajo
               </Text>
             </View>
             <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingWorkOrderId ? "Actualizacion" : "Nueva orden"}
+              {editingWorkOrderId ? "Actualización" : "Nueva orden"}
             </Text>
           </View>
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Diagnostico base
+              Diagnóstico base
             </Text>
             <View style={styles.optionWrap}>
               {selectableDiagnostics.slice(0, 10).map((diagnostic) => {
@@ -248,7 +248,7 @@ export default function WorkOrderFormScreen({
               <Text
                 style={[styles.helperText, { color: colors.textSecondary }]}
               >
-                No hay diagnosticos abiertos disponibles para crear una orden.
+                No hay diagnósticos abiertos disponibles para crear una orden.
               </Text>
             ) : null}
           </View>
@@ -263,7 +263,7 @@ export default function WorkOrderFormScreen({
             <Text
               style={[styles.vehicleSummaryLabel, { color: colors.accent }]}
             >
-              vehiculo:
+              vehículo:
             </Text>
             <View
               style={[
@@ -284,7 +284,7 @@ export default function WorkOrderFormScreen({
                   .join(" ") ||
                   selectedVehicle?.plate ||
                   form.vehicleId ||
-                  "Sin vehiculo"}
+                  "Sin vehículo"}
               </Text>
               <View
                 style={[

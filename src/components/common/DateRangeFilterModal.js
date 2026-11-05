@@ -38,7 +38,7 @@ const quickRanges = [
   },
   {
     key: "30days",
-    label: "Ultimos 30 dias",
+    label: "Últimos 30 días",
     buildRange: () => createLastDaysRange(30),
   },
 ];
@@ -211,7 +211,7 @@ export default function DateRangeFilterModal({
         >
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Define desde y hasta que fecha quieres revisar la operacion.
+            Define desde y hasta que fecha quieres revisar la operación.
           </Text>
 
           <View style={styles.quickRow}>

@@ -28,7 +28,7 @@ function buildVehicleTitle(vehicle) {
   return (
     [vehicle?.brand, vehicle?.model, vehicle?.year].filter(Boolean).join(" ") ||
     vehicle?.plate ||
-    "Vehiculo sin descripcion"
+    "Vehículo sin descripción"
   );
 }
 
@@ -102,19 +102,19 @@ function resolveVehicleContextAction(state) {
   if (state.activeDiagnosticId) {
     return {
       action: "diagnostic-detail",
-      label: "Abrir diagnostico",
+      label: "Abrir diagnóstico",
       icon: "pulse-outline",
       tone: "primary",
-      summary: "Diagnostico abierto pendiente de cierre.",
+      summary: "Diagnóstico abierto pendiente de cierre.",
     };
   }
 
   return {
     action: "diagnostic-create",
-    label: "Crear diagnostico",
+    label: "Crear diagnóstico",
     icon: "add-circle-outline",
     tone: "primary",
-    summary: "Sin diagnostico abierto ni orden activa.",
+    summary: "Sin diagnóstico abierto ni orden activa.",
   };
 }
 
@@ -246,9 +246,9 @@ export default function VehiclesDirectoryScreen({
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Recepcion"
-          subtitle="Consulta toda la flota del taller desde una sola vista con busqueda por placa, cliente o descripcion."
-          title="Vehiculos"
+          section="Recepción"
+          subtitle="Consulta toda la flota del taller desde una sola vista con búsqueda por placa, cliente o descripción."
+          title="Vehículos"
         />
 
         <View
@@ -514,7 +514,7 @@ export default function VehiclesDirectoryScreen({
                 Flota
               </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No hay vehiculos que coincidan con la busqueda actual.
+                No hay vehículos que coincidan con la búsqueda actual.
               </Text>
             </View>
           )}

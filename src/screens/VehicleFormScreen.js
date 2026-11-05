@@ -72,12 +72,12 @@ export default function VehicleFormScreen({
 
   const handleSubmit = async () => {
     if (!form.clientId) {
-      Alert.alert("Vehiculos", "Debes entrar desde la ficha de un cliente.");
+      Alert.alert("Vehículos", "Debes entrar desde la ficha de un cliente.");
       return;
     }
 
     if (!form.plate.trim()) {
-      Alert.alert("Vehiculos", "Ingresa al menos la placa del vehiculo.");
+      Alert.alert("Vehículos", "Ingresa al menos la placa del vehículo.");
       return;
     }
 
@@ -96,8 +96,8 @@ export default function VehicleFormScreen({
       onSaved?.(savedVehicleId);
     } catch (error) {
       Alert.alert(
-        "Vehiculos",
-        error?.message || "No se pudo guardar el vehiculo.",
+        "Vehículos",
+        error?.message || "No se pudo guardar el vehículo.",
       );
     } finally {
       setSubmitting(false);
@@ -115,9 +115,9 @@ export default function VehicleFormScreen({
       >
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Vehiculos"
-          subtitle="Registro operativo separado de la ficha del cliente para mantener una sola accion por pantalla."
-          title={editingVehicleId ? "Editar vehiculo" : "Asociar vehiculo"}
+          section="Vehículos"
+          subtitle="Registro operativo separado de la ficha del cliente para mantener una sola acción por pantalla."
+          title={editingVehicleId ? "Editar vehículo" : "Asociar vehículo"}
         />
 
         <View
@@ -154,11 +154,11 @@ export default function VehicleFormScreen({
                 Taller
               </Text>
               <Text style={[styles.cardTitle, { color: colors.text }]}>
-                Identificacion del vehiculo
+                Identificación del vehículo
               </Text>
             </View>
             <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingVehicleId ? "Edicion" : "Asociacion"}
+              {editingVehicleId ? "Edición" : "Asociación"}
             </Text>
           </View>
 
@@ -339,7 +339,7 @@ export default function VehicleFormScreen({
               <Text
                 style={[styles.fieldLabel, { color: colors.textSecondary }]}
               >
-                Notas del vehiculo
+                Notas del vehículo
               </Text>
               <TextInput
                 multiline
@@ -347,7 +347,7 @@ export default function VehicleFormScreen({
                 onChangeText={(value) =>
                   setForm((current) => ({ ...current, notes: value }))
                 }
-                placeholder="Observaciones, accesorios y condicion general"
+                placeholder="Observaciones, accesorios y condición general"
                 placeholderTextColor={colors.textTertiary}
                 style={[
                   styles.textArea,
@@ -369,10 +369,10 @@ export default function VehicleFormScreen({
           >
             <Text style={[styles.primaryActionText, { color: colors.white }]}>
               {submitting
-                ? "Guardando vehiculo..."
+                ? "Guardando vehículo..."
                 : editingVehicleId
-                  ? "Guardar vehiculo"
-                  : "Asociar vehiculo"}
+                  ? "Guardar vehículo"
+                  : "Asociar vehículo"}
             </Text>
           </Pressable>
         </View>

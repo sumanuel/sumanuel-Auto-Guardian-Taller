@@ -94,7 +94,7 @@ export async function updateVehicle(vehicleId, payload) {
   const currentVehicle = await getEntityRecord("vehicles", vehicleId);
 
   if (!currentVehicle || currentVehicle.workshopId !== workshopId) {
-    throw new Error("El vehiculo no pertenece al taller activo.");
+    throw new Error("El vehículo no pertenece al taller activo.");
   }
 
   await patchEntityRecord("vehicles", vehicleId, {
@@ -116,7 +116,7 @@ export async function deleteVehicle(vehicleId) {
   const currentVehicle = await getEntityRecord("vehicles", vehicleId);
 
   if (!currentVehicle || currentVehicle.workshopId !== workshopId) {
-    throw new Error("El vehiculo no pertenece al taller activo.");
+    throw new Error("El vehículo no pertenece al taller activo.");
   }
 
   await deleteEntityRecord("vehicles", vehicleId);

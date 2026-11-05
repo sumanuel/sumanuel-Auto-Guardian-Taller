@@ -10,7 +10,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
-import { hasPermission, isMechanicRole } from "../constants/accessControl";
+import {
+  getRoleLabel,
+  hasPermission,
+  isMechanicRole,
+} from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../utils/responsive";
@@ -19,9 +23,9 @@ const operationalItems = [
   {
     key: "stock-tools",
     title: "Stock y herramientas",
-    subtitle: "Inventario general del taller con altas, edicion y bajas.",
+    subtitle: "Inventario general del taller con altas, edición y bajas.",
     icon: "cube-outline",
-    eyebrow: "Operacion",
+    eyebrow: "Operación",
   },
 ];
 
@@ -31,14 +35,14 @@ const administrativeItems = [
     title: "Datos del taller",
     subtitle: "Identidad comercial, logo, contacto y notas operativas.",
     icon: "business-outline",
-    eyebrow: "Administracion",
+    eyebrow: "Administración",
   },
   {
     key: "team",
     title: "Colaboradores",
     subtitle: "Invitaciones, roles, estados y control de accesos.",
     icon: "people-outline",
-    eyebrow: "Administracion",
+    eyebrow: "Administración",
   },
 ];
 
@@ -92,7 +96,7 @@ function resolveActionState(
   return hasPermission(currentRole, "invitations.manage")
     ? {
         iconColor: "accent",
-        stateLabel: "Gestion activa",
+        stateLabel: "Gestión activa",
         stateTone: "accent",
       }
     : {
@@ -198,16 +202,7 @@ export default function WorkshopMoreScreen({
   const activeMembership = getPrimaryMembership(memberships, activeWorkshopId);
   const workshopName = activeWorkshop?.name || activeMembership?.workshopName;
   const resolvedRole = activeMembership?.role || userProfile?.role || "";
-  const roleLabel =
-    resolvedRole === "owner"
-      ? "Propietario"
-      : resolvedRole === "administrator"
-        ? "Administrador"
-        : resolvedRole === "reception"
-          ? "Recepcion"
-          : resolvedRole === "mechanic"
-            ? "Mecanico"
-            : "Sin rol";
+  const roleLabel = getRoleLabel(resolvedRole);
 
   return (
     <SafeAreaView
@@ -220,9 +215,9 @@ export default function WorkshopMoreScreen({
       >
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Configuracion"
-          subtitle="Agrupa herramientas operativas, administracion del taller y preferencias de la app en una sola vista ordenada."
-          title="Mas opciones"
+          section="Configuración"
+          subtitle="Agrupa herramientas operativas, administración del taller y preferencias de la app en una sola vista ordenada."
+          title="Más opciones"
         />
 
         <View
@@ -236,7 +231,7 @@ export default function WorkshopMoreScreen({
         >
           <View style={styles.heroCopy}>
             <Text style={[styles.heroEyebrow, { color: colors.primary }]}>
-              Centro de configuracion
+              Centro de configuración
             </Text>
             <Text style={[styles.heroTitle, { color: colors.text }]}>
               {workshopName || "Taller activo"}
@@ -282,7 +277,7 @@ export default function WorkshopMoreScreen({
               ]}
             >
               <Text style={[styles.heroStatValue, { color: colors.text }]}>
-                {activeWorkshopId ? "Activo" : "Sin sesion"}
+                {activeWorkshopId ? "Activo" : "Sin sesión"}
               </Text>
               <Text
                 style={[styles.heroStatLabel, { color: colors.textSecondary }]}
@@ -303,7 +298,7 @@ export default function WorkshopMoreScreen({
           ]}
         >
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Operacion
+            Operación
           </Text>
           <Text
             style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
@@ -335,12 +330,12 @@ export default function WorkshopMoreScreen({
           ]}
         >
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Administracion
+            Administración
           </Text>
           <Text
             style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
           >
-            Configuracion del taller, miembros y accesos operativos.
+            Configuración del taller, miembros y accesos operativos.
           </Text>
           <View style={styles.listWrap}>
             {administrativeItems.map((item) =>
@@ -369,12 +364,12 @@ export default function WorkshopMoreScreen({
           ]}
         >
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Aplicacion
+            Aplicación
           </Text>
           <Text
             style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
           >
-            Preferencias visuales y acciones de sesion para este dispositivo.
+            Preferencias visuales y acciones de sesión para este dispositivo.
           </Text>
           <View style={styles.actionList}>
             <Pressable
@@ -394,7 +389,7 @@ export default function WorkshopMoreScreen({
                 <Text
                   style={[styles.actionMeta, { color: colors.textSecondary }]}
                 >
-                  Recorre otra vez la introduccion operativa de la app.
+                  Recorre otra vez la introducción operativa de la app.
                 </Text>
               </View>
               <Ionicons
@@ -437,12 +432,12 @@ export default function WorkshopMoreScreen({
             >
               <View style={styles.actionCopy}>
                 <Text style={[styles.actionLabel, { color: colors.danger }]}>
-                  Cerrar sesion
+                  Cerrar sesión
                 </Text>
                 <Text
                   style={[styles.actionMeta, { color: colors.textSecondary }]}
                 >
-                  Finaliza la sesion del usuario actual en este equipo.
+                  Finaliza la sesión del usuario actual en este equipo.
                 </Text>
               </View>
               <Ionicons

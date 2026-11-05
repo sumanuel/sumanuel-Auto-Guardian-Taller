@@ -65,7 +65,7 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
       await refreshWorkshopContext();
       onSaved?.();
     } catch (error) {
-      Alert.alert("Taller", error?.message || "No se pudo guardar la informacion del taller.");
+      Alert.alert("Taller", error?.message || "No se pudo guardar la información del taller.");
     } finally {
       setSubmitting(false);
     }
@@ -101,7 +101,7 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
           keyboardShouldPersistTaps="handled"
         >
           <WorkshopScreenHeader
-            section="Configuracion inicial"
+            section="Configuración inicial"
             subtitle="Define los datos de tu taller para que el equipo y los clientes lo identifiquen correctamente."
             title="Datos del taller"
           />
@@ -122,7 +122,7 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
               <TextInput
                 autoCapitalize="words"
                 onChangeText={setName}
-                placeholder="Ej: Taller Mecanico Central"
+                placeholder="Ej: Taller Mecánico Central"
                 placeholderTextColor={colors.textTertiary}
                 style={[
                   styles.input,
@@ -138,7 +138,7 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
 
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Telefono
+                Teléfono
               </Text>
               <TextInput
                 keyboardType="phone-pad"
@@ -159,7 +159,7 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
 
             <View style={styles.fieldGroup}>
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Direccion
+                Dirección
               </Text>
               <TextInput
                 autoCapitalize="sentences"
@@ -217,8 +217,8 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
               size={rf(20)}
             />
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              Puedes completar o editar estos datos mas tarde desde la seccion
-              de configuracion del taller.
+              Puedes completar o editar estos datos más tarde desde la sección
+              de configuración del taller.
             </Text>
           </View>
 

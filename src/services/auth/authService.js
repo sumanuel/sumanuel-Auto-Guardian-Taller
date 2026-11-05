@@ -40,7 +40,7 @@ export async function signOutUserSession() {
 
 export async function signUpWithProfile({ fullName, email, password, phone }) {
   if (!REGISTRATION_POLICY.allowPublicSignUp) {
-    throw new Error("El registro publico no esta habilitado.");
+    throw new Error("El registro público no está habilitado.");
   }
 
   const normalizedEmail = normalizeEmail(email);
@@ -95,7 +95,7 @@ export async function acceptPendingInvitationForCurrentUser({
   const currentUser = auth.currentUser;
 
   if (!currentUser?.uid || !currentUser?.email) {
-    throw new Error("Debes iniciar sesion para aceptar la invitacion.");
+    throw new Error("Debes iniciar sesión para aceptar la invitación.");
   }
 
   const normalizedEmail = normalizeEmail(currentUser.email);

@@ -31,10 +31,10 @@ function getDiagnosticId(diagnostic) {
 }
 
 const FIELD_HELP_TEXT = {
-  concerns: "Sintomas, hallazgo inicial o solicitud exacta del cliente.",
-  serviceItemsText: "Una linea por servicio para ordenar la cotizacion.",
-  sparePartsText: "Una linea por repuesto previsto o detectado.",
-  quoteCost: "Costo estimado total para apoyar la cotizacion.",
+  concerns: "Síntomas, hallazgo inicial o solicitud exacta del cliente.",
+  serviceItemsText: "Una línea por servicio para ordenar la cotización.",
+  sparePartsText: "Una línea por repuesto previsto o detectado.",
+  quoteCost: "Costo estimado total para apoyar la cotización.",
 };
 
 export default function DiagnosticFormScreen({
@@ -108,8 +108,8 @@ export default function DiagnosticFormScreen({
         setVehicles(nextVehicles);
       } catch (error) {
         Alert.alert(
-          "Diagnosticos",
-          "No se pudieron cargar clientes, vehiculos y mecanicos de apoyo.",
+          "Diagnósticos",
+          "No se pudieron cargar clientes, vehículos y mecánicos de apoyo.",
         );
       }
     };
@@ -142,22 +142,22 @@ export default function DiagnosticFormScreen({
   const handleSubmit = async () => {
     if (isClosedDiagnostic) {
       Alert.alert(
-        "Diagnosticos",
-        "Este diagnostico ya esta cerrado y no se puede editar.",
+        "Diagnósticos",
+        "Este diagnóstico ya está cerrado y no se puede editar.",
       );
       return;
     }
 
     if (!form.clientId.trim() || !form.vehicleId.trim()) {
       Alert.alert(
-        "Diagnosticos",
-        "Selecciona el cliente y el vehiculo antes de guardar.",
+        "Diagnósticos",
+        "Selecciona el cliente y el vehículo antes de guardar.",
       );
       return;
     }
 
     if (!form.concerns.trim()) {
-      Alert.alert("Diagnosticos", "Describe al menos el motivo de ingreso.");
+      Alert.alert("Diagnósticos", "Describe al menos el motivo de ingreso.");
       return;
     }
 
@@ -218,22 +218,22 @@ export default function DiagnosticFormScreen({
           });
         } catch (quoteError) {
           quoteGenerationError =
-            quoteError?.message || "no se pudo generar el PDF de cotizacion.";
+            quoteError?.message || "no se pudo generar el PDF de cotización.";
         }
       }
 
       if (quoteGenerationError) {
         Alert.alert(
-          "Diagnosticos",
-          `El diagnostico se guardo, pero ${quoteGenerationError}`,
+          "Diagnósticos",
+          `El diagnóstico se guardó, pero ${quoteGenerationError}`,
         );
       }
 
       onSaved?.(savedDiagnosticId);
     } catch (error) {
       Alert.alert(
-        "Diagnosticos",
-        error?.message || "No se pudo guardar el diagnostico.",
+        "Diagnósticos",
+        error?.message || "No se pudo guardar el diagnóstico.",
       );
     } finally {
       setSubmitting(false);
@@ -251,10 +251,10 @@ export default function DiagnosticFormScreen({
       >
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Diagnosticos"
-          subtitle="Completa la ficha tecnica en una pantalla dedicada y vuelve a la lista para decidir la siguiente accion."
+          section="Diagnósticos"
+          subtitle="Completa la ficha técnica en una pantalla dedicada y vuelve a la lista para decidir la siguiente acción."
           title={
-            editingDiagnosticId ? "Editar diagnostico" : "Registrar diagnostico"
+            editingDiagnosticId ? "Editar diagnóstico" : "Registrar diagnóstico"
           }
         />
 
@@ -275,11 +275,11 @@ export default function DiagnosticFormScreen({
                 Taller
               </Text>
               <Text style={[styles.cardTitle, { color: colors.text }]}>
-                Apertura tecnica
+                Apertura técnica
               </Text>
             </View>
             <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingDiagnosticId ? "Revision" : "Ingreso"}
+              {editingDiagnosticId ? "Revisión" : "Ingreso"}
             </Text>
           </View>
 
@@ -299,7 +299,7 @@ export default function DiagnosticFormScreen({
               <Text
                 style={[styles.vehicleSummaryLabel, { color: colors.accent }]}
               >
-                vehiculo:
+                vehículo:
               </Text>
               <View
                 style={[
@@ -320,7 +320,7 @@ export default function DiagnosticFormScreen({
                     .join(" ") ||
                     selectedVehicle?.plate ||
                     form.vehicleId ||
-                    "Sin vehiculo"}
+                    "Sin vehículo"}
                 </Text>
                 <View
                   style={[
@@ -412,7 +412,7 @@ export default function DiagnosticFormScreen({
 
               <View style={styles.formGroup}>
                 <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Vehiculo
+                  Vehículo
                 </Text>
                 <View style={styles.optionWrap}>
                   {filteredVehicles.slice(0, 8).map((vehicle) => {
@@ -478,7 +478,7 @@ export default function DiagnosticFormScreen({
                       { color: colors.accent },
                     ]}
                   >
-                    vehiculo:
+                    vehículo:
                   </Text>
                   <View
                     style={[
@@ -501,7 +501,7 @@ export default function DiagnosticFormScreen({
                         .join(" ") ||
                         selectedVehicle?.plate ||
                         form.vehicleId ||
-                        "Sin vehiculo"}
+                        "Sin vehículo"}
                     </Text>
                     <View
                       style={[
@@ -551,7 +551,7 @@ export default function DiagnosticFormScreen({
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Mecanico asignado
+              Mecánico asignado
             </Text>
             {canManageDiagnostics ? (
               <View style={styles.optionWrap}>
@@ -597,7 +597,7 @@ export default function DiagnosticFormScreen({
                   <Text
                     style={[styles.helperText, { color: colors.textSecondary }]}
                   >
-                    No hay mecanicos disponibles para asignar.
+                    No hay mecánicos disponibles para asignar.
                   </Text>
                 )}
               </View>
@@ -605,7 +605,7 @@ export default function DiagnosticFormScreen({
               <Text
                 style={[styles.helperText, { color: colors.textSecondary }]}
               >
-                Como mecanico, el diagnostico queda asignado a tu usuario y no
+                Como mecánico, el diagnóstico queda asignado a tu usuario y no
                 puedes reasignarlo desde esta pantalla.
               </Text>
             )}
@@ -654,7 +654,7 @@ export default function DiagnosticFormScreen({
 
           {isClosedDiagnostic ? (
             <Text style={[styles.closedNote, { color: colors.textSecondary }]}>
-              Este diagnostico ya fue cerrado al crear su orden y queda solo en
+              Este diagnóstico ya fue cerrado al crear su orden y queda solo en
               consulta.
             </Text>
           ) : null}
@@ -672,7 +672,7 @@ export default function DiagnosticFormScreen({
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, concerns: value }))
               }
-              placeholder="Sintomas, hallazgo inicial, solicitud del cliente"
+              placeholder="Síntomas, hallazgo inicial, solicitud del cliente"
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.textArea,
@@ -700,7 +700,7 @@ export default function DiagnosticFormScreen({
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, serviceItemsText: value }))
               }
-              placeholder="Una linea por servicio"
+              placeholder="Una línea por servicio"
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.textArea,
@@ -728,7 +728,7 @@ export default function DiagnosticFormScreen({
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, sparePartsText: value }))
               }
-              placeholder="Una linea por repuesto"
+              placeholder="Una línea por repuesto"
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.textArea,
@@ -779,7 +779,7 @@ export default function DiagnosticFormScreen({
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, notes: value }))
               }
-              placeholder="Contexto adicional para orden y aprobacion"
+              placeholder="Contexto adicional para orden y aprobación"
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.textArea,
@@ -808,12 +808,12 @@ export default function DiagnosticFormScreen({
           >
             <Text style={[styles.primaryActionText, { color: colors.white }]}>
               {isClosedDiagnostic
-                ? "Diagnostico cerrado"
+                ? "Diagnóstico cerrado"
                 : submitting
-                  ? "Guardando diagnostico..."
+                  ? "Guardando diagnóstico..."
                   : editingDiagnosticId
                     ? "Guardar cambios"
-                    : "Crear diagnostico"}
+                    : "Crear diagnóstico"}
             </Text>
           </Pressable>
         </View>

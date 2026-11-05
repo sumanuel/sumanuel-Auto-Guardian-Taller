@@ -115,7 +115,7 @@ export async function createWorkOrder({
 
   if (isMechanicRole(activeSession?.role)) {
     throw new Error(
-      "El perfil de mecanico no puede crear ordenes ni reasignar responsables desde esta pantalla.",
+      "El perfil de mecánico no puede crear órdenes ni reasignar responsables desde esta pantalla.",
     );
   }
 
@@ -126,12 +126,12 @@ export async function createWorkOrder({
     );
 
     if (!diagnostic || diagnostic.workshopId !== workshopId) {
-      throw new Error("No se encontro el diagnostico base de la orden.");
+      throw new Error("No se encontró el diagnóstico base de la orden.");
     }
 
     if (isDiagnosticClosed(diagnostic.status)) {
       throw new Error(
-        "Este diagnostico ya esta cerrado y no admite una nueva orden.",
+        "Este diagnóstico ya está cerrado y no admite una nueva orden.",
       );
     }
   }
@@ -173,7 +173,7 @@ export async function updateWorkOrder(workOrderId, payload) {
 
   if (isMechanicRole(activeSession?.role)) {
     throw new Error(
-      "El perfil de mecanico no puede editar responsables ni la ficha general de la orden.",
+      "El perfil de mecánico no puede editar responsables ni la ficha general de la orden.",
     );
   }
 
@@ -203,7 +203,7 @@ export async function updateWorkOrderOperationalState(
   const currentWorkOrder = await getEntityRecord("workOrders", workOrderId);
 
   if (!currentWorkOrder || currentWorkOrder.workshopId !== workshopId) {
-    throw new Error("No se encontro la orden a actualizar.");
+    throw new Error("No se encontró la orden a actualizar.");
   }
 
   if (
@@ -211,7 +211,7 @@ export async function updateWorkOrderOperationalState(
     !isWorkOrderAssignedToUser(currentWorkOrder, currentUid)
   ) {
     throw new Error(
-      "Solo puedes actualizar el estado de ordenes asignadas a tu usuario.",
+      "Solo puedes actualizar el estado de órdenes asignadas a tu usuario.",
     );
   }
 

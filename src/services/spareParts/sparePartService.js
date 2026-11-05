@@ -54,7 +54,7 @@ async function resolveSparePartContext(
 
     if (!relatedDiagnostic || relatedDiagnostic.workshopId !== workshopId) {
       throw new Error(
-        "El diagnostico del repuesto no pertenece al taller activo.",
+        "El diagnóstico del repuesto no pertenece al taller activo.",
       );
     }
   }
@@ -75,7 +75,7 @@ async function resolveSparePartContext(
     relatedWorkOrder?.diagnosticId &&
     relatedDiagnostic.id !== relatedWorkOrder.diagnosticId
   ) {
-    throw new Error("La orden y el diagnostico del repuesto no coinciden.");
+    throw new Error("La orden y el diagnóstico del repuesto no coinciden.");
   }
 
   return {
@@ -157,7 +157,7 @@ export async function deleteSparePart(sparePartId) {
   const currentSparePart = await getEntityRecord("spareParts", sparePartId);
 
   if (!currentSparePart || currentSparePart.workshopId !== workshopId) {
-    throw new Error("No se encontro el repuesto a eliminar.");
+    throw new Error("No se encontró el repuesto a eliminar.");
   }
 
   if (!canDeleteSparePartStatus(currentSparePart.status)) {

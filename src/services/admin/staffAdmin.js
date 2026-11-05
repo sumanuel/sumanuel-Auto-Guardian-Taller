@@ -168,7 +168,7 @@ export async function createStaffInvitation({
     existingInvitation.exists() &&
     existingInvitation.data()?.status === INVITATION_STATUSES.PENDING
   ) {
-    throw new Error("Ya existe una invitacion pendiente para ese correo.");
+    throw new Error("Ya existe una invitación pendiente para ese correo.");
   }
 
   const expirationDate = new Date();
@@ -295,7 +295,7 @@ export async function updateStaffProfile(uid, payload) {
   const currentMembership = await getWorkshopMembership(activeWorkshopId, uid);
 
   if (!currentMembership) {
-    throw new Error("La membresia del colaborador no existe en este taller.");
+    throw new Error("La membresía del colaborador no existe en este taller.");
   }
 
   const currentActorUid = auth.currentUser?.uid || "";
@@ -308,7 +308,7 @@ export async function updateStaffProfile(uid, payload) {
     currentMembership.role === USER_ROLES.OWNER
   ) {
     throw new Error(
-      "Un administrador no puede editar ni suspender la ficha del dueno del taller.",
+      "Un administrador no puede editar ni suspender la ficha del dueño del taller.",
     );
   }
 

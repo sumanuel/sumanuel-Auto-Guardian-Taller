@@ -71,25 +71,25 @@ export async function getPendingInvitationByEmail(email) {
 
 export function assertInvitationCanBeUsed(invitation, email, invitationCode) {
   if (!invitation) {
-    throw new Error("La invitacion no existe o ya no esta disponible.");
+    throw new Error("La invitación no existe o ya no está disponible.");
   }
 
   if (invitation.status !== INVITATION_STATUSES.PENDING) {
-    throw new Error("La invitacion ya no esta disponible para activacion.");
+    throw new Error("La invitación ya no está disponible para activación.");
   }
 
   if (
     invitation.expiresAt?.toDate &&
     invitation.expiresAt.toDate() < new Date()
   ) {
-    throw new Error("La invitacion ya vencio.");
+    throw new Error("La invitación ya venció.");
   }
 
   if (
     invitation.emailNormalized?.trim().toLowerCase() !==
     email.trim().toLowerCase()
   ) {
-    throw new Error("El correo no coincide con la invitacion registrada.");
+    throw new Error("El correo no coincide con la invitación registrada.");
   }
 
   if (
@@ -98,7 +98,7 @@ export function assertInvitationCanBeUsed(invitation, email, invitationCode) {
     invitation.invitationCode !== normalizeInvitationCode(invitationCode)
   ) {
     throw new Error(
-      "El codigo de invitacion no coincide con el correo registrado.",
+      "El código de invitación no coincide con el correo registrado.",
     );
   }
 }

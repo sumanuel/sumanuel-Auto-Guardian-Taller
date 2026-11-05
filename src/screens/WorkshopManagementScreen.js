@@ -11,26 +11,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
-import { isMechanicRole } from "../constants/accessControl";
+import { isMechanicRole, ROLE_LABELS } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
-const roleLabels = {
-  owner: "Propietario",
-  administrator: "Administrador",
-  reception: "Recepcion",
-  mechanic: "Mecanico",
-};
+const roleLabels = ROLE_LABELS;
 
 export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
   const { colors } = useTheme();
-  const {
-    activeWorkshopId,
-    activeWorkshop,
-    memberships,
-    switchWorkshop,
-  } = useAuth();
+  const { activeWorkshopId, activeWorkshop, memberships, switchWorkshop } =
+    useAuth();
   const [switchingId, setSwitchingId] = useState(null);
 
   const handleSwitchWorkshop = async (workshopId) => {
@@ -60,7 +51,7 @@ export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Gestion de talleres"
+          section="Gestión de talleres"
           subtitle={
             memberships.length > 1
               ? "Tienes acceso a varios talleres. Selecciona el que quieras usar como contexto activo."
@@ -73,8 +64,7 @@ export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
           {memberships.map((membership) => {
             const isActive = membership.workshopId === activeWorkshopId;
             const isSwitching = switchingId === membership.workshopId;
-            const workshopName =
-              membership.workshopName || "Taller sin nombre";
+            const workshopName = membership.workshopName || "Taller sin nombre";
             const roleLabel =
               roleLabels[membership.role] || membership.role || "Sin rol";
 
@@ -181,10 +171,8 @@ export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
               Sin talleres
             </Text>
-            <Text
-              style={[styles.emptyText, { color: colors.textSecondary }]}
-            >
-              No perteneces a ningun taller aun. Si recibiste una invitacion,
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No perteneces a ningún taller aun. Si recibiste una invitación,
               revisa tu correo o contacta al administrador.
             </Text>
           </View>

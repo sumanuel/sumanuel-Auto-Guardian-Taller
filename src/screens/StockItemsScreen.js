@@ -175,7 +175,7 @@ export default function StockItemsScreen({
   const handleDelete = (item) => {
     Alert.alert(
       "Eliminar item",
-      `Se eliminara ${item.name || item.id || "este item"} del inventario del taller.`,
+      `Se eliminará ${item.name || item.id || "este item"} del inventario del taller.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -208,7 +208,7 @@ export default function StockItemsScreen({
       >
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Operacion"
+          section="Operación"
           subtitle="Controla el inventario transversal del taller sin mezclarlo con los repuestos de cada orden."
           title="Stock y herramientas"
         />
@@ -232,7 +232,7 @@ export default function StockItemsScreen({
             style={[styles.summarySubtitle, { color: colors.textSecondary }]}
           >
             Visualiza repuestos generales, herramientas registradas y elementos
-            que requieren reposicion.
+            que requieren reposición.
           </Text>
 
           <View style={styles.statsRow}>
@@ -240,7 +240,7 @@ export default function StockItemsScreen({
               { label: "Items", value: inventoryStats.total },
               { label: "Repuestos", value: inventoryStats.parts },
               { label: "Herramientas", value: inventoryStats.tools },
-              { label: "Atencion", value: inventoryStats.attention },
+              { label: "Atención", value: inventoryStats.attention },
             ].map((stat) => (
               <View
                 key={stat.label}
@@ -298,7 +298,7 @@ export default function StockItemsScreen({
         {!canManageInventory ? (
           <Text style={[styles.helperText, { color: colors.textSecondary }]}>
             {activeMembership?.status !== "active"
-              ? "Tu acceso en este taller esta suspendido. Debes entrar con un usuario activo para crear o editar inventario."
+              ? "Tu acceso en este taller está suspendido. Debes entrar con un usuario activo para crear o editar inventario."
               : "Tu rol puede consultar el inventario, pero no crear ni editar registros."}
           </Text>
         ) : null}
@@ -315,7 +315,7 @@ export default function StockItemsScreen({
           <TextInput
             autoCapitalize="none"
             onChangeText={setSearchQuery}
-            placeholder="Buscar por nombre, proveedor, ubicacion o codigo"
+            placeholder="Buscar por nombre, proveedor, ubicación o código"
             placeholderTextColor={colors.textTertiary}
             style={[
               styles.input,
@@ -432,7 +432,7 @@ export default function StockItemsScreen({
                         ]}
                       >
                         Costo {item.unitCost || 0} ·{" "}
-                        {item.location || "Sin ubicacion"}
+                        {item.location || "Sin ubicación"}
                       </Text>
                       <Text
                         style={[styles.rowMeta, { color: colors.textTertiary }]}
@@ -592,7 +592,7 @@ export default function StockItemsScreen({
             </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               Crea el primer repuesto general o herramienta del taller para
-              empezar a controlar disponibilidad y reposicion.
+              empezar a controlar disponibilidad y reposición.
             </Text>
           </View>
         )}

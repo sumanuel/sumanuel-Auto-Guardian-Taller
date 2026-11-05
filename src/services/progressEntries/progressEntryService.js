@@ -119,7 +119,7 @@ export async function createProgressEntry({
     !isWorkOrderAssignedToUser(workOrder, currentUid)
   ) {
     throw new Error(
-      "Solo puedes registrar avances en ordenes asignadas a tu usuario.",
+      "Solo puedes registrar avances en órdenes asignadas a tu usuario.",
     );
   }
 

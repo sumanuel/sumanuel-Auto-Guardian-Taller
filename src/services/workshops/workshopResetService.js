@@ -69,7 +69,7 @@ export async function resetActiveWorkshopDataForCurrentUser() {
   const workshopId = getActiveWorkshopId();
 
   if (!uid) {
-    throw new Error("Debes iniciar sesion para reiniciar el taller.");
+    throw new Error("Debes iniciar sesión para reiniciar el taller.");
   }
 
   if (!workshopId) {

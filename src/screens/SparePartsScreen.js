@@ -139,7 +139,7 @@ export default function SparePartsScreen({
 
     Alert.alert(
       "Eliminar repuesto",
-      `Se eliminara ${part.name || part.id || "este repuesto"} del tablero operativo.`,
+      `Se eliminará ${part.name || part.id || "este repuesto"} del tablero operativo.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -159,7 +159,7 @@ export default function SparePartsScreen({
                   vehicleId: relatedWorkOrder.vehicleId || "",
                   authorUid: userProfile?.uid,
                   type: "parts",
-                  message: `Se elimino el repuesto ${part.name || part.id || "sin nombre"}.`,
+                  message: `Se eliminó el repuesto ${part.name || part.id || "sin nombre"}.`,
                   statusSnapshot: relatedWorkOrder.status || "",
                 });
               }
@@ -192,7 +192,7 @@ export default function SparePartsScreen({
           subtitle={
             selectedWorkOrder
               ? "Consulta los repuestos solicitados para esta orden y agrega nuevas piezas sin salir del flujo operativo."
-              : "Registra piezas en una ficha dedicada y vuelve a la lista para revisar estado, costo y relacion con la orden."
+              : "Registra piezas en una ficha dedicada y vuelve a la lista para revisar estado, costo y relación con la orden."
           }
           title={selectedWorkOrder ? "Repuestos solicitados" : "Repuestos"}
         />
@@ -214,7 +214,7 @@ export default function SparePartsScreen({
               {selectedWorkOrder.id}
             </Text>
             <Text style={[styles.scopeMeta, { color: colors.textSecondary }]}>
-              Diagnostico: {selectedWorkOrder.diagnosticId || "Sin diagnostico"}
+              Diagnostico: {selectedWorkOrder.diagnosticId || "Sin diagnóstico"}
             </Text>
           </View>
         ) : null}
@@ -251,7 +251,7 @@ export default function SparePartsScreen({
           <TextInput
             autoCapitalize="none"
             onChangeText={setSearchQuery}
-            placeholder="Buscar por repuesto, proveedor, orden o diagnostico"
+            placeholder="Buscar por repuesto, proveedor, orden o diagnóstico"
             placeholderTextColor={colors.textTertiary}
             style={[
               styles.input,
@@ -368,7 +368,7 @@ export default function SparePartsScreen({
                         ·{" "}
                         {relatedDiagnostic?.id ||
                           part.diagnosticId ||
-                          "Sin diagnostico"}
+                          "Sin diagnóstico"}
                       </Text>
                       <Text
                         style={[styles.rowMeta, { color: colors.textTertiary }]}
@@ -435,7 +435,7 @@ export default function SparePartsScreen({
             </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {selectedWorkOrder
-                ? "Esta orden todavia no tiene repuestos registrados. Agrega la primera pieza para seguir la solicitud y la instalacion."
+                ? "Esta orden todavía no tiene repuestos registrados. Agrega la primera pieza para seguir la solicitud y la instalación."
                 : "No hay repuestos para el filtro actual. Cambia el estado o carga la primera pieza para seguir el costo del servicio."}
             </Text>
           </View>

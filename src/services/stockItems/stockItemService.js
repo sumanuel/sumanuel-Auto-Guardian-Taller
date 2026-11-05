@@ -134,7 +134,7 @@ export async function deleteStockItem(stockItemId) {
   const currentStockItem = await getEntityRecord("stockItems", stockItemId);
 
   if (!currentStockItem || currentStockItem.workshopId !== workshopId) {
-    throw new Error("No se encontro el item a eliminar.");
+    throw new Error("No se encontró el item a eliminar.");
   }
 
   await deleteEntityRecord("stockItems", stockItemId);
@@ -171,7 +171,7 @@ export async function createStockMovement({
     const stockItemSnapshot = await transaction.get(stockItemRef);
 
     if (!stockItemSnapshot.exists()) {
-      throw new Error("No se encontro el item seleccionado.");
+      throw new Error("No se encontró el item seleccionado.");
     }
 
     const stockItemData = stockItemSnapshot.data();

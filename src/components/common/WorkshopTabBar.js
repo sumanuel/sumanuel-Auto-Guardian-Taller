@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../../utils/responsive";
+import { TOUCH, tapFeedback } from "../../utils/touch";
 
 const tabConfig = [
   { key: "home", label: "Inicio", icon: "home-outline", activeIcon: "home" },
@@ -14,25 +15,30 @@ const tabConfig = [
   },
   {
     key: "diagnostics",
-    label: "Diag.",
+    label: "Diagnóstico",
     icon: "pulse-outline",
     activeIcon: "pulse",
   },
   {
     key: "work-orders",
-    label: "Ordenes",
+    label: "Órdenes",
     icon: "clipboard-outline",
     activeIcon: "clipboard",
   },
   {
     key: "more",
-    label: "Mas",
+    label: "Más",
     icon: "ellipsis-horizontal-circle-outline",
     activeIcon: "ellipsis-horizontal-circle",
   },
 ];
 
-export default function WorkshopTabBar({ activeTab, onChange, visibleTabs }) {
+export default function WorkshopTabBar({
+  activeTab,
+  onChange,
+  visibleTabs,
+  large = false,
+}) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const renderedTabs = Array.isArray(visibleTabs)
@@ -65,12 +71,20 @@ export default function WorkshopTabBar({ activeTab, onChange, visibleTabs }) {
           return (
             <Pressable
               key={tab.key}
-              onPress={() => onChange?.(tab.key)}
-              style={styles.tabButton}
+              hitSlop={large ? TOUCH.hitSlop : undefined}
+              onPress={() => {
+                if (large) {
+                  tapFeedback("light");
+                }
+
+                onChange?.(tab.key);
+              }}
+              style={[styles.tabButton, large && styles.tabButtonLarge]}
             >
               <View
                 style={[
                   styles.iconWrap,
+                  large && styles.iconWrapLarge,
                   {
                     backgroundColor: selected ? colors.primary : "transparent",
                   },
@@ -79,12 +93,13 @@ export default function WorkshopTabBar({ activeTab, onChange, visibleTabs }) {
                 <Ionicons
                   color={selected ? colors.white : colors.textTertiary}
                   name={selected ? tab.activeIcon : tab.icon}
-                  size={rf(19)}
+                  size={large ? 26 : rf(19)}
                 />
               </View>
               <Text
                 style={[
                   styles.tabLabel,
+                  large && styles.tabLabelLarge,
                   { color: selected ? colors.primary : colors.textTertiary },
                 ]}
               >
@@ -128,4 +143,7 @@ const styles = StyleSheet.create({
     fontSize: rf(10),
     fontWeight: "800",
   },
+  tabButtonLarge: { minHeight: TOUCH.large, justifyContent: "center" },
+  iconWrapLarge: { width: 48, height: 40 },
+  tabLabelLarge: { fontSize: 12 },
 });

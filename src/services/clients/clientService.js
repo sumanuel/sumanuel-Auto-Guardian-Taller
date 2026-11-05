@@ -120,7 +120,7 @@ export async function deleteClient(clientId) {
 
   if (!diagnosticsSnapshot.empty || !workOrdersSnapshot.empty) {
     throw new Error(
-      "Este cliente ya tiene diagnosticos u ordenes registradas y no se puede eliminar.",
+      "Este cliente ya tiene diagnósticos u órdenes registradas y no se puede eliminar.",
     );
   }
 

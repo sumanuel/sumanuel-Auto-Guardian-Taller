@@ -14,7 +14,7 @@ const resolveCollection = (entityKey) => {
   const collectionConfig = firestoreCollections[entityKey];
 
   if (!collectionConfig) {
-    throw new Error(`No existe configuracion de coleccion para ${entityKey}.`);
+    throw new Error(`No existe configuración de coleccion para ${entityKey}.`);
   }
 
   return collectionConfig;

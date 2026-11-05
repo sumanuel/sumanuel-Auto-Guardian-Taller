@@ -149,8 +149,8 @@ export default function DiagnosticsScreen({
       }
     } catch (error) {
       Alert.alert(
-        "Diagnosticos",
-        "No se pudo cargar el tablero operativo de diagnosticos.",
+        "Diagnósticos",
+        "No se pudo cargar el tablero operativo de diagnósticos.",
       );
     } finally {
       setLoading(false);
@@ -296,8 +296,8 @@ export default function DiagnosticsScreen({
       await Linking.openURL(fileUri);
     } catch (error) {
       Alert.alert(
-        "Diagnosticos",
-        error?.message || "No se pudo abrir el PDF de cotizacion.",
+        "Diagnósticos",
+        error?.message || "No se pudo abrir el PDF de cotización.",
       );
     }
   };
@@ -305,8 +305,8 @@ export default function DiagnosticsScreen({
   const handleSendQuoteWhatsapp = async (diagnostic, client) => {
     if (!client?.phone) {
       Alert.alert(
-        "Diagnosticos",
-        "Se debe registrar el numero de telefono del cliente.",
+        "Diagnósticos",
+        "Se debe registrar el número de teléfono del cliente.",
       );
       return;
     }
@@ -315,8 +315,8 @@ export default function DiagnosticsScreen({
 
     if (!whatsappPhone) {
       Alert.alert(
-        "Diagnosticos",
-        "Se debe registrar un numero de telefono valido del cliente.",
+        "Diagnósticos",
+        "Se debe registrar un número de teléfono valido del cliente.",
       );
       return;
     }
@@ -328,12 +328,12 @@ export default function DiagnosticsScreen({
 
       const shareOptions = {
         mimeType,
-        dialogTitle: `Compartir cotizacion para ${client.fullName || "cliente"}`,
+        dialogTitle: `Compartir cotización para ${client.fullName || "cliente"}`,
         UTI: "com.adobe.pdf",
       };
 
       if (Platform.OS === "android") {
-        const shareText = `Cotizacion ${diagnostic.id || ""}`.trim();
+        const shareText = `Cotización ${diagnostic.id || ""}`.trim();
 
         for (const packageName of WHATSAPP_PACKAGES) {
           try {
@@ -365,9 +365,9 @@ export default function DiagnosticsScreen({
       await Sharing.shareAsync(fileUri, shareOptions);
     } catch (error) {
       Alert.alert(
-        "Diagnosticos",
+        "Diagnósticos",
         error?.message ||
-          "No se pudo compartir el PDF de cotizacion por WhatsApp.",
+          "No se pudo compartir el PDF de cotización por WhatsApp.",
       );
     }
   };
@@ -387,7 +387,7 @@ export default function DiagnosticsScreen({
           <TextInput
             autoCapitalize="none"
             onChangeText={setSearchQuery}
-            placeholder="Buscar por codigo, placa, cliente o hallazgo"
+            placeholder="Buscar por código, placa, cliente o hallazgo"
             placeholderTextColor={colors.textTertiary}
             style={[
               styles.input,
@@ -549,7 +549,7 @@ export default function DiagnosticsScreen({
                         { color: colors.accent },
                       ]}
                     >
-                      vehiculo:
+                      vehículo:
                     </Text>
                     <View
                       style={[
@@ -568,7 +568,7 @@ export default function DiagnosticsScreen({
                           .join(" ") ||
                           vehicle?.plate ||
                           diagnostic.vehicleId ||
-                          "Sin vehiculo"}
+                          "Sin vehículo"}
                       </Text>
                       <View
                         style={[
@@ -645,7 +645,7 @@ export default function DiagnosticsScreen({
                             { color: colors.textSecondary },
                           ]}
                         >
-                          Este diagnostico ya fue cerrado al abrir su orden de
+                          Este diagnóstico ya fue cerrado al abrir su orden de
                           trabajo.
                         </Text>
                       </View>
@@ -675,7 +675,7 @@ export default function DiagnosticsScreen({
                             { color: colors.accent },
                           ]}
                         >
-                          Crear orden desde este diagnostico
+                          Crear orden desde este diagnóstico
                         </Text>
                       </Pressable>
                     ) : null}
@@ -759,8 +759,8 @@ export default function DiagnosticsScreen({
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {isMechanicUser
-              ? "No tienes diagnosticos asignados para el filtro actual. Ajusta el estado o espera una nueva asignacion."
-              : "No hay diagnosticos para el filtro actual. Ajusta el estado o registra una nueva revision desde la ficha del cliente."}
+              ? "No tienes diagnósticos asignados para el filtro actual. Ajusta el estado o espera una nueva asignación."
+              : "No hay diagnósticos para el filtro actual. Ajusta el estado o registra una nueva revisión desde la ficha del cliente."}
           </Text>
         </View>
       )}
@@ -788,11 +788,11 @@ export default function DiagnosticsScreen({
               Taller
             </Text>
             <Text style={[styles.rowTitle, { color: colors.text }]}>
-              Resumen de diagnostico
+              Resumen de diagnóstico
             </Text>
           </View>
           <Text style={[styles.cardTag, { color: colors.primary }]}>
-            {selectedDiagnostic?.id || "Sin diagnostico"}
+            {selectedDiagnostic?.id || "Sin diagnóstico"}
           </Text>
         </View>
 
@@ -804,7 +804,7 @@ export default function DiagnosticsScreen({
             {client?.fullName || selectedDiagnostic?.clientId || "Sin cliente"}
           </Text>
           <Text style={[styles.vehicleSectionLabel, { color: colors.accent }]}>
-            vehiculo:
+            vehículo:
           </Text>
           <View
             style={[
@@ -821,7 +821,7 @@ export default function DiagnosticsScreen({
                 .join(" ") ||
                 vehicle?.plate ||
                 selectedDiagnostic?.vehicleId ||
-                "Sin vehiculo"}
+                "Sin vehículo"}
             </Text>
             <View
               style={[
@@ -883,7 +883,7 @@ export default function DiagnosticsScreen({
               <Text
                 style={[styles.secondaryActionText, { color: colors.primary }]}
               >
-                Editar diagnostico
+                Editar diagnóstico
               </Text>
             </Pressable>
           ) : null}
@@ -909,7 +909,7 @@ export default function DiagnosticsScreen({
               <Text
                 style={[styles.secondaryActionText, { color: colors.accent }]}
               >
-                Crear orden desde este diagnostico
+                Crear orden desde este diagnóstico
               </Text>
             </Pressable>
           ) : null}
@@ -932,17 +932,17 @@ export default function DiagnosticsScreen({
             screenMode === SCREEN_MODES.DETAIL ? handleBackToList : onBack
           }
           section={
-            screenMode === SCREEN_MODES.DETAIL ? "Diagnostico" : "Taller"
+            screenMode === SCREEN_MODES.DETAIL ? "Diagnóstico" : "Taller"
           }
           subtitle={
             screenMode === SCREEN_MODES.DETAIL
-              ? "Revisa el contexto y abre la orden operativa sin perder la lectura rapida del caso."
-              : "Registra hallazgos, consulta el padron y abre la siguiente accion desde la lista, igual que en Auto-Guardian."
+              ? "Revisa el contexto y abre la orden operativa sin perder la lectura rápida del caso."
+              : "Registra hallazgos, consulta el padrón y abre la siguiente acción desde la lista, igual que en Auto-Guardian."
           }
           title={
             screenMode === SCREEN_MODES.DETAIL
-              ? selectedDiagnostic?.id || "Detalle de diagnostico"
-              : "Diagnosticos"
+              ? selectedDiagnostic?.id || "Detalle de diagnóstico"
+              : "Diagnósticos"
           }
         />
 
@@ -958,7 +958,7 @@ export default function DiagnosticsScreen({
           setDateRange(sharedRange);
         }}
         onClose={() => setIsDateFilterVisible(false)}
-        title="Filtrar diagnosticos por fecha"
+        title="Filtrar diagnósticos por fecha"
         visible={isDateFilterVisible}
       />
     </SafeAreaView>

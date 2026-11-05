@@ -299,7 +299,7 @@ export async function updateWorkshop(workshopId, changes = {}) {
   const normalizedName = normalizeOptional(changes.name);
 
   if (!normalizedWorkshopId) {
-    throw new Error("No se encontro el taller a actualizar.");
+    throw new Error("No se encontró el taller a actualizar.");
   }
 
   if (!normalizedName) {
@@ -356,7 +356,7 @@ export async function upsertWorkshopMembership({
   const normalizedUserUid = normalizeOptional(userUid);
 
   if (!normalizedWorkshopId || !normalizedUserUid) {
-    throw new Error("No se pudo resolver la membresia del taller.");
+    throw new Error("No se pudo resolver la membresía del taller.");
   }
 
   const documentId = getWorkshopMembershipId(

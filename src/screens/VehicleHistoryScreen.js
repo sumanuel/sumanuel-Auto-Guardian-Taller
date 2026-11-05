@@ -57,7 +57,7 @@ function resolveTimelinePresentation(item, colors) {
   if (item.type === "diagnostic") {
     return {
       icon: "pulse-outline",
-      label: "Diagnostico",
+      label: "Diagnóstico",
       accentColor: colors.primary,
     };
   }
@@ -81,7 +81,7 @@ function buildVehicleTitle(vehicle) {
   return (
     [vehicle?.brand, vehicle?.model, vehicle?.year].filter(Boolean).join(" ") ||
     vehicle?.plate ||
-    "Vehiculo sin descripcion"
+    "Vehículo sin descripción"
   );
 }
 
@@ -227,8 +227,8 @@ export default function VehicleHistoryScreen({
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Operacion"
-          subtitle="Diagnosticos y ordenes consolidados por unidad para revisar el flujo tecnico completo."
+          section="Operación"
+          subtitle="Diagnósticos y órdenes consolidados por unidad para revisar el flujo técnico completo."
           title="Historial operativo"
         />
 
@@ -306,7 +306,7 @@ export default function VehicleHistoryScreen({
               <Text
                 style={[styles.countLabel, { color: colors.textSecondary }]}
               >
-                Ordenes entregadas
+                Órdenes entregadas
               </Text>
             </View>
           </View>
@@ -379,7 +379,7 @@ export default function VehicleHistoryScreen({
                   </View>
 
                   <Text style={[styles.timelineCode, { color: colors.text }]}>
-                    {item.id || item.refId || item.name || "Sin codigo"}
+                    {item.id || item.refId || item.name || "Sin código"}
                   </Text>
                   <Text
                     style={[
@@ -413,10 +413,10 @@ export default function VehicleHistoryScreen({
               ]}
             >
               <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
-                Operacion
+                Operación
               </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                Esta unidad todavia no tiene diagnosticos cerrados ni ordenes
+                Esta unidad todavía no tiene diagnósticos cerrados ni órdenes
                 entregadas.
               </Text>
             </View>

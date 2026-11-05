@@ -63,7 +63,7 @@ export default function SparePartFormScreen({
         setWorkOrders(nextWorkOrders);
         setDiagnostics(nextDiagnostics);
       } catch (error) {
-        Alert.alert("Repuestos", "No se pudieron cargar ordenes de apoyo.");
+        Alert.alert("Repuestos", "No se pudieron cargar órdenes de apoyo.");
       }
     };
 
@@ -156,7 +156,7 @@ export default function SparePartFormScreen({
               </Text>
             </View>
             <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingSparePartId ? "Revision" : "Nueva pieza"}
+              {editingSparePartId ? "Revisión" : "Nueva pieza"}
             </Text>
           </View>
 
@@ -211,7 +211,7 @@ export default function SparePartFormScreen({
           >
             <Text style={[styles.summaryText, { color: colors.text }]}>
               Diagnostico asociado:{" "}
-              {diagnosticLabel || form.diagnosticId || "Sin diagnostico"}
+              {diagnosticLabel || form.diagnosticId || "Sin diagnóstico"}
             </Text>
           </View>
 

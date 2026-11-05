@@ -113,20 +113,20 @@ export default function ClientFormScreen({
           >
             <View style={styles.cardHeaderCopy}>
               <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-                Recepcion
+                Recepción
               </Text>
               <Text style={[styles.cardTitle, { color: colors.text }]}>
                 Ficha de contacto
               </Text>
             </View>
             <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingClientId ? "Actualizacion" : "Alta"}
+              {editingClientId ? "Actualización" : "Alta"}
             </Text>
           </View>
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Identificacion
+              Identificación
             </Text>
             <TextInput
               onChangeText={(value) =>
@@ -170,7 +170,7 @@ export default function ClientFormScreen({
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Telefono
+              Teléfono
             </Text>
             <TextInput
               keyboardType="phone-pad"
@@ -217,7 +217,7 @@ export default function ClientFormScreen({
 
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Direccion
+              Dirección
             </Text>
             <TextInput
               onChangeText={(value) =>
@@ -247,7 +247,7 @@ export default function ClientFormScreen({
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, notes: value }))
               }
-              placeholder="Preferencias, observaciones o instrucciones de atencion"
+              placeholder="Preferencias, observaciones o instrucciones de atención"
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.textArea,

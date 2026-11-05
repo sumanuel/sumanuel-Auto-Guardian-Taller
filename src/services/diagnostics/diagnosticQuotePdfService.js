@@ -5,7 +5,7 @@ import { patchEntityRecord } from "../firestore/repository";
 
 const QUOTE_STATUS_LABELS = {
   received: "Recibido",
-  "in-review": "En revision",
+  "in-review": "En revisión",
   quoted: "Cotizado",
   approved: "Aprobado",
   closed: "Cerrado",
@@ -85,14 +85,14 @@ function buildDiagnosticQuoteHtml({
   const logoUri = resolveWorkshopLogoUri(workshopProfile);
   const workshopName = workshopProfile?.workshopName || "Auto-Guardian Taller";
   const advisorName = workshopProfile?.fullName || "Equipo operativo";
-  const advisorPhone = workshopProfile?.phone || "Sin telefono operativo";
+  const advisorPhone = workshopProfile?.phone || "Sin teléfono operativo";
   const advisorEmail = workshopProfile?.email || "Sin correo operativo";
-  const workshopRif = workshopProfile?.rif || "Sin identificacion fiscal";
-  const workshopAddress = workshopProfile?.address || "Sin direccion operativa";
+  const workshopRif = workshopProfile?.rif || "Sin identificación fiscal";
+  const workshopAddress = workshopProfile?.address || "Sin dirección operativa";
   const commercialNotes =
     workshopProfile?.commercialNotes ||
     "Sin notas comerciales registradas para este taller.";
-  const clientPhone = client?.phone || "Sin telefono registrado";
+  const clientPhone = client?.phone || "Sin teléfono registrado";
   const vehicleLabel = [vehicle?.brand, vehicle?.model, vehicle?.year]
     .filter(Boolean)
     .join(" ");
@@ -254,23 +254,23 @@ function buildDiagnosticQuoteHtml({
             <div class="card">
               <h3>Cliente</h3>
               <p class="line"><strong>Nombre:</strong> ${escapeHtml(client?.fullName || "Sin cliente")}</p>
-              <p class="line"><strong>Identificacion:</strong> ${escapeHtml(client?.identification || "Sin identificacion")}</p>
+              <p class="line"><strong>Identificacion:</strong> ${escapeHtml(client?.identification || "Sin identificación")}</p>
               <p class="line"><strong>Telefono:</strong> ${escapeHtml(clientPhone)}</p>
-              <p class="line"><strong>Direccion:</strong> ${escapeHtml(client?.address || "Sin direccion")}</p>
+              <p class="line"><strong>Direccion:</strong> ${escapeHtml(client?.address || "Sin dirección")}</p>
             </div>
             <div class="card">
               <h3>Vehiculo</h3>
-              <p class="line"><strong>Unidad:</strong> ${escapeHtml(vehicleLabel || vehicle?.plate || "Sin vehiculo")}</p>
+              <p class="line"><strong>Unidad:</strong> ${escapeHtml(vehicleLabel || vehicle?.plate || "Sin vehículo")}</p>
               <p class="line"><strong>Placa:</strong> ${escapeHtml(vehicle?.plate || "Sin placa")}</p>
               <p class="line"><strong>Kilometraje:</strong> ${escapeHtml(vehicle?.mileage ? `${vehicle.mileage} km` : "Sin kilometraje")}</p>
-              <p class="line"><strong>Codigo:</strong> ${escapeHtml(vehicle?.id || diagnostic.vehicleId || "Sin codigo")}</p>
+              <p class="line"><strong>Codigo:</strong> ${escapeHtml(vehicle?.id || diagnostic.vehicleId || "Sin código")}</p>
             </div>
           </div>
 
           <div class="grid">
             <div class="card">
               <h3>Resumen tecnico</h3>
-              <p class="line"><strong>Diagnostico:</strong> ${escapeHtml(diagnostic.id || "Sin codigo")}</p>
+              <p class="line"><strong>Diagnostico:</strong> ${escapeHtml(diagnostic.id || "Sin código")}</p>
               <p class="line"><strong>Mecanico:</strong> ${escapeHtml(workshopProfile?.assignedMechanicName || "Sin asignar")}</p>
               <p class="line"><strong>Asesor:</strong> ${escapeHtml(advisorName)}</p>
               <p class="line"><strong>Contacto taller:</strong> ${escapeHtml(advisorPhone)}</p>
@@ -308,7 +308,7 @@ function buildDiagnosticQuoteHtml({
           </div>
 
           <div class="footer">
-            Este documento resume la cotizacion tecnica generada a partir del diagnostico del taller. Su aprobacion permite avanzar a la orden de trabajo y trazabilidad operativa.
+            Este documento resume la cotización técnica generada a partir del diagnóstico del taller. Su aprobación permite avanzar a la orden de trabajo y trazabilidad operativa.
           </div>
         </div>
       </body>
@@ -331,12 +331,12 @@ export async function createDiagnosticQuotePdf({
   const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
 
   if (!base64) {
-    throw new Error("No se pudo serializar el PDF de cotizacion.");
+    throw new Error("No se pudo serializar el PDF de cotización.");
   }
 
   await patchEntityRecord("diagnostics", diagnosticId, {
     quotePdfBase64: base64,
-    quotePdfFileName: `cotizacion-${diagnosticId}.pdf`,
+    quotePdfFileName: `cotización-${diagnosticId}.pdf`,
     quotePdfMimeType: "application/pdf",
     quoteGeneratedAt: new Date().toISOString(),
     quotePdfDownloadUrl: "",
@@ -346,7 +346,7 @@ export async function createDiagnosticQuotePdf({
   return {
     uri,
     base64,
-    fileName: `cotizacion-${diagnosticId}.pdf`,
+    fileName: `cotización-${diagnosticId}.pdf`,
     mimeType: "application/pdf",
   };
 }
@@ -356,13 +356,13 @@ export async function ensureDiagnosticQuotePdfFile(diagnostic) {
 
   if (!base64) {
     throw new Error(
-      "Este diagnostico todavia no tiene un PDF de cotizacion disponible.",
+      "Este diagnóstico todavía no tiene un PDF de cotización disponible.",
     );
   }
 
   const fileName =
     diagnostic?.quotePdfFileName ||
-    `cotizacion-${diagnostic?.id || "diagnostico"}.pdf`;
+    `cotización-${diagnostic?.id || "diagnóstico"}.pdf`;
   const directoryUri = `${FileSystem.cacheDirectory}diagnostic-quotes/`;
 
   await FileSystem.makeDirectoryAsync(directoryUri, { intermediates: true });

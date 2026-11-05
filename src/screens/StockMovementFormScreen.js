@@ -31,7 +31,7 @@ function getMovementMeta(movementType) {
     : {
         title: "Registrar entrada",
         subtitle:
-          "Suma unidades al inventario cuando recibes compra, reposicion o retorno de herramienta.",
+          "Suma unidades al inventario cuando recibes compra, reposición o retorno de herramienta.",
         tone: "accent",
       };
 }
@@ -84,14 +84,14 @@ export default function StockMovementFormScreen({
       Alert.alert(
         "Stock y herramientas",
         activeMembership?.status !== "active"
-          ? "Tu acceso en este taller esta suspendido y no puede registrar movimientos en el inventario."
+          ? "Tu acceso en este taller está suspendido y no puede registrar movimientos en el inventario."
           : "Tu rol actual no puede registrar movimientos en el inventario.",
       );
       return;
     }
 
     if (!initialStockItem?.id && !initialStockItem?.refId) {
-      Alert.alert("Stock y herramientas", "No se encontro el item a mover.");
+      Alert.alert("Stock y herramientas", "No se encontró el item a mover.");
       return;
     }
 
@@ -286,7 +286,7 @@ export default function StockMovementFormScreen({
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, notes: value }))
               }
-              placeholder="Compra, reposicion, consumo interno, salida a servicio o detalle tecnico"
+              placeholder="Compra, reposición, consumo interno, salida a servicio o detalle técnico"
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.input,

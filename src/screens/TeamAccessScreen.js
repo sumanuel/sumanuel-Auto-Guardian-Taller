@@ -17,6 +17,7 @@ import {
   hasPermission,
   USER_ROLES,
   USER_STATUSES,
+  ROLE_LABELS,
 } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -32,12 +33,7 @@ import {
 import { resetActiveWorkshopDataForCurrentUser } from "../services/workshops/workshopResetService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
-const roleLabels = {
-  owner: "Dueno",
-  administrator: "Administrador",
-  reception: "Recepcion",
-  mechanic: "Mecanico",
-};
+const roleLabels = ROLE_LABELS;
 
 const statusLabels = {
   active: "Activo",
@@ -93,7 +89,7 @@ async function pickWorkshopLogo() {
 
   if (!permissionResult.granted) {
     throw new Error(
-      "Debes permitir acceso a la galeria para seleccionar el logo del taller.",
+      "Debes permitir acceso a la galería para seleccionar el logo del taller.",
     );
   }
 
@@ -251,7 +247,7 @@ export default function TeamAccessScreen({
     } catch (error) {
       Alert.alert(
         "Equipo y accesos",
-        "No se pudo actualizar la informacion administrativa.",
+        "No se pudo actualizar la información administrativa.",
       );
     } finally {
       setAdminRefreshing(false);
@@ -294,12 +290,12 @@ export default function TeamAccessScreen({
       await refreshAdminData();
       Alert.alert(
         "Talleres",
-        "La invitacion fue aceptada y puedes operar en ese taller.",
+        "La invitación fue aceptada y puedes operar en ese taller.",
       );
     } catch (error) {
       Alert.alert(
         "Talleres",
-        error?.message || "No se pudo aceptar la invitacion pendiente.",
+        error?.message || "No se pudo aceptar la invitación pendiente.",
       );
     } finally {
       setAcceptingIncomingInvitation(false);
@@ -396,13 +392,13 @@ export default function TeamAccessScreen({
       await refreshAdminData();
 
       Alert.alert(
-        "Invitacion emitida",
-        `El codigo ${createdInvitation.id} quedo disponible en la app para el correo ${createdInvitation.email}.`,
+        "Invitación emitida",
+        `El código ${createdInvitation.id} quedó disponible en la app para el correo ${createdInvitation.email}.`,
       );
     } catch (error) {
       Alert.alert(
         "Invitaciones",
-        error?.message || "No se pudo emitir la invitacion.",
+        error?.message || "No se pudo emitir la invitación.",
       );
     } finally {
       setAdminSubmitting(false);
@@ -413,11 +409,11 @@ export default function TeamAccessScreen({
     try {
       await cancelStaffInvitation(invitation.refId || invitation.id);
       await refreshAdminData();
-      Alert.alert("Invitaciones", "La invitacion fue cancelada.");
+      Alert.alert("Invitaciones", "La invitación fue cancelada.");
     } catch (error) {
       Alert.alert(
         "Invitaciones",
-        error?.message || "No se pudo cancelar la invitacion.",
+        error?.message || "No se pudo cancelar la invitación.",
       );
     }
   };
@@ -428,7 +424,7 @@ export default function TeamAccessScreen({
       await refreshAdminData();
       Alert.alert(
         "Aprobaciones",
-        `${profile.fullName || profile.email || "El usuario"} ya quedo activo.`,
+        `${profile.fullName || profile.email || "El usuario"} ya quedó activo.`,
       );
     } catch (error) {
       Alert.alert(
@@ -442,7 +438,7 @@ export default function TeamAccessScreen({
     if (isProtectedCollaboratorForRole(profile, currentRole)) {
       Alert.alert(
         "Equipo",
-        "El perfil del dueno solo puede ser gestionado por ese mismo nivel de acceso.",
+        "El perfil del dueño solo puede ser gestionado por ese mismo nivel de acceso.",
       );
       return;
     }
@@ -470,7 +466,7 @@ export default function TeamAccessScreen({
     if (isProtectedCollaboratorForRole(profile, currentRole)) {
       Alert.alert(
         "Equipo",
-        "El perfil del dueno no puede ser editado desde una cuenta administradora.",
+        "El perfil del dueño no puede ser editado desde una cuenta administradora.",
       );
       return;
     }
@@ -518,7 +514,7 @@ export default function TeamAccessScreen({
   const handleResetWorkshopData = () => {
     Alert.alert(
       "Reiniciar taller",
-      "Se eliminaran clientes, vehiculos, diagnosticos, ordenes, avances, repuestos, stock y movimientos del taller activo. La identidad comercial, el taller y los colaboradores se conservan. Esta accion no se puede deshacer.",
+      "Se eliminarán clientes, vehículos, diagnósticos, órdenes, avances, repuestos, stock y movimientos del taller activo. La identidad comercial, el taller y los colaboradores se conservan. Esta acción no se puede deshacer.",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -550,17 +546,17 @@ export default function TeamAccessScreen({
   const headerCopy =
     screenMode === "workshop"
       ? {
-          section: "Configuracion",
+          section: "Configuración",
           title: "Datos del taller",
           subtitle:
             "Identidad comercial, contexto activo y mantenimiento operativo del taller.",
         }
       : screenMode === "collaborators"
         ? {
-            section: "Administracion",
+            section: "Administración",
             title: "Colaboradores",
             subtitle:
-              "Invitaciones, roles, estados y control de acceso del equipo tecnico.",
+              "Invitaciones, roles, estados y control de acceso del equipo técnico.",
           }
         : {
             section: "Control administrativo",
@@ -600,7 +596,7 @@ export default function TeamAccessScreen({
                 Taller activo
               </Text>
               <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-                Selecciona desde que taller quieres trabajar en esta sesion.
+                Selecciona desde que taller quieres trabajar en esta sesión.
               </Text>
             </View>
             <View
@@ -693,11 +689,11 @@ export default function TeamAccessScreen({
             ]}
           >
             <Text style={[styles.panelTitle, { color: colors.text }]}>
-              Gestion del taller activo
+              Gestión del taller activo
             </Text>
             <Text style={[styles.panelText, { color: colors.textSecondary }]}>
               Ajusta identidad fiscal, contacto, logo y notas comerciales del
-              taller activo dentro del esquema de taller unico.
+              taller activo dentro del esquema de taller único.
             </Text>
 
             <View style={styles.formGroup}>
@@ -732,7 +728,7 @@ export default function TeamAccessScreen({
                         phone: value,
                       }))
                     }
-                    placeholder="Telefono del taller"
+                    placeholder="Teléfono del taller"
                     placeholderTextColor={colors.textTertiary}
                     style={[
                       styles.input,
@@ -772,7 +768,7 @@ export default function TeamAccessScreen({
                         address: value,
                       }))
                     }
-                    placeholder="Direccion del taller"
+                    placeholder="Dirección del taller"
                     placeholderTextColor={colors.textTertiary}
                     style={[
                       styles.input,
@@ -791,7 +787,7 @@ export default function TeamAccessScreen({
                         rif: value,
                       }))
                     }
-                    placeholder="RIF o identificacion fiscal"
+                    placeholder="RIF o identificación fiscal"
                     placeholderTextColor={colors.textTertiary}
                     style={[
                       styles.input,
@@ -911,7 +907,7 @@ export default function TeamAccessScreen({
                           { color: colors.textSecondary },
                         ]}
                       >
-                        Selecciona una imagen desde la galeria para guardarla
+                        Selecciona una imagen desde la galería para guardarla
                         como logo comercial del taller.
                       </Text>
                     </View>
@@ -984,7 +980,7 @@ export default function TeamAccessScreen({
               ]}
             >
               <Text style={[styles.summaryText, { color: colors.text }]}>
-                Esta implementacion opera con un solo taller. La seccion ya no
+                Esta implementación opera con un solo taller. La sección ya no
                 permite crear talleres adicionales.
               </Text>
             </View>
@@ -1043,12 +1039,12 @@ export default function TeamAccessScreen({
             ]}
           >
             <Text style={[styles.panelTitle, { color: colors.text }]}>
-              Gestion del taller restringida
+              Gestión del taller restringida
             </Text>
             <Text style={[styles.panelText, { color: colors.textSecondary }]}>
               {currentRole === USER_ROLES.ADMINISTRATOR
                 ? "Tu perfil puede operar el equipo y el flujo diario, pero no cambiar la identidad comercial ni reiniciar la data del taller."
-                : "Este perfil no administra configuracion del taller. Usa esta pantalla solo como contexto del taller activo."}
+                : "Este perfil no administra configuración del taller. Usa esta pantalla solo como contexto del taller activo."}
             </Text>
           </View>
         ) : null}
@@ -1064,7 +1060,7 @@ export default function TeamAccessScreen({
             ]}
           >
             <Text style={[styles.panelTitle, { color: colors.text }]}>
-              Invitacion entrante
+              Invitación entrante
             </Text>
             <Text style={[styles.panelText, { color: colors.textSecondary }]}>
               Tienes una invitacion pendiente para unirte a{" "}
@@ -1086,8 +1082,8 @@ export default function TeamAccessScreen({
             >
               <Text style={[styles.primaryActionText, { color: colors.white }]}>
                 {acceptingIncomingInvitation
-                  ? "Aceptando invitacion..."
-                  : "Aceptar invitacion"}
+                  ? "Aceptando invitación..."
+                  : "Aceptar invitación"}
               </Text>
             </Pressable>
           </View>
@@ -1108,10 +1104,10 @@ export default function TeamAccessScreen({
             </Text>
             <Text style={[styles.panelText, { color: colors.textSecondary }]}>
               {currentRole === USER_ROLES.RECEPTION
-                ? "Recepcion no puede emitir invitaciones, aprobar accesos ni editar fichas del equipo."
+                ? "Recepción no puede emitir invitaciones, aprobar accesos ni editar fichas del equipo."
                 : currentRole === USER_ROLES.MECHANIC
-                  ? "Mecanico no puede gestionar invitaciones ni colaboradores desde esta pantalla."
-                  : "La gestion de invitaciones y colaboradores solo esta habilitada para perfiles con permiso administrativo."}
+                  ? "Mecánico no puede gestionar invitaciones ni colaboradores desde esta pantalla."
+                  : "La gestión de invitaciones y colaboradores solo está habilitada para perfiles con permiso administrativo."}
             </Text>
           </View>
         )}
@@ -1131,7 +1127,7 @@ export default function TeamAccessScreen({
                 <View style={styles.panelHeader}>
                   <View style={styles.panelCopy}>
                     <Text style={[styles.panelTitle, { color: colors.text }]}>
-                      Editar ficha tecnica
+                      Editar ficha técnica
                     </Text>
                     <Text
                       style={[
@@ -1139,7 +1135,7 @@ export default function TeamAccessScreen({
                         { color: colors.textSecondary },
                       ]}
                     >
-                      Completa nombre, telefono, rol y estado del colaborador
+                      Completa nombre, teléfono, rol y estado del colaborador
                       desde una sola ficha operativa.
                     </Text>
                   </View>
@@ -1189,7 +1185,7 @@ export default function TeamAccessScreen({
 
                 <View style={styles.formGroup}>
                   <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    Telefono
+                    Teléfono
                   </Text>
                   <TextInput
                     keyboardType="phone-pad"
@@ -1199,7 +1195,7 @@ export default function TeamAccessScreen({
                         phone: value,
                       }))
                     }
-                    placeholder="Numero de contacto"
+                    placeholder="Número de contacto"
                     placeholderTextColor={colors.textTertiary}
                     style={[
                       styles.input,
@@ -1327,12 +1323,12 @@ export default function TeamAccessScreen({
               <View style={styles.panelHeader}>
                 <View style={styles.panelCopy}>
                   <Text style={[styles.panelTitle, { color: colors.text }]}>
-                    Nueva invitacion
+                    Nueva invitación
                   </Text>
                   <Text
                     style={[styles.panelText, { color: colors.textSecondary }]}
                   >
-                    Cada invitacion genera un codigo consecutivo y queda
+                    Cada invitación genera un código consecutivo y queda
                     disponible en la app para que el colaborador se active con
                     ese mismo correo.
                   </Text>
@@ -1369,7 +1365,7 @@ export default function TeamAccessScreen({
                       email: value,
                     }))
                   }
-                  placeholder="tecnico@taller.com"
+                  placeholder="técnico@taller.com"
                   placeholderTextColor={colors.textTertiary}
                   style={[
                     styles.input,
@@ -1437,8 +1433,8 @@ export default function TeamAccessScreen({
                   style={[styles.primaryActionText, { color: colors.white }]}
                 >
                   {adminSubmitting
-                    ? "Emitiendo invitacion..."
-                    : "Emitir invitacion"}
+                    ? "Emitiendo invitación..."
+                    : "Emitir invitación"}
                 </Text>
               </Pressable>
             </View>
@@ -1491,7 +1487,7 @@ export default function TeamAccessScreen({
                                   { color: colors.primary },
                                 ]}
                               >
-                                Invitacion
+                                Invitación
                               </Text>
                               <Text
                                 style={[
@@ -1721,7 +1717,7 @@ export default function TeamAccessScreen({
                         { color: colors.textSecondary },
                       ]}
                     >
-                      No hay usuarios pendientes de aprobacion interna.
+                      No hay usuarios pendientes de aprobación interna.
                     </Text>
                   </View>
                 )}
@@ -1738,7 +1734,7 @@ export default function TeamAccessScreen({
               >
                 <View style={styles.listHeader}>
                   <Text style={[styles.listTitle, { color: colors.text }]}>
-                    Personal tecnico
+                    Personal técnico
                   </Text>
                   <Text style={[styles.counterText, { color: colors.accent }]}>
                     {staffProfiles.length}
@@ -1810,7 +1806,7 @@ export default function TeamAccessScreen({
                                   { color: colors.textSecondary },
                                 ]}
                               >
-                                {profile.userCode || "Sin codigo"} ·{" "}
+                                {profile.userCode || "Sin código"} ·{" "}
                                 {profile.email}
                               </Text>
                               <Text
@@ -1827,7 +1823,7 @@ export default function TeamAccessScreen({
                                   { color: colors.textTertiary },
                                 ]}
                               >
-                                {profile.phone || "Sin telefono operativo"}
+                                {profile.phone || "Sin teléfono operativo"}
                               </Text>
                               {isProtectedProfile ? (
                                 <Text
@@ -1836,7 +1832,7 @@ export default function TeamAccessScreen({
                                     { color: colors.warning },
                                   ]}
                                 >
-                                  El dueno no puede ser editado ni suspendido
+                                  El dueño no puede ser editado ni suspendido
                                   desde una cuenta administradora.
                                 </Text>
                               ) : null}
@@ -1924,7 +1920,7 @@ export default function TeamAccessScreen({
                         { color: colors.textSecondary },
                       ]}
                     >
-                      No hay personal tecnico registrado todavia.
+                      No hay personal técnico registrado todavía.
                     </Text>
                   </View>
                 )}

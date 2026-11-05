@@ -5,6 +5,17 @@ export const USER_ROLES = {
   MECHANIC: "mechanic",
 };
 
+export const ROLE_LABELS = {
+  [USER_ROLES.OWNER]: "Propietario",
+  [USER_ROLES.ADMINISTRATOR]: "Administrador",
+  [USER_ROLES.RECEPTION]: "Recepción",
+  [USER_ROLES.MECHANIC]: "Mecánico",
+};
+
+export function getRoleLabel(role, fallback = "Sin rol") {
+  return ROLE_LABELS[role] || role || fallback;
+}
+
 export const USER_STATUSES = {
   INVITED: "invited",
   PENDING_APPROVAL: "pendingApproval",

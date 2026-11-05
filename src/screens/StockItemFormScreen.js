@@ -64,7 +64,7 @@ export default function StockItemFormScreen({
       Alert.alert(
         "Stock y herramientas",
         activeMembership?.status !== "active"
-          ? "Tu acceso en este taller esta suspendido y no puede crear o editar items del inventario."
+          ? "Tu acceso en este taller está suspendido y no puede crear o editar items del inventario."
           : "Tu rol actual no puede crear o editar items del inventario.",
       );
       return;
@@ -138,7 +138,7 @@ export default function StockItemFormScreen({
               </Text>
             </View>
             <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingStockItemId ? "Revision" : "Nuevo registro"}
+              {editingStockItemId ? "Revisión" : "Nuevo registro"}
             </Text>
           </View>
 
@@ -191,7 +191,7 @@ export default function StockItemFormScreen({
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, name: value }))
               }
-              placeholder="Llave, escaner, filtro, lubricante..."
+              placeholder="Llave, escáner, filtro, lubricante..."
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.input,
@@ -230,7 +230,7 @@ export default function StockItemFormScreen({
             </View>
             <View style={[styles.formGroup, styles.gridItem]}>
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Minimo
+                Mínimo
               </Text>
               <TextInput
                 keyboardType="number-pad"
@@ -299,7 +299,7 @@ export default function StockItemFormScreen({
             </View>
             <View style={[styles.formGroup, styles.gridItem]}>
               <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Ubicacion
+                Ubicación
               </Text>
               <TextInput
                 onChangeText={(value) =>
@@ -330,7 +330,7 @@ export default function StockItemFormScreen({
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, notes: value }))
               }
-              placeholder="Compatibilidades, estado, detalle tecnico o recordatorio de reposicion"
+              placeholder="Compatibilidades, estado, detalle técnico o recordatorio de reposición"
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.input,

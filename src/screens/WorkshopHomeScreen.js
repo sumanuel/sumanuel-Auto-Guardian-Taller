@@ -17,6 +17,7 @@ import {
   isDiagnosticAssignedToUser,
   isMechanicRole,
   isWorkOrderAssignedToUser,
+  getRoleLabel,
 } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -40,33 +41,26 @@ import {
   setSharedOperationalDateRange,
 } from "../utils/dateRange";
 
-const roleLabels = {
-  owner: "Dueno",
-  administrator: "Administrador",
-  reception: "Recepcion",
-  mechanic: "Mecanico",
-};
-
 const queueTypeOptions = [
   {
     key: "all",
     label: "Todos",
     title: "Panorama general",
-    subtitle: "Diagnosticos y ordenes mezclados segun actividad reciente.",
+    subtitle: "Diagnósticos y órdenes mezclados según actividad reciente.",
     icon: "grid-outline",
   },
   {
     key: "diagnostic",
-    label: "Diag.",
-    title: "Diagnosticos del taller",
-    subtitle: "Revision inicial, cotizacion y aprobacion antes de abrir orden.",
+    label: "Diagnósticos",
+    title: "Diagnósticos del taller",
+    subtitle: "Revisión inicial, cotización y aprobación antes de abrir orden.",
     icon: "pulse-outline",
   },
   {
     key: "work-order",
-    label: "Ordenes",
-    title: "Ordenes operativas",
-    subtitle: "Seguimiento de ejecucion, pausas, entregas y avance tecnico.",
+    label: "Órdenes",
+    title: "Órdenes operativas",
+    subtitle: "Seguimiento de ejecución, pausas, entregas y avance técnico.",
     icon: "clipboard-outline",
   },
 ];
@@ -116,7 +110,7 @@ function formatOperationalCode(record, collectionConfig) {
     )}`;
   }
 
-  return fallbackId || "Sin codigo";
+  return fallbackId || "Sin código";
 }
 
 function getQueueAccentColor(item, colors) {
@@ -162,7 +156,7 @@ function getQueueIconName(itemType) {
 }
 
 function getQueueTypeLabel(itemType) {
-  return itemType === "diagnostic" ? "Diagnostico" : "Orden";
+  return itemType === "diagnostic" ? "Diagnóstico" : "Orden";
 }
 
 export default function WorkshopHomeScreen({
@@ -402,20 +396,30 @@ export default function WorkshopHomeScreen({
   const filteredQueue = useMemo(() => {
     const normalizedPlateQuery = normalizeSearchValue(plateQuery);
 
-    return queue
-      .filter((item) => {
-        const matchesPlate = normalizedPlateQuery
-          ? normalizeSearchValue(item.plate).includes(normalizedPlateQuery)
-          : true;
-        const matchesType =
-          selectedType === "all" ? true : item.type === selectedType;
-        const matchesStatus =
-          selectedStatus === "all" ? true : item.statusKey === selectedStatus;
-        const matchesDate = isWithinDateRange(item.createdAt, dateRange);
-        return matchesPlate && matchesType && matchesStatus && matchesDate;
-      })
-      .slice(0, 8);
-  }, [dateRange, plateQuery, queue, selectedStatus, selectedType]);
+    return queue.filter((item) => {
+      const matchesPlate = normalizedPlateQuery
+        ? normalizeSearchValue(item.plate).includes(normalizedPlateQuery)
+        : true;
+      const matchesType =
+        selectedType === "all" ? true : item.type === selectedType;
+      const matchesStatus =
+        selectedStatus === "all" ? true : item.statusKey === selectedStatus;
+      const isFinished =
+        item.statusKey === "delivered" || item.statusKey === "closed";
+      const matchesDate =
+        isMechanicUser && !isFinished
+          ? true
+          : isWithinDateRange(item.createdAt, dateRange);
+      return matchesPlate && matchesType && matchesStatus && matchesDate;
+    });
+  }, [
+    dateRange,
+    isMechanicUser,
+    plateQuery,
+    queue,
+    selectedStatus,
+    selectedType,
+  ]);
 
   const selectedQueueType =
     queueTypeOptions.find((option) => option.key === selectedType) ||
@@ -444,8 +448,8 @@ export default function WorkshopHomeScreen({
           section="Centro de control"
           subtitle={
             isMechanicUser
-              ? "Supervisa solo los diagnosticos y ordenes que estan bajo tu responsabilidad operativa."
-              : "Supervisa recepcion, diagnosticos, ordenes y alertas desde una sola vista operativa."
+              ? "Supervisa solo los diagnósticos y órdenes que están bajo tu responsabilidad operativa."
+              : "Supervisa recepción, diagnósticos, órdenes y alertas desde una sola vista operativa."
           }
           title="Auto-Guardian"
         />
@@ -470,9 +474,7 @@ export default function WorkshopHomeScreen({
               <Text
                 style={[styles.heroSubtitle, { color: colors.textSecondary }]}
               >
-                {roleLabels[userProfile?.role] ||
-                  userProfile?.role ||
-                  "Sin rol"}
+                {getRoleLabel(currentRole)}
               </Text>
             </View>
 
@@ -526,7 +528,7 @@ export default function WorkshopHomeScreen({
                 <Text
                   style={[styles.metricLabel, { color: colors.textSecondary }]}
                 >
-                  Vehiculos
+                  Vehículos
                 </Text>
               </Pressable>
               <Pressable
@@ -606,6 +608,7 @@ export default function WorkshopHomeScreen({
                   onPress={() => setSelectedType(option.key)}
                   style={[
                     styles.tabCard,
+                    isMechanicUser && styles.tabCardLarge,
                     {
                       backgroundColor: isActive
                         ? colors.primary
@@ -647,6 +650,7 @@ export default function WorkshopHomeScreen({
               <View
                 style={[
                   styles.searchShell,
+                  isMechanicUser && styles.searchShellLarge,
                   {
                     backgroundColor: colors.inputBackground,
                     borderColor: colors.border,
@@ -661,7 +665,11 @@ export default function WorkshopHomeScreen({
                 <TextInput
                   placeholder="Buscar por placa"
                   placeholderTextColor={colors.textTertiary}
-                  style={[styles.searchInput, { color: colors.text }]}
+                  style={[
+                    styles.searchInput,
+                    isMechanicUser && styles.searchInputLarge,
+                    { color: colors.text },
+                  ]}
                   value={plateQuery}
                   onChangeText={setPlateQuery}
                   autoCapitalize="characters"
@@ -672,6 +680,7 @@ export default function WorkshopHomeScreen({
                 onPress={() => setIsDateFilterVisible(true)}
                 style={[
                   styles.iconAction,
+                  isMechanicUser && styles.iconActionLarge,
                   {
                     backgroundColor: colors.cardMuted,
                     borderColor: colors.border,
@@ -692,6 +701,7 @@ export default function WorkshopHomeScreen({
                 }}
                 style={[
                   styles.iconAction,
+                  isMechanicUser && styles.iconActionLarge,
                   {
                     backgroundColor: colors.cardMuted,
                     borderColor: colors.border,
@@ -736,9 +746,9 @@ export default function WorkshopHomeScreen({
                 >
                   {selectedType === "all"
                     ? isMechanicUser
-                      ? "Vista compacta con tus casos y ordenes asignadas."
-                      : "Vista compacta para detectar rapido diagnosticos y ordenes activas."
-                    : "Filtra por estado solo cuando estes revisando un flujo operativo especifico."}
+                      ? "Vista compacta con tus casos y órdenes asignadas."
+                      : "Vista compacta para detectar rápido diagnósticos y órdenes activas."
+                    : "Filtra por estado solo cuando estés revisando un flujo operativo específico."}
                 </Text>
               </View>
               <View
@@ -769,6 +779,7 @@ export default function WorkshopHomeScreen({
                       onPress={() => setSelectedStatus(option.value)}
                       style={[
                         styles.filterChip,
+                        isMechanicUser && styles.filterChipLarge,
                         styles.filterChipCompact,
                         {
                           backgroundColor: isActive
@@ -783,6 +794,7 @@ export default function WorkshopHomeScreen({
                       <Text
                         style={[
                           styles.filterChipText,
+                          isMechanicUser && styles.filterChipTextLarge,
                           { color: isActive ? colors.white : colors.text },
                         ]}
                       >
@@ -868,7 +880,13 @@ export default function WorkshopHomeScreen({
                     <Text style={[styles.queueTitle, { color: colors.text }]}>
                       {item.title}
                     </Text>
-                    <Text style={[styles.queuePlate, { color: colors.accent }]}>
+                    <Text
+                      style={[
+                        styles.queuePlate,
+                        isMechanicUser && styles.queuePlateLarge,
+                        { color: colors.accent },
+                      ]}
+                    >
                       Placa: {item.plate}
                     </Text>
                     <Text style={[styles.queueCaseTag, { color: caseColor }]}>
@@ -881,12 +899,12 @@ export default function WorkshopHomeScreen({
                       ]}
                     >
                       {item.type === "diagnostic"
-                        ? "Listo para revision tecnica, cotizacion o aprobacion."
+                        ? "Listo para revisión técnica, cotización o aprobación."
                         : item.statusKey === "delivered"
-                          ? "Orden cerrada y vehiculo ya entregado."
+                          ? "Orden cerrada y vehículo ya entregado."
                           : item.statusKey === "ready"
-                            ? "Orden lista para coordinar la entrega del vehiculo."
-                            : "Sigue el avance de ejecucion y prepara la entrega del vehiculo."}
+                            ? "Orden lista para coordinar la entrega del vehículo."
+                            : "Sigue el avance de ejecución y prepara la entrega del vehículo."}
                     </Text>
                   </View>
                 </Pressable>
@@ -910,7 +928,7 @@ export default function WorkshopHomeScreen({
                   style={[styles.queueDetail, { color: colors.textSecondary }]}
                 >
                   {isMechanicUser
-                    ? "No tienes diagnosticos ni ordenes asignadas para esta vista. Ajusta los filtros o espera una nueva asignacion."
+                    ? "No tienes diagnósticos ni órdenes asignadas para esta vista. Ajusta los filtros o espera una nueva asignación."
                     : "No hay coincidencias para esta vista. Cambia de tab o ajusta la placa buscada para recuperar actividad operativa."}
                 </Text>
               </View>
@@ -1169,4 +1187,16 @@ const styles = StyleSheet.create({
   queueStatus: { fontSize: rf(14), fontWeight: "900", textAlign: "right" },
   queueCaseTag: { fontSize: rf(15), fontWeight: "900", lineHeight: rf(20) },
   queueDetail: { fontSize: rf(13), lineHeight: rf(18) },
+  tabCardLarge: { minHeight: 72, justifyContent: "center" },
+  iconActionLarge: { width: 56, minHeight: 56 },
+  filterChipLarge: {
+    minHeight: 56,
+    paddingHorizontal: spacing.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  filterChipTextLarge: { fontSize: 16 },
+  searchShellLarge: { minHeight: 56 },
+  searchInputLarge: { fontSize: 17 },
+  queuePlateLarge: { fontSize: 26, letterSpacing: 1 },
 });

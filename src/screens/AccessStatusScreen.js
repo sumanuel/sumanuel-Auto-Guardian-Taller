@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { USER_STATUSES } from "../constants/accessControl";
+import { ROLE_LABELS, USER_STATUSES } from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { borderRadius, rf, spacing } from "../utils/responsive";
 
@@ -18,13 +18,13 @@ const statusContent = {
   missing: {
     title: "Perfil no disponible",
     description:
-      "La cuenta existe en autenticacion, pero no tiene un perfil operativo en el taller.",
-    label: "Requiere revision",
+      "La cuenta existe en autenticación, pero no tiene un perfil operativo en el taller.",
+    label: "Requiere revisión",
   },
   [USER_STATUSES.PENDING_APPROVAL]: {
-    title: "Cuenta en revision",
+    title: "Cuenta en revisión",
     description:
-      "Tu acceso ya fue creado, pero aun falta la aprobacion interna del taller para habilitar la operacion.",
+      "Tu acceso ya fue creado, pero aún falta la aprobación interna del taller para habilitar la operación.",
     label: "Pendiente",
   },
   [USER_STATUSES.SUSPENDED]: {
@@ -36,16 +36,12 @@ const statusContent = {
   [USER_STATUSES.DISABLED]: {
     title: "Cuenta deshabilitada",
     description:
-      "El acceso fue deshabilitado y no puede operar dentro de la aplicacion.",
+      "El acceso fue deshabilitado y no puede operar dentro de la aplicación.",
     label: "Bloqueada",
   },
 };
 
-const roleLabels = {
-  administrator: "Administrador",
-  reception: "Recepcion",
-  mechanic: "Mecanico",
-};
+const roleLabels = ROLE_LABELS;
 
 export default function AccessStatusScreen({
   authUser,
@@ -156,7 +152,7 @@ export default function AccessStatusScreen({
               <Text
                 style={[styles.invitationKicker, { color: colors.primary }]}
               >
-                Invitacion detectada
+                Invitación detectada
               </Text>
               <Text style={[styles.invitationTitle, { color: colors.text }]}>
                 Ya puedes unirte al taller
@@ -168,7 +164,7 @@ export default function AccessStatusScreen({
                 ]}
               >
                 Encontramos una invitacion pendiente para {authUser?.email}. Al
-                aceptarla se creara tu perfil operativo con el rol asignado.
+                aceptarla se creará tu perfil operativo con el rol asignado.
               </Text>
 
               <View style={styles.statusBox}>
@@ -213,7 +209,7 @@ export default function AccessStatusScreen({
 
               <View style={styles.formGroup}>
                 <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Telefono
+                  Teléfono
                 </Text>
                 <TextInput
                   keyboardType="phone-pad"
@@ -239,7 +235,7 @@ export default function AccessStatusScreen({
 
               <View style={styles.formGroup}>
                 <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Codigo visible
+                  Código visible
                 </Text>
                 <TextInput
                   autoCapitalize="characters"
@@ -271,7 +267,7 @@ export default function AccessStatusScreen({
                   <ActivityIndicator color={colors.white} />
                 ) : (
                   <Text style={[styles.buttonText, { color: colors.white }]}>
-                    Aceptar invitacion
+                    Aceptar invitación
                   </Text>
                 )}
               </Pressable>
@@ -283,7 +279,7 @@ export default function AccessStatusScreen({
             style={[styles.button, { backgroundColor: colors.primary }]}
           >
             <Text style={[styles.buttonText, { color: colors.white }]}>
-              Cerrar sesion
+              Cerrar sesión
             </Text>
           </Pressable>
         </LinearGradient>

@@ -1,4 +1,5 @@
 import Slider from "@react-native-community/slider";
+import StepperPercent from "../components/common/StepperPercent";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -345,8 +346,8 @@ export default function WorkOrdersScreen({
     } catch (error) {
       console.error("WorkOrdersScreen refresh failed:", error);
       Alert.alert(
-        "Ordenes",
-        "No se pudo cargar el tablero operativo de ordenes.",
+        "Órdenes",
+        "No se pudo cargar el tablero operativo de órdenes.",
       );
     } finally {
       setLoading(false);
@@ -413,8 +414,8 @@ export default function WorkOrdersScreen({
         setProgressEntries(nextEntries);
       } catch (error) {
         Alert.alert(
-          "Ordenes",
-          "No se pudo cargar la cronologia de avances de esta orden.",
+          "Órdenes",
+          "No se pudo cargar la cronología de avances de esta orden.",
         );
       } finally {
         setProgressLoading(false);
@@ -515,8 +516,8 @@ export default function WorkOrdersScreen({
 
     if (isProgressLocked && !canReopenWithNote) {
       Alert.alert(
-        "Ordenes",
-        "Esta orden esta lista o entregada. Para registrar mas avances debes agregar una nota y cambiar su estado a En proceso.",
+        "Órdenes",
+        "Esta orden está lista o entregada. Para registrar más avances debes agregar una nota y cambiar su estado a En proceso.",
       );
       return;
     }
@@ -542,20 +543,20 @@ export default function WorkOrdersScreen({
       .filter(Boolean);
 
     if (progressForm.type === "note" && !progressForm.message.trim()) {
-      Alert.alert("Ordenes", "Describe la nota para registrarla.");
+      Alert.alert("Órdenes", "Describe la nota para registrarla.");
       return;
     }
 
     if (progressForm.type === "parts" && !selectedPartUpdates.length) {
       Alert.alert(
-        "Ordenes",
+        "Órdenes",
         "Selecciona al menos un repuesto y su estado para registrarlo.",
       );
       return;
     }
 
     if (progressForm.type === "delivery" && !progressForm.message.trim()) {
-      Alert.alert("Ordenes", "Describe la entrega antes de cerrar la orden.");
+      Alert.alert("Órdenes", "Describe la entrega antes de cerrar la orden.");
       return;
     }
 
@@ -567,7 +568,7 @@ export default function WorkOrdersScreen({
       return new Promise((resolve) => {
         Alert.alert(
           "Cerrar orden",
-          "Se marcara la orden como terminada y entregada. Deseas continuar?",
+          "Se marcará la orden como terminada y entregada. Deseas continuar?",
           [
             {
               text: "Cancelar",
@@ -718,7 +719,7 @@ export default function WorkOrdersScreen({
       );
     } catch (error) {
       Alert.alert(
-        "Ordenes",
+        "Órdenes",
         error?.message || "No se pudo registrar el avance de la orden.",
       );
     } finally {
@@ -741,11 +742,12 @@ export default function WorkOrdersScreen({
           <TextInput
             autoCapitalize="none"
             onChangeText={setSearchQuery}
-            placeholder="Buscar por orden, diagnostico, placa o cliente"
+            placeholder="Buscar por orden, diagnóstico, placa o cliente"
             placeholderTextColor={colors.textTertiary}
             style={[
               styles.input,
               styles.searchInput,
+              isMechanicUser && styles.inputLarge,
               {
                 backgroundColor: colors.inputBackground,
                 borderColor: colors.border,
@@ -758,6 +760,7 @@ export default function WorkOrdersScreen({
             onPress={() => setIsDateFilterVisible(true)}
             style={[
               styles.iconAction,
+              isMechanicUser && styles.iconActionLarge,
               {
                 backgroundColor: colors.cardMuted,
                 borderColor: colors.border,
@@ -777,6 +780,7 @@ export default function WorkOrdersScreen({
             }}
             style={[
               styles.iconAction,
+              isMechanicUser && styles.iconActionLarge,
               {
                 backgroundColor: colors.cardMuted,
                 borderColor: colors.border,
@@ -806,6 +810,7 @@ export default function WorkOrdersScreen({
                   onPress={() => setActiveFilter(filter.key)}
                   style={[
                     styles.filterChip,
+                    isMechanicUser && styles.filterChipLarge,
                     {
                       backgroundColor: selected
                         ? colors.primary
@@ -817,6 +822,7 @@ export default function WorkOrdersScreen({
                   <Text
                     style={[
                       styles.filterChipText,
+                      isMechanicUser && styles.filterChipTextLarge,
                       { color: selected ? colors.white : colors.text },
                     ]}
                   >
@@ -871,7 +877,7 @@ export default function WorkOrdersScreen({
                       <Text
                         style={[styles.cardEyebrow, { color: colors.primary }]}
                       >
-                        Operacion
+                        Operación
                       </Text>
                       <Text style={[styles.rowTitle, { color: colors.text }]}>
                         {workOrder.id}
@@ -893,11 +899,11 @@ export default function WorkOrdersScreen({
                       <Text
                         style={[styles.detailMetaLabel, { color: colors.text }]}
                       >
-                        Diagnostico:
+                        Diagnóstico:
                       </Text>{" "}
                       {diagnostic?.id ||
                         workOrder.diagnosticId ||
-                        "Sin diagnostico"}
+                        "Sin diagnóstico"}
                     </Text>
                     <Text
                       style={[
@@ -918,7 +924,7 @@ export default function WorkOrdersScreen({
                         { color: colors.accent },
                       ]}
                     >
-                      vehiculo:
+                      vehículo:
                     </Text>
                     <View
                       style={[
@@ -937,7 +943,7 @@ export default function WorkOrdersScreen({
                           .join(" ") ||
                           vehicle?.plate ||
                           workOrder.vehicleId ||
-                          "Sin vehiculo"}
+                          "Sin vehículo"}
                       </Text>
                       <View
                         style={[
@@ -988,7 +994,7 @@ export default function WorkOrdersScreen({
                       >
                         Responsables:
                       </Text>{" "}
-                      {assignedMechanics || "Sin mecanicos asignados"}
+                      {assignedMechanics || "Sin mecánicos asignados"}
                     </Text>
                   </View>
                 </Pressable>
@@ -999,6 +1005,7 @@ export default function WorkOrdersScreen({
                       onPress={() => onOpenWorkOrderForm?.(workOrder)}
                       style={[
                         styles.iconAction,
+                        isMechanicUser && styles.iconActionLarge,
                         {
                           backgroundColor: colors.cardBackground,
                           borderColor: colors.border,
@@ -1028,12 +1035,12 @@ export default function WorkOrdersScreen({
           ]}
         >
           <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
-            Operacion
+            Operación
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {isMechanicUser
-              ? "No tienes ordenes asignadas para el filtro actual. Cambia el estado o espera una nueva asignacion."
-              : "No hay ordenes para el filtro actual. Cambia el estado o crea la primera orden desde un diagnostico activo."}
+              ? "No tienes órdenes asignadas para el filtro actual. Cambia el estado o espera una nueva asignación."
+              : "No hay órdenes para el filtro actual. Cambia el estado o crea la primera orden desde un diagnóstico activo."}
           </Text>
         </View>
       )}
@@ -1076,7 +1083,7 @@ export default function WorkOrdersScreen({
           >
             <View style={styles.cardHeaderCopy}>
               <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-                Operacion
+                Operación
               </Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>
                 Resumen de orden
@@ -1090,11 +1097,11 @@ export default function WorkOrdersScreen({
           <View style={styles.detailLines}>
             <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
               <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-                Diagnostico:
+                Diagnóstico:
               </Text>{" "}
               {diagnostic?.id ||
                 selectedWorkOrder?.diagnosticId ||
-                "Sin diagnostico"}
+                "Sin diagnóstico"}
             </Text>
             <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
               <Text style={[styles.detailLineLabel, { color: colors.text }]}>
@@ -1103,7 +1110,7 @@ export default function WorkOrdersScreen({
               {client?.fullName || selectedWorkOrder?.clientId || "Sin cliente"}
             </Text>
             <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Vehiculo
+              Vehículo
             </Text>
             <View
               style={[
@@ -1120,7 +1127,7 @@ export default function WorkOrdersScreen({
                   .join(" ") ||
                   vehicle?.plate ||
                   selectedWorkOrder?.vehicleId ||
-                  "Sin vehiculo"}
+                  "Sin vehículo"}
               </Text>
               <View
                 style={[
@@ -1193,7 +1200,11 @@ export default function WorkOrdersScreen({
                     ]}
                   >
                     <Text
-                      style={[styles.filterChipText, { color: colors.text }]}
+                      style={[
+                        styles.filterChipText,
+                        isMechanicUser && styles.filterChipTextLarge,
+                        { color: colors.text },
+                      ]}
                     >
                       {mechanic.fullName || mechanic.email || mechanic.userCode}
                     </Text>
@@ -1232,6 +1243,7 @@ export default function WorkOrdersScreen({
                 onPress={() => onOpenWorkOrderForm?.(selectedWorkOrder)}
                 style={[
                   styles.secondaryAction,
+                  isMechanicUser && styles.secondaryActionLarge,
                   {
                     backgroundColor: colors.cardMuted,
                     borderColor: colors.border,
@@ -1241,6 +1253,7 @@ export default function WorkOrdersScreen({
                 <Text
                   style={[
                     styles.secondaryActionText,
+                    isMechanicUser && styles.secondaryActionTextLarge,
                     { color: colors.primary },
                   ]}
                 >
@@ -1254,6 +1267,7 @@ export default function WorkOrdersScreen({
               onPress={() => onOpenSpareParts?.(selectedWorkOrder)}
               style={[
                 styles.secondaryAction,
+                isMechanicUser && styles.secondaryActionLarge,
                 {
                   backgroundColor: colors.cardMuted,
                   borderColor: colors.border,
@@ -1261,7 +1275,11 @@ export default function WorkOrdersScreen({
               ]}
             >
               <Text
-                style={[styles.secondaryActionText, { color: colors.accent }]}
+                style={[
+                  styles.secondaryActionText,
+                  isMechanicUser && styles.secondaryActionTextLarge,
+                  { color: colors.accent },
+                ]}
               >
                 Abrir repuestos de esta orden
               </Text>
@@ -1312,6 +1330,7 @@ export default function WorkOrdersScreen({
                   }
                   style={[
                     styles.filterChip,
+                    isMechanicUser && styles.filterChipLarge,
                     {
                       backgroundColor: selected
                         ? palette.accent
@@ -1324,6 +1343,7 @@ export default function WorkOrdersScreen({
                   <Text
                     style={[
                       styles.filterChipText,
+                      isMechanicUser && styles.filterChipTextLarge,
                       { color: selected ? colors.white : palette.text },
                     ]}
                   >
@@ -1364,7 +1384,7 @@ export default function WorkOrdersScreen({
                 Estado operativo
               </Text>
               <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
-                Opcional: si lo seleccionas, la nota tambien actualiza el estado
+                Opcional: si lo seleccionas, la nota también actualiza el estado
                 actual de la orden.
               </Text>
               <View style={styles.filterRow}>
@@ -1396,6 +1416,7 @@ export default function WorkOrdersScreen({
                       }
                       style={[
                         styles.filterChip,
+                        isMechanicUser && styles.filterChipLarge,
                         {
                           backgroundColor: selected
                             ? colors.warning
@@ -1410,6 +1431,7 @@ export default function WorkOrdersScreen({
                       <Text
                         style={[
                           styles.filterChipText,
+                          isMechanicUser && styles.filterChipTextLarge,
                           {
                             color: selected
                               ? colors.white
@@ -1425,7 +1447,7 @@ export default function WorkOrdersScreen({
               </View>
               {progressForm.operationalStatus === "ready" ? (
                 <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
-                  Al marcar la orden como lista, se guardara automaticamente con
+                  Al marcar la orden como lista, se guardará automáticamente con
                   100% de avance.
                 </Text>
               ) : null}
@@ -1464,28 +1486,44 @@ export default function WorkOrdersScreen({
                     La orden estaba al 100%. Puedes bajar este valor antes de
                     reactivarla para reflejar el avance real restante.
                   </Text>
-                  <Slider
-                    maximumTrackTintColor={colors.borderStrong}
-                    maximumValue={100}
-                    minimumTrackTintColor={getProgressMeterColor(
-                      progressForm.progressPercent,
-                      colors,
-                    )}
-                    minimumValue={0}
-                    onValueChange={(value) =>
-                      setProgressForm((current) => ({
-                        ...current,
-                        progressPercent: Math.round(value),
-                      }))
-                    }
-                    step={1}
-                    style={styles.slider}
-                    thumbTintColor={getProgressMeterColor(
-                      progressForm.progressPercent,
-                      colors,
-                    )}
-                    value={Number(progressForm.progressPercent) || 0}
-                  />
+                  {isMechanicUser ? (
+                    <StepperPercent
+                      color={getProgressMeterColor(
+                        progressForm.progressPercent,
+                        colors,
+                      )}
+                      onChange={(value) =>
+                        setProgressForm((current) => ({
+                          ...current,
+                          progressPercent: value,
+                        }))
+                      }
+                      value={progressForm.progressPercent}
+                    />
+                  ) : (
+                    <Slider
+                      maximumTrackTintColor={colors.borderStrong}
+                      maximumValue={100}
+                      minimumTrackTintColor={getProgressMeterColor(
+                        progressForm.progressPercent,
+                        colors,
+                      )}
+                      minimumValue={0}
+                      onValueChange={(value) =>
+                        setProgressForm((current) => ({
+                          ...current,
+                          progressPercent: Math.round(value),
+                        }))
+                      }
+                      step={1}
+                      style={styles.slider}
+                      thumbTintColor={getProgressMeterColor(
+                        progressForm.progressPercent,
+                        colors,
+                      )}
+                      value={Number(progressForm.progressPercent) || 0}
+                    />
+                  )}
                 </View>
               ) : null}
               {isProgressLocked ? (
@@ -1517,35 +1555,50 @@ export default function WorkOrdersScreen({
                   {Math.round(Number(progressForm.progressPercent) || 0)}%
                 </Text>
               </View>
-              <Slider
-                maximumTrackTintColor={colors.borderStrong}
-                maximumValue={100}
-                minimumTrackTintColor={progressMeterColor}
-                minimumValue={0}
-                onValueChange={(value) =>
-                  setProgressForm((current) => ({
-                    ...current,
-                    progressPercent: Math.round(value),
-                  }))
-                }
-                step={1}
-                style={styles.slider}
-                thumbTintColor={progressMeterColor}
-                value={Number(progressForm.progressPercent) || 0}
-              />
-              <View style={styles.progressScaleRow}>
-                {[0, 25, 50, 75, 100].map((value) => (
-                  <Text
-                    key={value}
-                    style={[
-                      styles.progressScaleText,
-                      { color: colors.textTertiary },
-                    ]}
-                  >
-                    {value}%
-                  </Text>
-                ))}
-              </View>
+              {isMechanicUser ? (
+                <StepperPercent
+                  color={progressMeterColor}
+                  onChange={(value) =>
+                    setProgressForm((current) => ({
+                      ...current,
+                      progressPercent: value,
+                    }))
+                  }
+                  value={progressForm.progressPercent}
+                />
+              ) : (
+                <>
+                  <Slider
+                    maximumTrackTintColor={colors.borderStrong}
+                    maximumValue={100}
+                    minimumTrackTintColor={progressMeterColor}
+                    minimumValue={0}
+                    onValueChange={(value) =>
+                      setProgressForm((current) => ({
+                        ...current,
+                        progressPercent: Math.round(value),
+                      }))
+                    }
+                    step={1}
+                    style={styles.slider}
+                    thumbTintColor={progressMeterColor}
+                    value={Number(progressForm.progressPercent) || 0}
+                  />
+                  <View style={styles.progressScaleRow}>
+                    {[0, 25, 50, 75, 100].map((value) => (
+                      <Text
+                        key={value}
+                        style={[
+                          styles.progressScaleText,
+                          { color: colors.textTertiary },
+                        ]}
+                      >
+                        {value}%
+                      </Text>
+                    ))}
+                  </View>
+                </>
+              )}
             </View>
           ) : null}
 
@@ -1607,6 +1660,7 @@ export default function WorkOrdersScreen({
                               }
                               style={[
                                 styles.filterChip,
+                                isMechanicUser && styles.filterChipLarge,
                                 {
                                   backgroundColor: selected
                                     ? colors.textTertiary
@@ -1620,6 +1674,7 @@ export default function WorkOrdersScreen({
                               <Text
                                 style={[
                                   styles.filterChipText,
+                                  isMechanicUser && styles.filterChipTextLarge,
                                   {
                                     color: selected
                                       ? colors.white
@@ -1655,7 +1710,7 @@ export default function WorkOrdersScreen({
                 <Text
                   style={[styles.emptyText, { color: colors.textSecondary }]}
                 >
-                  Esta orden todavia no tiene repuestos cargados. Abrelos desde
+                  Esta orden todavía no tiene repuestos cargados. Ábrelos desde
                   el bloque superior para agregarlos primero.
                 </Text>
               </View>
@@ -1672,11 +1727,12 @@ export default function WorkOrdersScreen({
               placeholder={
                 progressForm.type === "delivery"
                   ? "Describe la entrega final, observaciones y conformidad"
-                  : "Describe la nota tecnica o novedad operativa"
+                  : "Describe la nota técnica o novedad operativa"
               }
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.textArea,
+                isMechanicUser && styles.textAreaLarge,
                 {
                   backgroundColor: colors.inputBackground,
                   borderColor: colors.border,
@@ -1693,6 +1749,7 @@ export default function WorkOrdersScreen({
             onPress={handleProgressSubmit}
             style={[
               styles.primaryButton,
+              isMechanicUser && styles.primaryButtonLarge,
               {
                 backgroundColor: getProgressTypePalette(
                   progressForm.type,
@@ -1702,7 +1759,13 @@ export default function WorkOrdersScreen({
               },
             ]}
           >
-            <Text style={[styles.primaryButtonText, { color: colors.white }]}>
+            <Text
+              style={[
+                styles.primaryButtonText,
+                isMechanicUser && styles.primaryButtonTextLarge,
+                { color: colors.white },
+              ]}
+            >
               {progressSubmitting
                 ? "Guardando avance..."
                 : resolveProgressButtonLabel(progressForm.type)}
@@ -1727,7 +1790,7 @@ export default function WorkOrdersScreen({
                 Taller
               </Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>
-                Cronologia
+                Cronología
               </Text>
             </View>
             <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
@@ -1920,11 +1983,11 @@ export default function WorkOrdersScreen({
               ]}
             >
               <Text style={[styles.emptyEyebrow, { color: colors.accent }]}>
-                Cronologia
+                Cronología
               </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No hay avances registrados todavia. Usa el bloque superior para
-                documentar el primer movimiento tecnico.
+                No hay avances registrados todavía. Usa el bloque superior para
+                documentar el primer movimiento técnico.
               </Text>
             </View>
           )}
@@ -1947,17 +2010,17 @@ export default function WorkOrdersScreen({
             screenMode === SCREEN_MODES.DETAIL ? handleBackToList : undefined
           }
           section={
-            screenMode === SCREEN_MODES.DETAIL ? "Orden activa" : "Operacion"
+            screenMode === SCREEN_MODES.DETAIL ? "Orden activa" : "Operación"
           }
           subtitle={
             screenMode === SCREEN_MODES.DETAIL
-              ? "Desde aqui puedes revisar contexto, mecanicos asignados y avances cronologicos."
-              : "Abre la orden desde un diagnostico activo y vuelve a la lista para editar o continuar con repuestos."
+              ? "Desde aquí puedes revisar contexto, mecánicos asignados y avances cronológicos."
+              : "Abre la orden desde un diagnóstico activo y vuelve a la lista para editar o continuar con repuestos."
           }
           title={
             screenMode === SCREEN_MODES.DETAIL
               ? selectedWorkOrder?.id || "Detalle de orden"
-              : "Ordenes de trabajo"
+              : "Órdenes de trabajo"
           }
         />
 
@@ -1973,7 +2036,7 @@ export default function WorkOrdersScreen({
           setDateRange(sharedRange);
         }}
         onClose={() => setIsDateFilterVisible(false)}
-        title="Filtrar ordenes por fecha"
+        title="Filtrar órdenes por fecha"
         visible={isDateFilterVisible}
       />
     </SafeAreaView>
@@ -2221,4 +2284,23 @@ const styles = StyleSheet.create({
   },
   emptyInlineChipText: { fontSize: rf(11), fontWeight: "700" },
   emptyText: { fontSize: rf(14), lineHeight: rf(21) },
+  filterChipLarge: {
+    minHeight: 56,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  filterChipTextLarge: { fontSize: 16 },
+  secondaryActionLarge: {
+    minHeight: 56,
+    justifyContent: "center",
+    paddingHorizontal: spacing.lg,
+  },
+  secondaryActionTextLarge: { fontSize: 16 },
+  primaryButtonLarge: { minHeight: 64, justifyContent: "center" },
+  primaryButtonTextLarge: { fontSize: 18 },
+  iconActionLarge: { width: 56, height: 56 },
+  inputLarge: { fontSize: 17, minHeight: 56 },
+  textAreaLarge: { fontSize: 17, minHeight: 120 },
 });

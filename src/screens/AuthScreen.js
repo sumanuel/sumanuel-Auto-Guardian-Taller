@@ -98,10 +98,10 @@ export default function AuthScreen() {
   const headline = useMemo(() => {
     if (mode === modes.recovery) {
       return {
-        kicker: "Recuperacion segura",
+        kicker: "Recuperación segura",
         title: "Recuperar acceso",
         subtitle:
-          "Enviaremos el enlace de recuperacion al correo operativo asociado al taller.",
+          "Enviaremos el enlace de recuperación al correo operativo asociado al taller.",
         pills: ["Correo seguro", "Acceso validado"],
       };
     }
@@ -111,18 +111,18 @@ export default function AuthScreen() {
         kicker: "Registro operativo",
         title: "Crear cuenta",
         subtitle:
-          "Registra tu acceso para entrar al panel del taller y sincronizar tu informacion desde el primer inicio.",
-        pills: ["Cuenta nueva", "Perfil", "Sincronizacion"],
+          "Registra tu acceso para entrar al panel del taller y sincronizar tu información desde el primer inicio.",
+        pills: ["Cuenta nueva", "Perfil", "Sincronización"],
       };
     }
 
     if (mode === modes.invitation) {
       return {
         kicker: "Alta autorizada",
-        title: "Activar invitacion",
+        title: "Activar invitación",
         subtitle:
-          "Activa tu cuenta con el correo invitado; si administracion te compartio un codigo, puedes usarlo como referencia dentro de la app.",
-        pills: ["Invitacion", "Aprobacion", "Equipo tecnico"],
+          "Activa tu cuenta con el correo invitado; si administración te compartió un código, puedes usarlo como referencia dentro de la app.",
+        pills: ["Invitación", "Aprobación", "Equipo técnico"],
       };
     }
 
@@ -130,8 +130,8 @@ export default function AuthScreen() {
       kicker: "Acceso seguro",
       title: "Auto-Guardian Taller",
       subtitle:
-        "Inicia sesion para cargar tu espacio de trabajo y sincronizar tus datos del taller.",
-      pills: ["Sincronizacion", "Seguridad", "Tu taller"],
+        "Inicia sesión para cargar tu espacio de trabajo y sincronizar tus datos del taller.",
+      pills: ["Sincronización", "Seguridad", "Tu taller"],
     };
   }, [mode]);
 
@@ -150,7 +150,7 @@ export default function AuthScreen() {
     resetMessages();
 
     if (!loginForm.email.trim() || !loginForm.password.trim()) {
-      setError("Debes completar correo y contrasena.");
+      setError("Debes completar correo y contraseña.");
       return;
     }
 
@@ -175,7 +175,7 @@ export default function AuthScreen() {
     }
 
     if (registerForm.password !== registerForm.confirmPassword) {
-      setError("La confirmacion de contrasena no coincide.");
+      setError("La confirmación de contraseña no coincide.");
       return;
     }
 
@@ -197,7 +197,7 @@ export default function AuthScreen() {
     try {
       await recoverPassword(recoveryEmail);
       setFeedback(
-        "Se envio el correo de recuperacion si la cuenta existe y esta habilitada.",
+        "Se envió el correo de recuperación si la cuenta existe y está habilitada.",
       );
     } catch (authError) {
       setError(resolveFirebaseError(authError));
@@ -213,19 +213,19 @@ export default function AuthScreen() {
       !invitationForm.password.trim() ||
       !invitationForm.confirmPassword.trim()
     ) {
-      setError("Completa los datos obligatorios para activar la invitacion.");
+      setError("Completa los datos obligatorios para activar la invitación.");
       return;
     }
 
     if (invitationForm.password !== invitationForm.confirmPassword) {
-      setError("La confirmacion de contrasena no coincide.");
+      setError("La confirmación de contraseña no coincide.");
       return;
     }
 
     try {
       await activateInvitation(invitationForm);
       setFeedback(
-        "Invitacion activada. Tu cuenta quedo registrada y puede requerir aprobacion interna.",
+        "Invitación activada. Tu cuenta quedó registrada y puede requerir aprobación interna.",
       );
     } catch (authError) {
       setError(resolveFirebaseError(authError));
@@ -312,7 +312,7 @@ export default function AuthScreen() {
                       ],
                     ]}
                   >
-                    Iniciar sesion
+                    Iniciar sesión
                   </Text>
                 </Pressable>
                 <Pressable
@@ -375,7 +375,7 @@ export default function AuthScreen() {
                 />
 
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Contrasena
+                  Contraseña
                 </Text>
                 <View
                   style={[
@@ -396,7 +396,7 @@ export default function AuthScreen() {
                         password: value,
                       }))
                     }
-                    placeholder="Minimo 6 caracteres"
+                    placeholder="Mínimo 6 caracteres"
                     placeholderTextColor={palette.placeholder}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
@@ -451,7 +451,7 @@ export default function AuthScreen() {
                 />
 
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Telefono
+                  Teléfono
                 </Text>
                 <TextInput
                   ref={registerPhoneInputRef}
@@ -467,7 +467,7 @@ export default function AuthScreen() {
                   onChangeText={(value) =>
                     setRegisterForm((current) => ({ ...current, phone: value }))
                   }
-                  placeholder="Numero de contacto"
+                  placeholder="Número de contacto"
                   placeholderTextColor={palette.placeholder}
                   keyboardType="phone-pad"
                   returnKeyType="next"
@@ -505,7 +505,7 @@ export default function AuthScreen() {
                 />
 
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Contrasena
+                  Contraseña
                 </Text>
                 <View
                   style={[
@@ -526,7 +526,7 @@ export default function AuthScreen() {
                         password: value,
                       }))
                     }
-                    placeholder="Minimo 6 caracteres"
+                    placeholder="Mínimo 6 caracteres"
                     placeholderTextColor={palette.placeholder}
                     secureTextEntry={!showRegisterPassword}
                     autoCapitalize="none"
@@ -556,7 +556,7 @@ export default function AuthScreen() {
                 </View>
 
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Confirmar contrasena
+                  Confirmar contraseña
                 </Text>
                 <View
                   style={[
@@ -577,7 +577,7 @@ export default function AuthScreen() {
                         confirmPassword: value,
                       }))
                     }
-                    placeholder="Repite la contrasena"
+                    placeholder="Repite la contraseña"
                     placeholderTextColor={palette.placeholder}
                     secureTextEntry={!showRegisterConfirmPassword}
                     autoCapitalize="none"
@@ -636,7 +636,7 @@ export default function AuthScreen() {
             {isInvitation && (
               <>
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Codigo de invitacion opcional
+                  Código de invitación opcional
                 </Text>
                 <TextInput
                   ref={invitationCodeInputRef}
@@ -685,7 +685,7 @@ export default function AuthScreen() {
                       fullName: value,
                     }))
                   }
-                  placeholder="Nombre del tecnico"
+                  placeholder="Nombre del técnico"
                   placeholderTextColor={palette.placeholder}
                   returnKeyType="next"
                   onFocus={() => scrollToFocusedInput(vs(190))}
@@ -695,7 +695,7 @@ export default function AuthScreen() {
                 />
 
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Telefono
+                  Teléfono
                 </Text>
                 <TextInput
                   ref={invitationPhoneInputRef}
@@ -714,7 +714,7 @@ export default function AuthScreen() {
                       phone: value,
                     }))
                   }
-                  placeholder="Numero de contacto"
+                  placeholder="Número de contacto"
                   placeholderTextColor={palette.placeholder}
                   keyboardType="phone-pad"
                   returnKeyType="next"
@@ -757,7 +757,7 @@ export default function AuthScreen() {
                 />
 
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Contrasena
+                  Contraseña
                 </Text>
                 <View
                   style={[
@@ -778,7 +778,7 @@ export default function AuthScreen() {
                         password: value,
                       }))
                     }
-                    placeholder="Minimo 6 caracteres"
+                    placeholder="Mínimo 6 caracteres"
                     placeholderTextColor={palette.placeholder}
                     secureTextEntry={!showInvitationPassword}
                     autoCapitalize="none"
@@ -810,7 +810,7 @@ export default function AuthScreen() {
                 </View>
 
                 <Text style={[styles.label, { color: palette.text }]}>
-                  Confirmar contrasena
+                  Confirmar contraseña
                 </Text>
                 <View
                   style={[
@@ -831,7 +831,7 @@ export default function AuthScreen() {
                         confirmPassword: value,
                       }))
                     }
-                    placeholder="Repite la contrasena"
+                    placeholder="Repite la contraseña"
                     placeholderTextColor={palette.placeholder}
                     secureTextEntry={!showInvitationConfirmPassword}
                     autoCapitalize="none"
@@ -922,7 +922,7 @@ export default function AuthScreen() {
                   <Text
                     style={[styles.linkButtonText, { color: palette.info }]}
                   >
-                    Recuperar contrasena
+                    Recuperar contraseña
                   </Text>
                 </Pressable>
               </View>
@@ -947,9 +947,9 @@ export default function AuthScreen() {
 
             <Text style={[styles.securityHint, { color: palette.muted }]}>
               {isInvitation
-                ? "La activacion valida el correo invitado y, si existe un codigo, lo toma como referencia adicional antes de crear tu perfil operativo sin depender de un correo externo."
+                ? "La activación valida el correo invitado y, si existe un código, lo toma como referencia adicional antes de crear tu perfil operativo sin depender de un correo externo."
                 : isRegister
-                  ? "Si tu correo tiene una invitacion pendiente, la app la detectara despues del login para que aceptes el acceso desde tu estado de cuenta."
+                  ? "Si tu correo tiene una invitación pendiente, la app la detectará después del login para que aceptes el acceso desde tu estado de cuenta."
                   : "Al continuar, tus datos locales se vinculan con tu espacio seguro en la nube."}
             </Text>
           </View>
@@ -998,12 +998,12 @@ function resolveFirebaseError(error) {
     case "auth/invalid-credential":
       return "Las credenciales no coinciden con un usuario habilitado.";
     case "auth/email-already-in-use":
-      return "Ese correo ya esta asociado a una cuenta existente.";
+      return "Ese correo ya está asociado a una cuenta existente.";
     case "auth/weak-password":
-      return "La contrasena debe tener al menos 6 caracteres.";
+      return "La contraseña debe tener al menos 6 caracteres.";
     default:
       return (
-        error?.message || "No fue posible completar la operacion de acceso."
+        error?.message || "No fue posible completar la operación de acceso."
       );
   }
 }

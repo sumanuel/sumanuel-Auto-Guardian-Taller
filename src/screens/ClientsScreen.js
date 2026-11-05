@@ -158,7 +158,7 @@ export default function ClientsScreen({
         const nextVehicles = await listVehiclesByClientId(selectedClientId);
         setVehicles(nextVehicles);
       } catch (error) {
-        Alert.alert("Vehiculos", "No se pudo cargar la flota del cliente.");
+        Alert.alert("Vehículos", "No se pudo cargar la flota del cliente.");
       } finally {
         setVehicleLoading(false);
       }
@@ -207,7 +207,7 @@ export default function ClientsScreen({
   const handleDeleteClient = (client) => {
     Alert.alert(
       "Eliminar cliente",
-      `Se eliminara ${client.fullName || "este cliente"} del padron operativo.`,
+      `Se eliminará ${client.fullName || "este cliente"} del padrón operativo.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -235,8 +235,8 @@ export default function ClientsScreen({
 
   const handleDeleteVehicle = (vehicle) => {
     Alert.alert(
-      "Eliminar vehiculo",
-      `Se eliminara ${vehicle.plate || "este vehiculo"} del cliente activo.`,
+      "Eliminar vehículo",
+      `Se eliminará ${vehicle.plate || "este vehículo"} del cliente activo.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -250,8 +250,8 @@ export default function ClientsScreen({
               setVehicles(nextVehicles);
             } catch (error) {
               Alert.alert(
-                "Vehiculos",
-                error?.message || "No se pudo eliminar el vehiculo.",
+                "Vehículos",
+                error?.message || "No se pudo eliminar el vehículo.",
               );
             }
           },
@@ -264,8 +264,8 @@ export default function ClientsScreen({
     <>
       <WorkshopScreenHeader
         onBack={onBack}
-        section="Recepcion"
-        subtitle="Lista operativa mas limpia, con alta y asociacion resueltas en pantallas separadas."
+        section="Recepción"
+        subtitle="Lista operativa más limpia, con alta y asociación resueltas en pantallas separadas."
         title="Clientes"
       />
 
@@ -281,7 +281,7 @@ export default function ClientsScreen({
         <TextInput
           autoCapitalize="none"
           onChangeText={setSearchQuery}
-          placeholder="Buscar por identificacion o nombre"
+          placeholder="Buscar por identificación o nombre"
           placeholderTextColor={colors.textTertiary}
           style={[
             styles.input,
@@ -327,7 +327,7 @@ export default function ClientsScreen({
                       <Text
                         style={[styles.cardEyebrow, { color: colors.primary }]}
                       >
-                        Recepcion
+                        Recepción
                       </Text>
                       <Text
                         style={[styles.clientTitle, { color: colors.text }]}
@@ -346,9 +346,9 @@ export default function ClientsScreen({
                       <Text
                         style={[styles.fieldLineLabel, { color: colors.text }]}
                       >
-                        Identificacion:
+                        Identificación:
                       </Text>{" "}
-                      {client.identification || "Sin identificacion"}
+                      {client.identification || "Sin identificación"}
                     </Text>
                     <Text
                       style={[
@@ -359,9 +359,9 @@ export default function ClientsScreen({
                       <Text
                         style={[styles.fieldLineLabel, { color: colors.text }]}
                       >
-                        Telefono:
+                        Teléfono:
                       </Text>{" "}
-                      {client.phone || "Sin telefono"}
+                      {client.phone || "Sin teléfono"}
                     </Text>
                     <Text
                       style={[
@@ -369,7 +369,7 @@ export default function ClientsScreen({
                         { color: colors.accent },
                       ]}
                     >
-                      Vehiculos asociados:
+                      Vehículos asociados:
                     </Text>
                     <Text
                       style={[
@@ -377,7 +377,7 @@ export default function ClientsScreen({
                         { color: colors.textTertiary },
                       ]}
                     >
-                      Presione sobre un vehiculo para ver detalles.
+                      Presione sobre un vehículo para ver detalles.
                     </Text>
                     {clientVehicles.length ? (
                       clientVehicles.map((vehicle) => (
@@ -399,7 +399,7 @@ export default function ClientsScreen({
                           >
                             {[vehicle.brand, vehicle.model, vehicle.year]
                               .filter(Boolean)
-                              .join(" ") || "Sin descripcion"}
+                              .join(" ") || "Sin descripción"}
                           </Text>
                           <View
                             style={[
@@ -460,7 +460,7 @@ export default function ClientsScreen({
                             { color: colors.accent },
                           ]}
                         >
-                          Asociar vehiculo ahora
+                          Asociar vehículo ahora
                         </Text>
                       </Pressable>
                     ) : null}
@@ -520,13 +520,13 @@ export default function ClientsScreen({
           ]}
         >
           <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
-            Recepcion
+            Recepción
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {clients.length
-              ? "No hay coincidencias con la busqueda actual. Prueba con otra identificacion o nombre."
+              ? "No hay coincidencias con la búsqueda actual. Prueba con otra identificación o nombre."
               : canEditClients
-                ? "No hay clientes registrados. Usa el boton flotante para abrir la primera ficha de recepcion."
+                ? "No hay clientes registrados. Usa el botón flotante para abrir la primera ficha de recepción."
                 : "No hay clientes visibles en este momento."}
           </Text>
         </View>
@@ -539,7 +539,7 @@ export default function ClientsScreen({
       <WorkshopScreenHeader
         onBack={handleBackToList}
         section="Ficha cliente"
-        subtitle="La asociacion de vehiculos ocurre en una pantalla propia; aqui solo consultas y gestionas la ficha."
+        subtitle="La asociación de vehículos ocurre en una pantalla propia; aquí solo consultas y gestionas la ficha."
         title="Cliente"
       />
 
@@ -555,14 +555,14 @@ export default function ClientsScreen({
         <View style={[styles.cardHeader, { borderBottomColor: colors.border }]}>
           <View style={styles.cardHeaderCopy}>
             <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-              Recepcion
+              Recepción
             </Text>
             <Text style={[styles.clientTitle, { color: colors.text }]}>
               Resumen del cliente
             </Text>
           </View>
           <Text style={[styles.cardTag, { color: colors.primary }]}>
-            {selectedClient?.id || "Sin codigo"}
+            {selectedClient?.id || "Sin código"}
           </Text>
         </View>
 
@@ -575,15 +575,15 @@ export default function ClientsScreen({
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Identificacion:
+              Identificación:
             </Text>{" "}
-            {selectedClient?.identification || "Sin identificacion"}
+            {selectedClient?.identification || "Sin identificación"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Telefono:
+              Teléfono:
             </Text>{" "}
-            {selectedClient?.phone || "Sin telefono"}
+            {selectedClient?.phone || "Sin teléfono"}
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
@@ -593,9 +593,9 @@ export default function ClientsScreen({
           </Text>
           <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
             <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Direccion:
+              Dirección:
             </Text>{" "}
-            {selectedClient?.address || "Sin direccion"}
+            {selectedClient?.address || "Sin dirección"}
           </Text>
         </View>
 
@@ -614,7 +614,7 @@ export default function ClientsScreen({
               <Text
                 style={[styles.secondaryActionText, { color: colors.accent }]}
               >
-                Asociar vehiculo
+                Asociar vehículo
               </Text>
             </Pressable>
           </View>
@@ -623,7 +623,7 @@ export default function ClientsScreen({
 
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Vehiculos asociados
+          Vehículos asociados
         </Text>
         <Text style={[styles.sectionMeta, { color: colors.textTertiary }]}>
           {vehicles.length} registro{vehicles.length === 1 ? "" : "s"}
@@ -656,12 +656,12 @@ export default function ClientsScreen({
                     <Text
                       style={[styles.cardEyebrow, { color: colors.accent }]}
                     >
-                      Vehiculo
+                      Vehículo
                     </Text>
                     <Text style={[styles.clientTitle, { color: colors.text }]}>
                       {[vehicle.brand, vehicle.model, vehicle.year]
                         .filter(Boolean)
-                        .join(" ") || "Sin descripcion"}
+                        .join(" ") || "Sin descripción"}
                     </Text>
                   </View>
                 </View>
@@ -715,7 +715,7 @@ export default function ClientsScreen({
                           { color: colors.accent },
                         ]}
                       >
-                        Abrir diagnostico de esta unidad
+                        Abrir diagnóstico de esta unidad
                       </Text>
                     </Pressable>
                   ) : null}
@@ -772,12 +772,12 @@ export default function ClientsScreen({
           ]}
         >
           <Text style={[styles.emptyEyebrow, { color: colors.accent }]}>
-            Vehiculos
+            Vehículos
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {canEditVehicles
-              ? "Este cliente todavia no tiene vehiculos asociados. Registra la unidad para continuar con diagnosticos u ordenes."
-              : "Este cliente todavia no tiene vehiculos visibles para tu perfil."}
+              ? "Este cliente todavía no tiene vehículos asociados. Registra la unidad para continuar con diagnósticos u órdenes."
+              : "Este cliente todavía no tiene vehículos visibles para tu perfil."}
           </Text>
         </View>
       )}

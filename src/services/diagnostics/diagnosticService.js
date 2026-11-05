@@ -48,7 +48,7 @@ function normalizeListInput(value) {
 
 export const diagnosticStatusOptions = [
   { key: "received", label: "Recibido" },
-  { key: "in-review", label: "En revision" },
+  { key: "in-review", label: "En revisión" },
   { key: "quoted", label: "Cotizado" },
   { key: "approved", label: "Aprobado" },
   { key: "closed", label: "Cerrado" },
@@ -164,13 +164,13 @@ export async function createDiagnostic({
 
   if (existingActiveDiagnostic) {
     throw new Error(
-      "Esta unidad ya tiene un diagnostico abierto. Debes editar ese mismo registro antes de crear otro.",
+      "Esta unidad ya tiene un diagnóstico abierto. Debes editar ese mismo registro antes de crear otro.",
     );
   }
 
   if (blockingWorkOrder) {
     throw new Error(
-      "Esta unidad ya tiene una orden activa. Debes continuar esa orden antes de abrir otro diagnostico.",
+      "Esta unidad ya tiene una orden activa. Debes continuar esa orden antes de abrir otro diagnóstico.",
     );
   }
 
@@ -201,11 +201,11 @@ export async function updateDiagnostic(diagnosticId, payload) {
   const currentDiagnostic = await getEntityRecord("diagnostics", diagnosticId);
 
   if (!currentDiagnostic || currentDiagnostic.workshopId !== workshopId) {
-    throw new Error("No se encontro el diagnostico a actualizar.");
+    throw new Error("No se encontró el diagnóstico a actualizar.");
   }
 
   if (isDiagnosticClosed(currentDiagnostic.status)) {
-    throw new Error("Este diagnostico ya esta cerrado y no se puede editar.");
+    throw new Error("Este diagnóstico ya está cerrado y no se puede editar.");
   }
 
   if (
@@ -213,7 +213,7 @@ export async function updateDiagnostic(diagnosticId, payload) {
     !isDiagnosticAssignedToUser(currentDiagnostic, currentUid)
   ) {
     throw new Error(
-      "Solo puedes editar diagnosticos que esten asignados a tu usuario.",
+      "Solo puedes editar diagnósticos que estén asignados a tu usuario.",
     );
   }
 
@@ -227,7 +227,7 @@ export async function updateDiagnostic(diagnosticId, payload) {
 
   if (existingActiveDiagnostic) {
     throw new Error(
-      "Esta unidad ya tiene otro diagnostico abierto. Debes continuar con ese registro.",
+      "Esta unidad ya tiene otro diagnóstico abierto. Debes continuar con ese registro.",
     );
   }
 
@@ -237,7 +237,7 @@ export async function updateDiagnostic(diagnosticId, payload) {
       normalizeOptional(diagnosticId)
   ) {
     throw new Error(
-      "Esta unidad ya tiene una orden activa. Debes continuar esa orden antes de abrir otro diagnostico.",
+      "Esta unidad ya tiene una orden activa. Debes continuar esa orden antes de abrir otro diagnóstico.",
     );
   }
 
@@ -280,7 +280,7 @@ export async function deleteDiagnostic(diagnosticId) {
   const currentDiagnostic = await getEntityRecord("diagnostics", diagnosticId);
 
   if (!currentDiagnostic || currentDiagnostic.workshopId !== workshopId) {
-    throw new Error("El diagnostico no pertenece al taller activo.");
+    throw new Error("El diagnóstico no pertenece al taller activo.");
   }
 
   await deleteEntityRecord("diagnostics", diagnosticId);

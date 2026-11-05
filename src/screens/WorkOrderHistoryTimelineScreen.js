@@ -42,7 +42,7 @@ function buildVehicleTitle(vehicle) {
   return (
     [vehicle?.brand, vehicle?.model, vehicle?.year].filter(Boolean).join(" ") ||
     vehicle?.plate ||
-    "Vehiculo sin descripcion"
+    "Vehículo sin descripción"
   );
 }
 
@@ -247,7 +247,7 @@ export default function WorkOrderHistoryTimelineScreen({
   const startedTimestamp =
     selectedWorkOrder?.startedAt || selectedWorkOrder?.createdAt || null;
   const responsibilityLabel =
-    assignedMechanics.length > 1 ? "Equipo responsable" : "Tecnico responsable";
+    assignedMechanics.length > 1 ? "Equipo responsable" : "Técnico responsable";
 
   const responsibleTechnicianLabel =
     assignedMechanics[0]?.fullName ||
@@ -256,7 +256,7 @@ export default function WorkOrderHistoryTimelineScreen({
     staffLookup[deliveryEntry?.authorUid]?.fullName ||
     staffLookup[deliveryEntry?.authorUid]?.email ||
     deliveryEntry?.authorUid ||
-    "Sin tecnico asignado";
+    "Sin técnico asignado";
 
   const intervenedSparePartsCount = useMemo(() => {
     const uniquePartKeys = new Set();
@@ -286,9 +286,9 @@ export default function WorkOrderHistoryTimelineScreen({
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Operacion"
-          subtitle="Vista historica de solo lectura para revisar la cronologia final de esta orden por unidad."
-          title="Cronologia de orden"
+          section="Operación"
+          subtitle="Vista histórica de solo lectura para revisar la cronología final de esta orden por unidad."
+          title="Cronología de orden"
         />
 
         <View
@@ -464,7 +464,7 @@ export default function WorkOrderHistoryTimelineScreen({
                 Historial
               </Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>
-                Cronologia final
+                Cronología final
               </Text>
             </View>
             <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
@@ -480,7 +480,7 @@ export default function WorkOrderHistoryTimelineScreen({
                 Orden
               </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No se pudo encontrar la orden historica que intentas revisar.
+                No se pudo encontrar la orden histórica que intentas revisar.
               </Text>
             </View>
           ) : progressEntries.length ? (
@@ -663,10 +663,10 @@ export default function WorkOrderHistoryTimelineScreen({
           ) : (
             <View style={styles.emptyWrap}>
               <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
-                Cronologia
+                Cronología
               </Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                Esta orden entregada no tiene registros de cronologia
+                Esta orden entregada no tiene registros de cronología
                 disponibles.
               </Text>
             </View>

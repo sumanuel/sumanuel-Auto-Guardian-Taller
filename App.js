@@ -23,6 +23,7 @@ import OnboardingScreen, {
 } from "./src/screens/OnboardingScreen";
 import WorkOrderFormScreen from "./src/screens/WorkOrderFormScreen";
 import WorkOrdersScreen from "./src/screens/WorkOrdersScreen";
+import MechanicHomeScreen from "./src/screens/MechanicHomeScreen";
 import WorkshopHomeScreen from "./src/screens/WorkshopHomeScreen";
 import WorkshopMoreScreen from "./src/screens/WorkshopMoreScreen";
 import VehicleFormScreen from "./src/screens/VehicleFormScreen";
@@ -603,8 +604,8 @@ function AppContent() {
 
                 if (activeDiagnostic) {
                   Alert.alert(
-                    "Diagnosticos",
-                    "Esta unidad ya tiene un diagnostico abierto. Se abrira ese mismo registro para editarlo.",
+                    "Diagnósticos",
+                    "Esta unidad ya tiene un diagnóstico abierto. Se abrirá ese mismo registro para editarlo.",
                   );
 
                   setDiagnosticFormContext({
@@ -629,9 +630,9 @@ function AppContent() {
               setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
             } catch (error) {
               Alert.alert(
-                "Diagnosticos",
+                "Diagnósticos",
                 error?.message ||
-                  "No se pudo preparar el diagnostico para esta unidad.",
+                  "No se pudo preparar el diagnóstico para esta unidad.",
               );
             }
           }}
@@ -671,8 +672,8 @@ function AppContent() {
 
               if (!vehicleId) {
                 Alert.alert(
-                  "Diagnosticos",
-                  "No se pudo identificar la unidad para abrir el diagnostico.",
+                  "Diagnósticos",
+                  "No se pudo identificar la unidad para abrir el diagnóstico.",
                 );
                 return;
               }
@@ -682,8 +683,8 @@ function AppContent() {
 
               if (activeDiagnostic) {
                 Alert.alert(
-                  "Diagnosticos",
-                  "Esta unidad ya tiene un diagnostico abierto. Se abrira ese mismo registro para editarlo.",
+                  "Diagnósticos",
+                  "Esta unidad ya tiene un diagnóstico abierto. Se abrirá ese mismo registro para editarlo.",
                 );
 
                 setDiagnosticFormContext({
@@ -711,9 +712,9 @@ function AppContent() {
               setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
             } catch (error) {
               Alert.alert(
-                "Diagnosticos",
+                "Diagnósticos",
                 error?.message ||
-                  "No se pudo preparar el diagnostico para esta unidad.",
+                  "No se pudo preparar el diagnóstico para esta unidad.",
               );
             }
           }}
@@ -1122,8 +1123,10 @@ function AppContent() {
       );
     }
 
+    const HomeScreen = isMechanicUser ? MechanicHomeScreen : WorkshopHomeScreen;
+
     return (
-      <WorkshopHomeScreen
+      <HomeScreen
         onOpenDiagnosticDetail={(diagnosticId) => {
           setDiagnosticsViewState({
             selectedDiagnosticId: diagnosticId || null,
@@ -1190,6 +1193,7 @@ function AppContent() {
         <View style={styles.content}>{renderAuthenticatedScreen()}</View>
         <WorkshopTabBar
           activeTab={activeTab}
+          large={isMechanicUser}
           onChange={handleTabChange}
           visibleTabs={
             isMechanicUser
