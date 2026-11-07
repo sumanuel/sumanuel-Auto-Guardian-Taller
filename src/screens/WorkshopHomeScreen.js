@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import BigButton from "../components/common/BigButton";
+import BigChip from "../components/common/BigChip";
 import OperationCard from "../components/common/OperationCard";
 import {
   isDiagnosticAssignedToUser,
@@ -47,22 +48,16 @@ const queueTypeOptions = [
   {
     key: "all",
     label: "Todos",
-    title: "Panorama general",
-    subtitle: "Diagnósticos y órdenes mezclados según actividad reciente.",
     icon: "grid-outline",
   },
   {
     key: "diagnostic",
     label: "Diagnósticos",
-    title: "Diagnósticos del taller",
-    subtitle: "Revisión inicial, cotización y aprobación antes de abrir orden.",
     icon: "pulse-outline",
   },
   {
     key: "work-order",
     label: "Órdenes",
-    title: "Órdenes operativas",
-    subtitle: "Seguimiento de ejecución, pausas, entregas y avance técnico.",
     icon: "clipboard-outline",
   },
 ];
@@ -424,10 +419,6 @@ export default function WorkshopHomeScreen({
     selectedType,
   ]);
 
-  const selectedQueueType =
-    queueTypeOptions.find((option) => option.key === selectedType) ||
-    queueTypeOptions[0];
-
   const tabCounters = useMemo(
     () => ({
       all: queue.length,
@@ -616,235 +607,108 @@ export default function WorkshopHomeScreen({
           ) : null}
         </View>
 
-        <View
-          style={[
-            styles.sectionPanel,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <View style={styles.panelHeaderBlock}>
-            <Text style={[styles.panelEyebrow, { color: colors.primary }]}>
-              Agenda operativa
-            </Text>
-            <Text style={[styles.panelTitle, { color: colors.text }]}>
-              {selectedQueueType.title}
-            </Text>
-            <Text style={[styles.panelText, { color: colors.textSecondary }]}>
-              {selectedQueueType.subtitle}
-            </Text>
+        <View style={styles.agenda}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Agenda
+          </Text>
+
+          <View style={styles.chipRow}>
+            {queueTypeOptions.map((option) => (
+              <BigChip
+                key={option.key}
+                label={`${option.label}\n${tabCounters[option.key] || 0}`}
+                onPress={() => setSelectedType(option.key)}
+                selected={option.key === selectedType}
+                style={styles.chipFlex}
+              />
+            ))}
           </View>
 
-          <View style={styles.tabRail}>
-            {queueTypeOptions.map((option) => {
-              const isActive = option.key === selectedType;
-
-              return (
-                <Pressable
-                  key={option.key}
-                  onPress={() => setSelectedType(option.key)}
-                  style={[
-                    styles.tabCard,
-                    styles.tabCardLarge,
-                    {
-                      backgroundColor: isActive
-                        ? colors.primary
-                        : colors.cardMuted,
-                      borderColor: isActive ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <View style={styles.tabCardTopRow}>
-                    <Ionicons
-                      color={isActive ? colors.white : colors.textSecondary}
-                      name={option.icon}
-                      size={rf(16)}
-                    />
-                    <Text
-                      style={[
-                        styles.tabCardCount,
-                        { color: isActive ? colors.white : colors.text },
-                      ]}
-                    >
-                      {tabCounters[option.key] || 0}
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.tabCardLabel,
-                      { color: isActive ? colors.white : colors.text },
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View style={styles.filtersBlock}>
-            <View style={styles.searchRow}>
-              <View
-                style={[
-                  styles.searchShell,
-                  styles.searchShellLarge,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Ionicons
-                  color={colors.textTertiary}
-                  name="search-outline"
-                  size={rf(18)}
-                />
-                <TextInput
-                  placeholder="Buscar por placa"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.searchInput,
-                    styles.searchInputLarge,
-                    { color: colors.text },
-                  ]}
-                  value={plateQuery}
-                  onChangeText={setPlateQuery}
-                  autoCapitalize="characters"
-                />
-              </View>
-
-              <Pressable
-                onPress={() => setIsDateFilterVisible(true)}
-                style={[
-                  styles.iconAction,
-                  styles.iconActionLarge,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Ionicons
-                  color={colors.primary}
-                  name="calendar-outline"
-                  size={rf(18)}
-                />
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  resetDateRangeToLastThirtyDays();
-                  refreshData();
-                }}
-                style={[
-                  styles.iconAction,
-                  styles.iconActionLarge,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Ionicons
-                  color={colors.accent}
-                  name="refresh-outline"
-                  size={rf(18)}
-                />
-              </Pressable>
-            </View>
-
-            <Text
-              style={[styles.rangeSummary, { color: colors.textSecondary }]}
-            >
-              Rango activo: {formatDateRangeLabel(dateRange)}
-            </Text>
-
+          <View style={styles.searchRow}>
             <View
               style={[
-                styles.contextStrip,
+                styles.searchShell,
                 {
-                  backgroundColor: colors.cardMuted,
+                  backgroundColor: colors.inputBackground,
                   borderColor: colors.border,
                 },
               ]}
             >
-              <View style={styles.contextStripCopy}>
-                <Text
-                  style={[styles.contextStripTitle, { color: colors.text }]}
-                >
-                  {filteredQueue.length} registro
-                  {filteredQueue.length === 1 ? "" : "s"} visibles
-                </Text>
-                <Text
-                  style={[
-                    styles.contextStripSubtitle,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  {selectedType === "all"
-                    ? isMechanicUser
-                      ? "Vista compacta con tus casos y órdenes asignadas."
-                      : "Vista compacta para detectar rápido diagnósticos y órdenes activas."
-                    : "Filtra por estado solo cuando estés revisando un flujo operativo específico."}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.contextBadge,
-                  {
-                    backgroundColor: colors.cardBackground,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[styles.contextBadgeText, { color: colors.primary }]}
-                >
-                  {selectedQueueType.label}
-                </Text>
-              </View>
+              <Ionicons
+                color={colors.textTertiary}
+                name="search-outline"
+                size={22}
+              />
+              <TextInput
+                autoCapitalize="characters"
+                onChangeText={setPlateQuery}
+                placeholder="Buscar por placa"
+                placeholderTextColor={colors.textTertiary}
+                style={[styles.searchInput, { color: colors.text }]}
+                value={plateQuery}
+              />
             </View>
 
-            {selectedType !== "all" ? (
-              <View style={styles.filterGroup}>
-                {statusFilterOptions.map((option) => {
-                  const isActive = option.value === selectedStatus;
+            <Pressable
+              accessibilityLabel="Filtrar por fecha"
+              accessibilityRole="button"
+              onPress={() => setIsDateFilterVisible(true)}
+              style={[
+                styles.iconAction,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.borderStrong,
+                },
+              ]}
+            >
+              <Ionicons
+                color={colors.primary}
+                name="calendar-outline"
+                size={24}
+              />
+            </Pressable>
 
-                  return (
-                    <Pressable
-                      key={option.id}
-                      onPress={() => setSelectedStatus(option.value)}
-                      style={[
-                        styles.filterChip,
-                        styles.filterChipLarge,
-                        styles.filterChipCompact,
-                        {
-                          backgroundColor: isActive
-                            ? colors.primaryStrong
-                            : colors.cardMuted,
-                          borderColor: isActive
-                            ? colors.primaryStrong
-                            : colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.filterChipText,
-                          styles.filterChipTextLarge,
-                          { color: isActive ? colors.white : colors.text },
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            ) : null}
+            <Pressable
+              accessibilityLabel="Actualizar"
+              accessibilityRole="button"
+              onPress={() => {
+                resetDateRangeToLastThirtyDays();
+                refreshData();
+              }}
+              style={[
+                styles.iconAction,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.borderStrong,
+                },
+              ]}
+            >
+              <Ionicons
+                color={colors.accent}
+                name="refresh-outline"
+                size={24}
+              />
+            </Pressable>
           </View>
+
+          <Text style={[styles.rangeSummary, { color: colors.textSecondary }]}>
+            {filteredQueue.length} registro
+            {filteredQueue.length === 1 ? "" : "s"} ·{" "}
+            {formatDateRangeLabel(dateRange)}
+          </Text>
+
+          {selectedType !== "all" ? (
+            <View style={styles.filterGroup}>
+              {statusFilterOptions.map((option) => (
+                <BigChip
+                  key={option.id}
+                  label={option.label}
+                  onPress={() => setSelectedStatus(option.value)}
+                  selected={option.value === selectedStatus}
+                />
+              ))}
+            </View>
+          ) : null}
         </View>
 
         {loading ? <ActivityIndicator color={colors.primary} /> : null}
@@ -935,7 +799,6 @@ const styles = StyleSheet.create({
   },
   heroCopy: { flex: 1, gap: spacing.sm },
   heroEyebrow: {
-    color: "#d4e5ff",
     fontSize: rf(12),
     fontWeight: "800",
     letterSpacing: 1,
@@ -950,222 +813,46 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   alertPillText: { fontSize: rf(12), fontWeight: "800" },
-  metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
-  metricTile: {
-    width: "47%",
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    gap: 2,
-  },
-  metricActionTile: {
-    gap: spacing.sm,
-  },
-  metricTileHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  metricIconWrap: {
-    width: rf(36),
-    height: rf(36),
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  metricValue: { fontSize: rf(24), fontWeight: "900" },
-  metricLabel: { fontSize: rf(12), fontWeight: "700" },
-  sectionPanel: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.sm,
-  },
-  panelHeaderBlock: {
-    gap: spacing.xs,
-  },
-  tabRail: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  tabCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    gap: spacing.xs,
-  },
-  tabCardTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-  },
-  tabCardCount: {
-    fontSize: rf(16),
-    fontWeight: "900",
-  },
-  tabCardLabel: {
-    fontSize: rf(12),
-    fontWeight: "800",
-  },
-  filtersBlock: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
-  },
-  searchRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    alignItems: "stretch",
-  },
+  agenda: { gap: 12 },
+  sectionTitle: { fontSize: 22, fontWeight: "900" },
+  chipRow: { flexDirection: "row", gap: 8 },
+  chipFlex: { flex: 1, minHeight: 64, paddingHorizontal: 4 },
+  searchRow: { flexDirection: "row", gap: 8, alignItems: "stretch" },
   searchShell: {
     flex: 1,
+    minHeight: 56,
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
+    borderRadius: 14,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: 10,
   },
+  searchInput: { flex: 1, paddingVertical: 8, fontSize: 17, fontWeight: "600" },
   iconAction: {
-    width: 48,
+    width: 56,
+    minHeight: 56,
     borderWidth: 1,
-    borderRadius: borderRadius.lg,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 48,
   },
-  searchInput: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    fontSize: rf(15),
-    fontWeight: "600",
-  },
-  rangeSummary: {
-    fontSize: rf(13),
-    lineHeight: rf(17),
-    fontWeight: "700",
-  },
-  contextStrip: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  contextStripCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  contextStripTitle: {
-    fontSize: rf(14),
-    fontWeight: "800",
-  },
-  contextStripSubtitle: {
-    fontSize: rf(13),
-    lineHeight: rf(17),
-  },
-  contextBadge: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  contextBadgeText: {
-    fontSize: rf(12),
-    fontWeight: "800",
-  },
-  filterGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  filterChip: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    minHeight: 48,
-    justifyContent: "center",
-  },
-  filterChipCompact: {
-    paddingHorizontal: spacing.sm,
-  },
-  filterChipText: {
-    fontSize: rf(14),
-    fontWeight: "800",
-  },
-  panelEyebrow: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  panelTitle: { fontSize: rf(20), fontWeight: "900" },
-  panelText: { fontSize: rf(14), lineHeight: rf(20) },
-  listWrap: {
-    backgroundColor: "transparent",
-    paddingTop: spacing.xs,
-    gap: spacing.sm,
-  },
+  rangeSummary: { fontSize: 14, lineHeight: 20, fontWeight: "700" },
+  filterGroup: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  listWrap: { gap: spacing.sm },
   queueRow: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
   },
   queueCopy: { flex: 1, gap: spacing.sm },
-  queueTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-  },
-  queueTypeBadge: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  queueTypeBadgeText: {
-    fontSize: rf(11),
+  queueEyebrow: {
+    fontSize: rf(12),
     fontWeight: "800",
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
-  queueTitle: { fontSize: rf(16), fontWeight: "800" },
-  queuePlate: {
-    fontSize: rf(18),
-    fontWeight: "900",
-    letterSpacing: 0.6,
-  },
-  queueStatusBadge: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  queueStatus: { fontSize: rf(14), fontWeight: "900", textAlign: "right" },
-  queueCaseTag: { fontSize: rf(15), fontWeight: "900", lineHeight: rf(20) },
-  queueDetail: { fontSize: rf(14), lineHeight: rf(18) },
-  tabCardLarge: { minHeight: 72, justifyContent: "center" },
-  iconActionLarge: { width: 56, minHeight: 56 },
-  filterChipLarge: {
-    minHeight: 56,
-    paddingHorizontal: spacing.md,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  filterChipTextLarge: { fontSize: 16 },
-  searchShellLarge: { minHeight: 56 },
-  searchInputLarge: { fontSize: 17 },
-  queuePlateLarge: { fontSize: 26, letterSpacing: 1 },
+  queueDetail: { fontSize: 16, lineHeight: 23 },
   boardGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   boardTile: {
     flexBasis: "47%",

@@ -5,6 +5,7 @@ import ContactBar from "../components/common/ContactBar";
 import DetailHero from "../components/common/DetailHero";
 import ConfirmModal from "../components/common/ConfirmModal";
 import PhotoStrip from "../components/common/PhotoStrip";
+import ProgressTimeline from "../components/common/ProgressTimeline";
 import RequestPartModal from "../components/common/RequestPartModal";
 import StatusActionBar from "../components/common/StatusActionBar";
 import StepperPercent from "../components/common/StepperPercent";
@@ -1941,210 +1942,14 @@ export default function WorkOrdersScreen({
           </Pressable>
         </View>
 
-        <View
-          style={[
-            styles.listCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <View
-            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
-          >
-            <View style={styles.cardHeaderCopy}>
-              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-                Taller
-              </Text>
-              <Text style={[styles.rowTitle, { color: colors.text }]}>
-                Cronología
-              </Text>
-            </View>
-            <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
-              {progressEntries.length} registro
-              {progressEntries.length === 1 ? "" : "s"}
-            </Text>
-          </View>
-
-          {progressLoading ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : progressEntries.length ? (
-            <View style={styles.timelineList}>
-              {progressEntries.map((entry) => {
-                const author = staffLookup[entry.authorUid];
-                const palette = getProgressTypePalette(entry.type, colors);
-                const parsedProgressMessage =
-                  entry.type === "status"
-                    ? parseOperationalProgressMessage(entry.message)
-                    : null;
-
-                return (
-                  <View
-                    key={getEntityId(entry)}
-                    style={[
-                      styles.timelineRow,
-                      {
-                        backgroundColor: colors.cardMuted,
-                        borderColor: palette.accent,
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.timelineMarker,
-                        { backgroundColor: palette.accent },
-                      ]}
-                    />
-                    <View style={styles.timelineCopy}>
-                      <View style={styles.timelineTitleRow}>
-                        <Text style={[styles.rowTitle, { color: colors.text }]}>
-                          {progressEntryTypeOptions.find(
-                            (item) => item.key === entry.type,
-                          )?.label || entry.type}
-                        </Text>
-                      </View>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {entry.authorUid && entry.authorUid === currentUserUid
-                          ? "Tú"
-                          : author?.fullName ||
-                            author?.email ||
-                            "Colaborador"}{" "}
-                        · {formatDateTime(entry.createdAt)}
-                      </Text>
-                      {entry.type === "status" ? (
-                        parsedProgressMessage ? (
-                          <Text style={styles.timelineProgressText}>
-                            <Text
-                              style={[
-                                styles.timelineProgressPrefix,
-                                { color: colors.text },
-                              ]}
-                            >
-                              {parsedProgressMessage.prefix}
-                            </Text>
-                            <Text
-                              style={{
-                                color: getProgressMeterColor(
-                                  entry.progressPercent,
-                                  colors,
-                                ),
-                              }}
-                            >
-                              {parsedProgressMessage.value}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.timelineProgressPrefix,
-                                { color: colors.text },
-                              ]}
-                            >
-                              {parsedProgressMessage.suffix}
-                            </Text>
-                          </Text>
-                        ) : (
-                          <Text
-                            style={[
-                              styles.timelineProgressText,
-                              { color: colors.text },
-                            ]}
-                          >
-                            {entry.message}
-                          </Text>
-                        )
-                      ) : (
-                        <Text style={[styles.rowMeta, { color: colors.text }]}>
-                          {entry.message}
-                        </Text>
-                      )}
-                      {entry.statusChangedTo ? (
-                        <View
-                          style={[
-                            styles.timelineTypeChip,
-                            {
-                              backgroundColor: colors.cardBackground,
-                              borderColor: colors.warning,
-                              alignSelf: "flex-start",
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.timelineTypeChipText,
-                              { color: colors.warning },
-                            ]}
-                          >
-                            Estado actualizado a{" "}
-                            {resolveWorkOrderStatusLabel(entry.statusChangedTo)}
-                          </Text>
-                        </View>
-                      ) : null}
-                      {entry.type === "parts" &&
-                      !entry.message &&
-                      entry.sparePartUpdates?.length ? (
-                        <View style={styles.timelineNestedList}>
-                          {entry.sparePartUpdates.map((item) => (
-                            <Text
-                              key={`${item.sparePartId}-${item.status}`}
-                              style={[
-                                styles.rowMeta,
-                                { color: colors.textSecondary },
-                              ]}
-                            >
-                              {item.sparePartName}:{" "}
-                              {sparePartStatusOptions.find(
-                                (option) => option.key === item.status,
-                              )?.label || item.status}
-                            </Text>
-                          ))}
-                        </View>
-                      ) : null}
-                      {entry.photos?.length ? (
-                        <PhotoStrip photos={entry.photos} />
-                      ) : null}
-                      {entry.deliveryClosedOrder ? (
-                        <Text
-                          style={[styles.rowMeta, { color: colors.success }]}
-                        >
-                          Orden cerrada y entregada.
-                        </Text>
-                      ) : null}
-                      <Text
-                        style={[styles.rowMeta, { color: colors.textTertiary }]}
-                      >
-                        Estado capturado:{" "}
-                        {resolveWorkOrderStatusLabel(entry.statusSnapshot)}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          ) : (
-            <View
-              style={[
-                styles.emptyStateCard,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.emptyEyebrow, { color: colors.accent }]}>
-                Cronología
-              </Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                No hay avances registrados todavía. Usa el bloque superior para
-                documentar el primer movimiento técnico.
-              </Text>
-            </View>
-          )}
-        </View>
+        <ProgressTimeline
+          currentUserUid={currentUserUid}
+          emptyText="Aún no hay avances. Usa Avance o Nota para registrar el primer movimiento."
+          entries={progressEntries}
+          loading={progressLoading}
+          staffLookup={staffLookup}
+        />
+        {progressLoading ? <ActivityIndicator color={colors.primary} /> : null}
       </>
     );
   };

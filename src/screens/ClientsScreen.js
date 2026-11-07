@@ -14,6 +14,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import BigButton from "../components/common/BigButton";
+import ContactBar from "../components/common/ContactBar";
+import DetailHero from "../components/common/DetailHero";
 import OperationCard from "../components/common/OperationCard";
 import {
   canManageClients,
@@ -267,35 +269,25 @@ export default function ClientsScreen({
       <WorkshopScreenHeader
         onBack={onBack}
         section="Recepción"
-        subtitle="Lista operativa más limpia, con alta y asociación resueltas en pantallas separadas."
+        subtitle="Toca un cliente para ver su ficha y sus vehículos."
         title="Clientes"
       />
 
-      <View
+      <TextInput
+        autoCapitalize="none"
+        onChangeText={setSearchQuery}
+        placeholder="Buscar por identificación o nombre"
+        placeholderTextColor={colors.textTertiary}
         style={[
-          styles.controlsPanel,
+          styles.input,
           {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
+            backgroundColor: colors.inputBackground,
+            borderColor: colors.borderStrong,
+            color: colors.text,
           },
         ]}
-      >
-        <TextInput
-          autoCapitalize="none"
-          onChangeText={setSearchQuery}
-          placeholder="Buscar por identificación o nombre"
-          placeholderTextColor={colors.textTertiary}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.inputBackground,
-              borderColor: colors.border,
-              color: colors.text,
-            },
-          ]}
-          value={searchQuery}
-        />
-      </View>
+        value={searchQuery}
+      />
 
       {loading ? (
         <ActivityIndicator color={colors.primary} />
@@ -395,88 +387,58 @@ export default function ClientsScreen({
     <>
       <WorkshopScreenHeader
         onBack={handleBackToList}
-        section="Ficha cliente"
-        subtitle="La asociación de vehículos ocurre en una pantalla propia; aquí solo consultas y gestionas la ficha."
-        title="Cliente"
+        section="Recepción"
+        subtitle="Datos del cliente y sus vehículos."
+        title="Ficha del cliente"
       />
 
-      <View
-        style={[
-          styles.detailCard,
+      <DetailHero
+        code={selectedClient?.id || "Sin código"}
+        facts={[
           {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
+            label: "Identificación",
+            value: selectedClient?.identification || "Sin identificación",
           },
+          {
+            label: "Correo",
+            value: selectedClient?.email || "Sin correo",
+          },
+          {
+            label: "Dirección",
+            value: selectedClient?.address || "Sin dirección",
+          },
+          ...(selectedClient?.notes
+            ? [{ label: "Notas", value: selectedClient.notes }]
+            : []),
         ]}
+        plate={selectedClient?.fullName || "Sin nombre"}
+        statusLabel="Cliente"
+        title={selectedClient?.phone || "Sin teléfono"}
+        tone={colors.primary}
       >
-        <View style={[styles.cardHeader, { borderBottomColor: colors.border }]}>
-          <View style={styles.cardHeaderCopy}>
-            <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-              Recepción
-            </Text>
-            <Text style={[styles.clientTitle, { color: colors.text }]}>
-              Resumen del cliente
-            </Text>
-          </View>
-          <Text style={[styles.cardTag, { color: colors.primary }]}>
-            {selectedClient?.id || "Sin código"}
-          </Text>
-        </View>
-
-        <View style={styles.detailLines}>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Nombre:
-            </Text>{" "}
-            {selectedClient?.fullName || "Sin nombre"}
-          </Text>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Identificación:
-            </Text>{" "}
-            {selectedClient?.identification || "Sin identificación"}
-          </Text>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Teléfono:
-            </Text>{" "}
-            {selectedClient?.phone || "Sin teléfono"}
-          </Text>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Correo:
-            </Text>{" "}
-            {selectedClient?.email || "Sin correo"}
-          </Text>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Dirección:
-            </Text>{" "}
-            {selectedClient?.address || "Sin dirección"}
-          </Text>
-        </View>
-
-        {selectedClient?.notes ? (
-          <Text style={[styles.notesText, { color: colors.textSecondary }]}>
-            {selectedClient.notes}
-          </Text>
+        <ContactBar
+          message={`Hola ${selectedClient?.fullName || ""}, te escribimos del taller.`}
+          name={selectedClient?.fullName}
+          phone={selectedClient?.phone}
+        />
+        {canEditClients ? (
+          <BigButton
+            icon="create-outline"
+            label="Editar cliente"
+            onPress={() =>
+              onOpenClientForm?.(selectedClient, { returnTo: "detail" })
+            }
+            variant="secondary"
+          />
         ) : null}
-
         {canEditVehicles ? (
-          <View style={styles.actionRow}>
-            <Pressable
-              onPress={() => onOpenVehicleForm?.(selectedClient, null)}
-              style={[styles.secondaryAction, { borderColor: colors.accent }]}
-            >
-              <Text
-                style={[styles.secondaryActionText, { color: colors.accent }]}
-              >
-                Asociar vehículo
-              </Text>
-            </Pressable>
-          </View>
+          <BigButton
+            icon="car-sport-outline"
+            label="Asociar vehículo"
+            onPress={() => onOpenVehicleForm?.(selectedClient, null)}
+          />
         ) : null}
-      </View>
+      </DetailHero>
 
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -492,130 +454,61 @@ export default function ClientsScreen({
       ) : vehicles.length ? (
         <View style={styles.listBody}>
           {vehicles.map((vehicle) => (
-            <View
+            <OperationCard
+              actions={
+                canEditVehicles
+                  ? [
+                      {
+                        key: "edit",
+                        icon: "create-outline",
+                        label: "Editar vehículo",
+                        onPress: () =>
+                          onOpenVehicleForm?.(selectedClient, vehicle),
+                      },
+                      {
+                        key: "delete",
+                        icon: "trash-outline",
+                        color: colors.danger,
+                        label: "Eliminar vehículo",
+                        onPress: () => handleDeleteVehicle(vehicle),
+                      },
+                    ]
+                  : []
+              }
+              code="Vehículo"
               key={getEntityId(vehicle)}
-              style={[
-                styles.clientRow,
+              lines={[
                 {
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
+                  label: "Kilometraje",
+                  value: vehicle.mileage
+                    ? `${vehicle.mileage} km`
+                    : "Sin kilometraje",
                 },
               ]}
+              plate={vehicle.plate || "Sin placa"}
+              title={
+                [vehicle.brand, vehicle.model, vehicle.year]
+                  .filter(Boolean)
+                  .join(" ") || "Sin descripción"
+              }
+              tone={colors.accent}
             >
-              <View style={styles.clientCopy}>
-                <View
-                  style={[
-                    styles.cardHeader,
-                    { borderBottomColor: colors.border },
-                  ]}
-                >
-                  <View style={styles.cardHeaderCopy}>
-                    <Text
-                      style={[styles.cardEyebrow, { color: colors.accent }]}
-                    >
-                      Vehículo
-                    </Text>
-                    <Text style={[styles.clientTitle, { color: colors.text }]}>
-                      {[vehicle.brand, vehicle.model, vehicle.year]
-                        .filter(Boolean)
-                        .join(" ") || "Sin descripción"}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.cardBody}>
-                  <Text
-                    style={[styles.clientPlateMeta, { color: colors.accent }]}
-                  >
-                    <Text
-                      style={[
-                        styles.clientPlateMetaLabel,
-                        { color: colors.accent },
-                      ]}
-                    >
-                      Placa:
-                    </Text>{" "}
-                    {vehicle.plate || "Sin placa"}
-                  </Text>
-                  <Text
-                    style={[styles.clientMeta, { color: colors.textTertiary }]}
-                  >
-                    <Text
-                      style={[styles.clientMetaLabel, { color: colors.text }]}
-                    >
-                      Kilometraje:
-                    </Text>{" "}
-                    {vehicle.mileage
-                      ? `${vehicle.mileage} km`
-                      : "Sin kilometraje"}
-                  </Text>
-                  {canEditVehicles ? (
-                    <Pressable
-                      onPress={() =>
-                        onOpenDiagnosticForm?.(null, {
-                          seedData: {
-                            clientId: selectedClient?.id || "",
-                            vehicleId: vehicle.id || vehicle.refId || "",
-                          },
-                        })
-                      }
-                      style={[
-                        styles.diagnosticLinkWrap,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.diagnosticLinkText,
-                          { color: colors.accent },
-                        ]}
-                      >
-                        Abrir diagnóstico de esta unidad
-                      </Text>
-                    </Pressable>
-                  ) : null}
-                </View>
-              </View>
-
               {canEditVehicles ? (
-                <View style={styles.iconActionRow}>
-                  <Pressable
-                    onPress={() => onOpenVehicleForm?.(selectedClient, vehicle)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
+                <BigButton
+                  icon="pulse-outline"
+                  label="Abrir diagnóstico"
+                  onPress={() =>
+                    onOpenDiagnosticForm?.(null, {
+                      seedData: {
+                        clientId: selectedClient?.id || "",
+                        vehicleId: vehicle.id || vehicle.refId || "",
                       },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.textTertiary}
-                      name="create-outline"
-                      size={rf(17)}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => handleDeleteVehicle(vehicle)}
-                    style={[
-                      styles.iconAction,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.danger}
-                      name="trash-outline"
-                      size={rf(17)}
-                    />
-                  </Pressable>
-                </View>
+                    })
+                  }
+                  variant="secondary"
+                />
               ) : null}
-            </View>
+            </OperationCard>
           ))}
         </View>
       ) : (
@@ -629,11 +522,11 @@ export default function ClientsScreen({
           ]}
         >
           <Text style={[styles.emptyEyebrow, { color: colors.accent }]}>
-            Vehículos
+            Sin vehículos
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {canEditVehicles
-              ? "Este cliente todavía no tiene vehículos asociados. Registra la unidad para continuar con diagnósticos u órdenes."
+              ? "Este cliente todavía no tiene vehículos. Usa «Asociar vehículo» para continuar con diagnósticos u órdenes."
               : "Este cliente todavía no tiene vehículos visibles para tu perfil."}
           </Text>
         </View>
@@ -682,11 +575,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: rf(15),
-    minHeight: 48,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    fontSize: 17,
+    minHeight: 56,
   },
   listBody: { gap: spacing.sm },
   clientRow: {
@@ -804,8 +697,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
   },
-  sectionTitle: { fontSize: rf(16), fontWeight: "900" },
-  sectionMeta: { fontSize: rf(12), fontWeight: "700" },
+  sectionTitle: { fontSize: 22, fontWeight: "900" },
+  sectionMeta: { fontSize: 14, fontWeight: "700" },
   emptyStateCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -818,7 +711,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  emptyText: { fontSize: rf(15), lineHeight: rf(20) },
+  emptyText: { fontSize: 16, lineHeight: 23 },
   diagnosticLinkWrap: {
     alignSelf: "flex-start",
     marginTop: spacing.xs,
