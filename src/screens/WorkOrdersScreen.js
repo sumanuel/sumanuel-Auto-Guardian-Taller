@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   Alert,
   BackHandler,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -1472,78 +1473,57 @@ export default function WorkOrdersScreen({
                   selectedWorkOrder?.status,
                 ).toLowerCase()}
                 , no se pueden registrar avances, estados ni repuestos. Para
-                continuar, agrega una nota y cambia el estado a En proceso.
+                continuar, usa el botón Reabrir o Reanudar de la barra inferior.
               </Text>
             </View>
           ) : null}
 
           {progressForm.type === "note" ? (
             <View style={styles.formGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Estado operativo
-              </Text>
-              <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
-                Opcional: si lo seleccionas, la nota también actualiza el estado
-                actual de la orden.
-              </Text>
-              <View style={styles.filterRow}>
-                {noteOperationalStatusOptions.map((statusOption) => {
-                  const selected =
-                    progressForm.operationalStatus === statusOption.key;
-                  const isStatusLocked =
-                    isProgressLocked && statusOption.key !== "in-progress";
-
-                  return (
-                    <Pressable
-                      key={statusOption.key}
-                      disabled={isStatusLocked}
-                      onPress={() =>
-                        setProgressForm((current) => ({
-                          ...current,
-                          operationalStatus: selected ? "" : statusOption.key,
-                          progressPercent:
-                            !selected &&
-                            statusOption.key === "in-progress" &&
-                            isProgressLocked
-                              ? getSuggestedReactivationProgress(
-                                  selectedWorkOrder?.progressPercent,
-                                )
-                              : !selected && statusOption.key === "ready"
-                                ? 100
-                                : current.progressPercent,
-                        }))
-                      }
-                      style={[
-                        styles.filterChip,
-                        styles.filterChipLarge,
-                        {
-                          backgroundColor: selected
-                            ? colors.warning
-                            : colors.cardMuted,
-                          borderColor: selected
-                            ? colors.warning
-                            : colors.border,
-                          opacity: isStatusLocked ? 0.4 : 1,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.filterChipText,
-                          styles.filterChipTextLarge,
-                          {
-                            color: selected
-                              ? colors.white
-                              : colors.textSecondary,
-                          },
-                        ]}
-                      >
-                        {statusOption.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              {progressForm.operationalStatus ? (
+                <View
+                  style={[
+                    styles.statusNotice,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.warning,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    color={colors.warning}
+                    name="flag-outline"
+                    size={24}
+                  />
+                  <Text
+                    style={[styles.statusNoticeText, { color: colors.text }]}
+                  >
+                    Al guardar, la orden pasará a{" "}
+                    {resolveWorkOrderStatusLabel(
+                      progressForm.operationalStatus,
+                    ).toLowerCase()}
+                    .
+                  </Text>
+                  <Pressable
+                    accessibilityLabel="Quitar cambio de estado"
+                    accessibilityRole="button"
+                    hitSlop={12}
+                    onPress={() =>
+                      setProgressForm((current) => ({
+                        ...current,
+                        operationalStatus: "",
+                      }))
+                    }
+                    style={styles.statusNoticeClose}
+                  >
+                    <Ionicons
+                      color={colors.textSecondary}
+                      name="close"
+                      size={26}
+                    />
+                  </Pressable>
+                </View>
+              ) : null}
               {progressForm.operationalStatus === "ready" ? (
                 <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
                   Al marcar la orden como lista, se guardará automáticamente con
@@ -1854,6 +1834,57 @@ export default function WorkOrdersScreen({
               textAlignVertical="top"
               value={progressForm.message}
             />
+          ) : null}
+
+          {progressForm.type !== "status" && progressForm.type !== "parts" ? (
+            <View style={styles.textHelpRow}>
+              {Platform.OS === "android" ? (
+                <View style={styles.micHint}>
+                  <Ionicons
+                    color={colors.textTertiary}
+                    name="mic-outline"
+                    size={22}
+                  />
+                  <Text
+                    style={[
+                      styles.micHintText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Puedes dictar con el micrófono del teclado.
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.micHint} />
+              )}
+              {progressForm.message ? (
+                <Pressable
+                  accessibilityLabel="Borrar todo el texto"
+                  accessibilityRole="button"
+                  onPress={() =>
+                    setProgressForm((current) => ({ ...current, message: "" }))
+                  }
+                  style={[
+                    styles.clearButton,
+                    {
+                      backgroundColor: colors.cardMuted,
+                      borderColor: colors.borderStrong,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    color={colors.danger}
+                    name="trash-outline"
+                    size={22}
+                  />
+                  <Text
+                    style={[styles.clearButtonText, { color: colors.text }]}
+                  >
+                    Borrar
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
           ) : null}
 
           {progressForm.type === "note" || progressForm.type === "delivery" ? (
@@ -2220,6 +2251,41 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   primaryButtonText: { fontSize: rf(16), fontWeight: "800" },
+  statusNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1.5,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingLeft: 14,
+    paddingRight: 8,
+  },
+  statusNoticeText: { flex: 1, fontSize: 16, fontWeight: "700" },
+  statusNoticeClose: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textHelpRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  micHint: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
+  micHintText: { flex: 1, fontSize: 14, lineHeight: 19 },
+  clearButton: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+  },
+  clearButtonText: { fontSize: 16, fontWeight: "800" },
   timelineList: { gap: spacing.sm },
   timelineTitleRow: {
     flexDirection: "row",
