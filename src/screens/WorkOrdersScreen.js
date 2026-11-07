@@ -2003,26 +2003,6 @@ export default function WorkOrdersScreen({
                             (item) => item.key === entry.type,
                           )?.label || entry.type}
                         </Text>
-                        <View
-                          style={[
-                            styles.timelineTypeChip,
-                            {
-                              backgroundColor: palette.surface,
-                              borderColor: palette.accent,
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.timelineTypeChipText,
-                              { color: palette.text },
-                            ]}
-                          >
-                            {progressEntryTypeOptions.find(
-                              (item) => item.key === entry.type,
-                            )?.label || entry.type}
-                          </Text>
-                        </View>
                       </View>
                       <Text
                         style={[
@@ -2030,10 +2010,11 @@ export default function WorkOrdersScreen({
                           { color: colors.textSecondary },
                         ]}
                       >
-                        {author?.fullName ||
-                          author?.email ||
-                          entry.authorUid ||
-                          "Sin autor"}{" "}
+                        {entry.authorUid && entry.authorUid === currentUserUid
+                          ? "Tú"
+                          : author?.fullName ||
+                            author?.email ||
+                            "Colaborador"}{" "}
                         · {formatDateTime(entry.createdAt)}
                       </Text>
                       {entry.type === "status" ? (
@@ -2104,6 +2085,7 @@ export default function WorkOrdersScreen({
                         </View>
                       ) : null}
                       {entry.type === "parts" &&
+                      !entry.message &&
                       entry.sparePartUpdates?.length ? (
                         <View style={styles.timelineNestedList}>
                           {entry.sparePartUpdates.map((item) => (

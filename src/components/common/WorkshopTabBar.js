@@ -147,6 +147,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   tabButtonLarge: { minHeight: TOUCH.large, justifyContent: "center" },
-  iconWrapLarge: { width: 48, height: 40 },
+  iconWrapLarge: { width: 56, height: 40, borderRadius: 16 },
   tabLabelLarge: { fontSize: 12 },
 });

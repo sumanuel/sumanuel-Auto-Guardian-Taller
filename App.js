@@ -2,7 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, BackHandler, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import ClientFormScreen from "./src/screens/ClientFormScreen";
 import ClientsScreen from "./src/screens/ClientsScreen";
@@ -72,7 +75,8 @@ const ROOT_TABS = new Set([
 ]);
 
 function AppContent() {
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { colors, isDarkMode, toggleTheme } = useTheme();
+  const insets = useSafeAreaInsets();
   const {
     acceptPendingInvitation,
     activeWorkshop,
@@ -1221,6 +1225,15 @@ function AppContent() {
       <StatusBar style={isDarkMode ? "light" : "dark"} />
       <View style={styles.shell}>
         <View style={styles.content}>{renderAuthenticatedScreen()}</View>
+        {insets.top > 0 ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.statusScrim,
+              { height: insets.top, backgroundColor: colors.background },
+            ]}
+          />
+        ) : null}
         <OfflineBanner />
         <WorkshopTabBar
           activeTab={activeTab}
@@ -1260,5 +1273,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  statusScrim: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });

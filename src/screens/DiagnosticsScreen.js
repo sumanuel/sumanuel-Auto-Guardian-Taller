@@ -19,6 +19,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import BigButton from "../components/common/BigButton";
+import ContactBar from "../components/common/ContactBar";
+import DetailHero from "../components/common/DetailHero";
 import OperationCard from "../components/common/OperationCard";
 import { getDiagnosticTone } from "../utils/statusTone";
 import {
@@ -606,123 +608,79 @@ export default function DiagnosticsScreen({
     const vehicle = vehicleLookup[selectedDiagnostic?.vehicleId];
     const isClosedDiagnostic = selectedDiagnostic?.status === "closed";
 
+    const hasQuotePdf = Boolean(
+      selectedDiagnostic?.quotePdfBase64 ||
+      selectedDiagnostic?.quotePdfDownloadUrl,
+    );
+
     return (
-      <View
-        style={[
-          styles.detailCard,
+      <DetailHero
+        code={selectedDiagnostic?.id || "Sin diagnóstico"}
+        facts={[
           {
-            backgroundColor: colors.cardBackground,
-            borderColor: colors.border,
+            label: "Cliente",
+            value:
+              client?.fullName || selectedDiagnostic?.clientId || "Sin cliente",
+          },
+          {
+            label: "Kilometraje",
+            value: vehicle?.mileage
+              ? `${vehicle.mileage} km`
+              : "Sin kilometraje",
           },
         ]}
+        plate={vehicle?.plate}
+        statusLabel={
+          diagnosticStatusOptions.find(
+            (item) => item.key === selectedDiagnostic?.status,
+          )?.label ||
+          selectedDiagnostic?.status ||
+          "Sin estado"
+        }
+        title={
+          [vehicle?.brand, vehicle?.model, vehicle?.year]
+            .filter(Boolean)
+            .join(" ") ||
+          selectedDiagnostic?.vehicleId ||
+          "Sin vehículo"
+        }
+        tone={getDiagnosticTone(selectedDiagnostic?.status, colors)}
       >
-        <View style={[styles.cardHeader, { borderBottomColor: colors.border }]}>
-          <View style={styles.cardHeaderCopy}>
-            <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-              Taller
-            </Text>
-            <Text style={[styles.rowTitle, { color: colors.text }]}>
-              Resumen de diagnóstico
-            </Text>
-          </View>
-          <Text style={[styles.cardTag, { color: colors.primary }]}>
-            {selectedDiagnostic?.id || "Sin diagnóstico"}
+        <View style={styles.detailSection}>
+          <Text
+            style={[styles.detailSectionLabel, { color: colors.textTertiary }]}
+          >
+            Hallazgos
+          </Text>
+          <Text style={[styles.detailSectionText, { color: colors.text }]}>
+            {selectedDiagnostic?.concerns || "Sin hallazgos registrados"}
           </Text>
         </View>
 
-        <View style={styles.detailLines}>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Cliente:
-            </Text>{" "}
-            {client?.fullName || selectedDiagnostic?.clientId || "Sin cliente"}
-          </Text>
-          <Text style={[styles.vehicleSectionLabel, { color: colors.accent }]}>
-            vehículo:
-          </Text>
-          <View
-            style={[
-              styles.vehicleCard,
-              {
-                backgroundColor: colors.cardMuted,
-                borderColor: colors.border,
-              },
-            ]}
+        <View style={styles.detailSection}>
+          <Text
+            style={[styles.detailSectionLabel, { color: colors.textTertiary }]}
           >
-            <Text style={[styles.vehicleTitle, { color: colors.text }]}>
-              {[vehicle?.brand, vehicle?.model, vehicle?.year]
-                .filter(Boolean)
-                .join(" ") ||
-                vehicle?.plate ||
-                selectedDiagnostic?.vehicleId ||
-                "Sin vehículo"}
-            </Text>
-            <View
-              style={[
-                styles.vehicleDivider,
-                { backgroundColor: colors.border },
-              ]}
-            />
-            <Text style={[styles.vehiclePlate, { color: colors.accent }]}>
-              <Text
-                style={[styles.vehiclePlateLabel, { color: colors.accent }]}
-              >
-                Placa:
-              </Text>{" "}
-              {vehicle?.plate || "Sin placa"}
-            </Text>
-            <Text style={[styles.vehicleMeta, { color: colors.textTertiary }]}>
-              <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
-                Kilometraje:
-              </Text>{" "}
-              {vehicle?.mileage ? `${vehicle.mileage} km` : "Sin kilometraje"}
-            </Text>
-          </View>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Estado:
-            </Text>{" "}
-            {diagnosticStatusOptions.find(
-              (item) => item.key === selectedDiagnostic?.status,
-            )?.label ||
-              selectedDiagnostic?.status ||
-              "Sin estado"}
+            Notas
           </Text>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Hallazgos:
-            </Text>{" "}
-            {selectedDiagnostic?.concerns || "Sin hallazgos registrados"}
-          </Text>
-          <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-            <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-              Notas:
-            </Text>{" "}
+          <Text style={[styles.detailSectionText, { color: colors.text }]}>
             {selectedDiagnostic?.notes || "Sin notas adicionales"}
           </Text>
         </View>
 
-        <View style={styles.detailActionRow}>
-          {!isClosedDiagnostic ? (
-            <Pressable
-              onPress={() => onOpenDiagnosticForm?.(selectedDiagnostic)}
-              style={[
-                styles.secondaryAction,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text
-                style={[styles.secondaryActionText, { color: colors.primary }]}
-              >
-                Editar diagnóstico
-              </Text>
-            </Pressable>
-          ) : null}
+        <ContactBar
+          message={`Hola, te escribimos del taller sobre el diagnóstico ${
+            selectedDiagnostic?.id || ""
+          } de tu vehículo ${vehicle?.plate || ""}.`}
+          name={client?.fullName}
+          phone={client?.phone}
+        />
+
+        <View style={styles.detailActions}>
           {!isClosedDiagnostic && !isMechanicUser ? (
-            <Pressable
+            <BigButton
+              icon="clipboard-outline"
+              label="Crear orden desde este diagnóstico"
               onPress={() =>
                 onOpenWorkOrderForm?.(null, {
                   seedData: {
@@ -732,23 +690,46 @@ export default function DiagnosticsScreen({
                   },
                 })
               }
-              style={[
-                styles.secondaryAction,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text
-                style={[styles.secondaryActionText, { color: colors.accent }]}
-              >
-                Crear orden desde este diagnóstico
-              </Text>
-            </Pressable>
+              variant={
+                selectedDiagnostic?.status === "approved"
+                  ? "primary"
+                  : "secondary"
+              }
+            />
+          ) : null}
+          {!isClosedDiagnostic ? (
+            <BigButton
+              icon="create-outline"
+              label="Editar diagnóstico"
+              onPress={() => onOpenDiagnosticForm?.(selectedDiagnostic)}
+              variant="secondary"
+            />
+          ) : null}
+          {hasQuotePdf ? (
+            <BigButton
+              icon="document-text-outline"
+              label="Ver cotización"
+              onPress={() => handleOpenQuotePdf(selectedDiagnostic)}
+              variant="secondary"
+            />
+          ) : null}
+          {hasQuotePdf && !isClosedDiagnostic ? (
+            <BigButton
+              icon="logo-whatsapp"
+              label="Enviar cotización por WhatsApp"
+              onPress={() =>
+                handleSendQuoteWhatsapp(selectedDiagnostic, client)
+              }
+              variant="success"
+            />
+          ) : null}
+          {isClosedDiagnostic ? (
+            <Text style={[styles.detailClosed, { color: colors.accent }]}>
+              Ya convertido en orden de trabajo
+            </Text>
           ) : null}
         </View>
-      </View>
+      </DetailHero>
     );
   };
 
@@ -963,4 +944,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   emptyText: { fontSize: rf(15), lineHeight: rf(21) },
+  detailSection: { gap: 4 },
+  detailSectionLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  detailSectionText: { fontSize: 16, lineHeight: 23 },
+  detailActions: { gap: 12 },
+  detailClosed: { fontSize: 16, fontWeight: "800" },
 });
