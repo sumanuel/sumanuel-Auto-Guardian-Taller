@@ -1,27 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import BigButton from "../components/common/BigButton";
+import FormField from "../components/common/FormField";
+import FormScreen from "../components/common/FormScreen";
 import { USER_ROLES } from "../constants/accessControl";
-import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
   createWorkshop,
   upsertWorkshopMembership,
 } from "../services/workshops/workshopService";
-import { borderRadius, rf, spacing } from "../utils/responsive";
+import { TOUCH } from "../utils/touch";
 
 export default function WorkshopSetupScreen({ onSaved, userProfile }) {
   const { colors } = useTheme();
@@ -94,264 +84,81 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
   };
 
   return (
-    <SafeAreaView
+    <FormScreen
+      actionIcon="checkmark-circle-outline"
+      actionLabel="Crear taller"
       edges={["left", "right", "bottom"]}
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
+      onSubmit={handleSave}
+      section="Configuración inicial"
+      submitting={submitting}
+      subtitle="Así te identifican tu equipo y tus clientes."
+      title="Datos del taller"
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.flex}
+      <FormField
+        autoCapitalize="words"
+        label="Nombre del taller"
+        onChangeText={setName}
+        placeholder="Ej: Taller Mecánico Central"
+        value={name}
+      />
+      <FormField
+        keyboardType="phone-pad"
+        label="Teléfono"
+        onChangeText={setPhone}
+        placeholder="Ej: 0412-1234567"
+        value={phone}
+      />
+      <FormField
+        autoCapitalize="sentences"
+        label="Dirección"
+        multiline
+        onChangeText={setAddress}
+        placeholder="Ej: Av. Principal, Local 5"
+        value={address}
+      />
+      <FormField
+        autoCapitalize="characters"
+        label="RIF"
+        onChangeText={setRif}
+        placeholder="Ej: J-12345678-9"
+        value={rif}
+      />
+
+      <View
+        style={[
+          styles.info,
+          { backgroundColor: colors.cardMuted, borderColor: colors.border },
+        ]}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <WorkshopScreenHeader
-            section="Configuración inicial"
-            subtitle="Define los datos de tu taller para que el equipo y los clientes lo identifiquen correctamente."
-            title="Datos del taller"
-          />
+        <Ionicons
+          color={colors.primary}
+          name="information-circle-outline"
+          size={24}
+        />
+        <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+          Solo el nombre es obligatorio. Puedes completar el resto más tarde
+          desde la configuración del taller.
+        </Text>
+      </View>
 
-          <View
-            style={[
-              styles.formCard,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Nombre del taller *
-              </Text>
-              <TextInput
-                autoCapitalize="words"
-                onChangeText={setName}
-                placeholder="Ej: Taller Mecánico Central"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={name}
-              />
-            </View>
-
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Teléfono
-              </Text>
-              <TextInput
-                keyboardType="phone-pad"
-                onChangeText={setPhone}
-                placeholder="Ej: 0412-1234567"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={phone}
-              />
-            </View>
-
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Dirección
-              </Text>
-              <TextInput
-                autoCapitalize="sentences"
-                multiline
-                onChangeText={setAddress}
-                placeholder="Ej: Av. Principal, Local 5"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  styles.textArea,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={address}
-              />
-            </View>
-
-            <View style={styles.fieldGroup}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                RIF
-              </Text>
-              <TextInput
-                autoCapitalize="characters"
-                onChangeText={setRif}
-                placeholder="Ej: J-12345678-9"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={rif}
-              />
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.infoCard,
-              {
-                backgroundColor: colors.cardMuted,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Ionicons
-              color={colors.primary}
-              name="information-circle-outline"
-              size={rf(20)}
-            />
-            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-              Puedes completar o editar estos datos más tarde desde la sección
-              de configuración del taller.
-            </Text>
-          </View>
-
-          {submitting ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : (
-            <View style={styles.actionRow}>
-              <Pressable
-                onPress={handleSkip}
-                style={[
-                  styles.secondaryAction,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.secondaryActionText,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  Ahora no
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={handleSave}
-                style={[
-                  styles.primaryAction,
-                  { backgroundColor: colors.primary },
-                ]}
-              >
-                <Ionicons
-                  color={colors.white}
-                  name="save-outline"
-                  size={rf(18)}
-                />
-                <Text style={styles.primaryActionText}>Configurar taller</Text>
-              </Pressable>
-            </View>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <BigButton
+        disabled={submitting}
+        label="Omitir por ahora"
+        onPress={handleSkip}
+        variant="secondary"
+      />
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  flex: { flex: 1 },
-  scrollContent: {
-    padding: spacing.lg,
-    gap: spacing.xl,
-    paddingBottom: spacing.xxl,
-  },
-  formCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.lg,
-  },
-  fieldGroup: {
-    gap: spacing.sm,
-  },
-  fieldLabel: {
-    fontSize: rf(16),
-    fontWeight: "800",
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: rf(16),
-    fontWeight: "600",
-    minHeight: 52,
-  },
-  textArea: {
-    minHeight: 120,
-    textAlignVertical: "top",
-  },
-  infoCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+  info: {
     flexDirection: "row",
-    gap: spacing.sm,
-    alignItems: "flex-start",
-  },
-  infoText: {
-    flex: 1,
-    fontSize: rf(13),
-    lineHeight: rf(18),
-    fontWeight: "500",
-  },
-  actionRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  secondaryAction: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    minHeight: rf(50),
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.md,
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: TOUCH.radius,
+    padding: 14,
   },
-  secondaryActionText: {
-    fontSize: rf(14),
-    fontWeight: "800",
-  },
-  primaryAction: {
-    flex: 2,
-    borderRadius: borderRadius.lg,
-    minHeight: 56,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.lg,
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  primaryActionText: {
-    color: "#ffffff",
-    fontSize: rf(17),
-    fontWeight: "900",
-  },
+  infoText: { flex: 1, fontSize: 14, lineHeight: 20 },
 });

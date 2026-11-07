@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DetailHero from "../components/common/DetailHero";
+import OperationCard from "../components/common/OperationCard";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
@@ -21,7 +21,7 @@ import {
   listWorkOrders,
   workOrderStatusOptions,
 } from "../services/workOrders/workOrderService";
-import { borderRadius, rf, spacing } from "../utils/responsive";
+import { getDiagnosticTone, getWorkOrderTone } from "../utils/statusTone";
 
 function getEntityId(entity) {
   return entity?.refId || entity?.id || "";
@@ -224,204 +224,94 @@ export default function VehicleHistoryScreen({
       edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <WorkshopScreenHeader
           onBack={onBack}
           section="Operación"
-          subtitle="Diagnósticos y órdenes consolidados por unidad para revisar el flujo técnico completo."
-          title="Historial operativo"
+          subtitle="Diagnósticos cerrados y órdenes entregadas de esta unidad."
+          title="Historial del vehículo"
         />
 
-        <View
-          style={[
-            styles.summaryCard,
+        <DetailHero
+          code={`${timeline.length} ${timeline.length === 1 ? "registro" : "registros"}`}
+          facts={[
             {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              label: "Cliente",
+              value: client?.fullName || "Sin cliente asociado",
+            },
+            {
+              label: "Trabajos",
+              value: `${closedDiagnosticCount} diagnósticos cerrados · ${deliveredWorkOrderCount} órdenes entregadas`,
             },
           ]}
-        >
-          <View style={styles.summaryTopRow}>
-            <View
-              style={[
-                styles.summaryIconWrap,
+          plate={resolvedVehicle?.plate}
+          statusLabel="Historial"
+          title={buildVehicleTitle(resolvedVehicle)}
+          tone={colors.primary}
+        />
+
+        {loading ? (
+          <ActivityIndicator color={colors.primary} size="large" />
+        ) : null}
+
+        {timeline.map((item) => {
+          const isDiagnostic = item.type === "diagnostic";
+          const presentation = resolveTimelinePresentation(item, colors);
+
+          return (
+            <OperationCard
+              code={presentation.label}
+              key={`${item.type}-${item.entityId}`}
+              lines={[
                 {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
+                  label: "Fecha",
+                  value: formatDateTime(item.updatedAt || item.createdAt),
+                },
+                {
+                  label: isDiagnostic ? "Hallazgos" : "Resultado",
+                  value: isDiagnostic
+                    ? item.concerns || "Sin hallazgos registrados"
+                    : `Entrega completada con ${item.progressPercent || 0}% de avance final`,
                 },
               ]}
-            >
-              <Ionicons
-                color={colors.accent}
-                name="car-sport-outline"
-                size={rf(18)}
-              />
-            </View>
-            <View style={styles.summaryCopy}>
-              <Text style={[styles.summaryTitle, { color: colors.text }]}>
-                {buildVehicleTitle(resolvedVehicle)}
-              </Text>
-              <Text style={[styles.summaryPlate, { color: colors.accent }]}>
-                Placa: {resolvedVehicle?.plate || "Sin placa"}
-              </Text>
-              <Text
-                style={[styles.summaryMeta, { color: colors.textSecondary }]}
-              >
-                Cliente: {client?.fullName || "Sin cliente asociado"}
-              </Text>
-            </View>
+              onPress={() =>
+                isDiagnostic
+                  ? onOpenDiagnosticDetail?.(item.entityId)
+                  : onOpenWorkOrderTimeline?.(item.entityId)
+              }
+              plate={item.id || item.refId || item.name || "Sin código"}
+              statusLabel={resolveTimelineMeta(item)}
+              tone={
+                isDiagnostic
+                  ? getDiagnosticTone(item.status, colors)
+                  : getWorkOrderTone(item.status, colors)
+              }
+            />
+          );
+        })}
+
+        {!loading && !timeline.length ? (
+          <View
+            style={[
+              styles.empty,
+              {
+                backgroundColor: colors.cardBackground,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
+              Sin historial todavía
+            </Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              Cuando se cierre un diagnóstico o se entregue una orden de esta
+              unidad, aparecerá aquí.
+            </Text>
           </View>
-
-          <View style={styles.countRow}>
-            <View
-              style={[
-                styles.countCard,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.countValue, { color: colors.text }]}>
-                {closedDiagnosticCount}
-              </Text>
-              <Text
-                style={[styles.countLabel, { color: colors.textSecondary }]}
-              >
-                Diag. cerrados
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.countCard,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.countValue, { color: colors.text }]}>
-                {deliveredWorkOrderCount}
-              </Text>
-              <Text
-                style={[styles.countLabel, { color: colors.textSecondary }]}
-              >
-                Órdenes entregadas
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {loading ? <ActivityIndicator color={colors.primary} /> : null}
-
-        <View style={styles.timelineWrap}>
-          {timeline.length ? (
-            timeline.map((item) => {
-              const presentation = resolveTimelinePresentation(item, colors);
-              const accentColor = presentation.accentColor;
-              const isDiagnostic = item.type === "diagnostic";
-
-              return (
-                <Pressable
-                  key={`${item.type}-${item.entityId}`}
-                  onPress={() => {
-                    if (isDiagnostic) {
-                      onOpenDiagnosticDetail?.(item.entityId);
-                      return;
-                    }
-
-                    onOpenWorkOrderTimeline?.(item.entityId);
-                  }}
-                  style={[
-                    styles.timelineCard,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <View style={styles.timelineTopRow}>
-                    <View
-                      style={[
-                        styles.typeBadge,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={accentColor}
-                        name={presentation.icon}
-                        size={rf(14)}
-                      />
-                      <Text
-                        style={[styles.typeBadgeText, { color: accentColor }]}
-                      >
-                        {presentation.label}
-                      </Text>
-                    </View>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: accentColor,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.statusBadgeText, { color: accentColor }]}
-                      >
-                        {resolveTimelineMeta(item)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text style={[styles.timelineCode, { color: colors.text }]}>
-                    {item.id || item.refId || item.name || "Sin código"}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.timelineDate,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {formatDateTime(item.updatedAt || item.createdAt)}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.timelineDescription,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {isDiagnostic
-                      ? item.concerns || "Sin hallazgos registrados"
-                      : `Entrega completada con ${item.progressPercent || 0}% de avance final.`}
-                  </Text>
-                </Pressable>
-              );
-            })
-          ) : (
-            <View
-              style={[
-                styles.emptyCard,
-                {
-                  backgroundColor: colors.cardBackground,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
-                Operación
-              </Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                Esta unidad todavía no tiene diagnósticos cerrados ni órdenes
-                entregadas.
-              </Text>
-            </View>
-          )}
-        </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -429,130 +319,13 @@ export default function VehicleHistoryScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xl,
-    gap: spacing.xl,
-  },
-  summaryCard: {
+  scrollContent: { padding: 20, paddingBottom: 32, gap: 12 },
+  empty: {
     borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.md,
+    borderRadius: 20,
+    padding: 20,
+    gap: 6,
   },
-  summaryTopRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-    alignItems: "flex-start",
-  },
-  summaryIconWrap: {
-    width: rf(42),
-    height: rf(42),
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  summaryCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  summaryTitle: {
-    fontSize: rf(18),
-    fontWeight: "900",
-  },
-  summaryPlate: {
-    fontSize: rf(16),
-    fontWeight: "900",
-    letterSpacing: 0.5,
-  },
-  summaryMeta: {
-    fontSize: rf(13),
-    lineHeight: rf(18),
-  },
-  countRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  countCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    gap: 2,
-  },
-  countValue: {
-    fontSize: rf(24),
-    fontWeight: "900",
-  },
-  countLabel: {
-    fontSize: rf(12),
-    fontWeight: "700",
-  },
-  timelineWrap: {
-    gap: spacing.md,
-  },
-  timelineCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  timelineTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  typeBadge: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  typeBadgeText: {
-    fontSize: rf(11),
-    fontWeight: "800",
-  },
-  statusBadge: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  statusBadgeText: {
-    fontSize: rf(11),
-    fontWeight: "800",
-  },
-  timelineCode: {
-    fontSize: rf(15),
-    fontWeight: "800",
-  },
-  timelineDate: {
-    fontSize: rf(12),
-    lineHeight: rf(17),
-  },
-  timelineDescription: {
-    fontSize: rf(13),
-    lineHeight: rf(18),
-  },
-  emptyCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.xs,
-  },
-  emptyEyebrow: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  emptyText: {
-    fontSize: rf(15),
-    lineHeight: rf(19),
-  },
+  emptyTitle: { fontSize: 18, fontWeight: "900" },
+  emptyText: { fontSize: 15, lineHeight: 22 },
 });

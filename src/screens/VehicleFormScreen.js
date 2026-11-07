@@ -1,22 +1,15 @@
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { Ionicons } from "@expo/vector-icons";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import FormField from "../components/common/FormField";
+import FormScreen from "../components/common/FormScreen";
 import { useTheme } from "../context/ThemeContext";
 import {
   createEmptyVehicleForm,
   createVehicle,
   updateVehicle,
 } from "../services/vehicles/vehicleService";
-import { borderRadius, rf, spacing } from "../utils/responsive";
+import { TOUCH } from "../utils/touch";
 
 function getVehicleId(vehicle) {
   return vehicle?.refId || vehicle?.id || null;
@@ -60,6 +53,8 @@ export default function VehicleFormScreen({
 
   const editingVehicleId = getVehicleId(initialVehicle);
   const clientLabel = initialClient?.fullName || initialClient?.id || "Cliente";
+  const setField = (key) => (value) =>
+    setForm((current) => ({ ...current, [key]: value }));
 
   useEffect(() => {
     setForm(
@@ -105,363 +100,125 @@ export default function VehicleFormScreen({
   };
 
   return (
-    <SafeAreaView
-      edges={["left", "right"]}
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    <FormScreen
+      actionLabel={
+        submitting
+          ? "Guardando vehículo..."
+          : editingVehicleId
+            ? "Guardar vehículo"
+            : "Asociar vehículo"
+      }
+      onBack={onBack}
+      onSubmit={handleSubmit}
+      section="Vehículos"
+      submitting={submitting}
+      subtitle="La placa es lo único obligatorio."
+      title={editingVehicleId ? "Editar vehículo" : "Asociar vehículo"}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <View
+        style={[
+          styles.owner,
+          {
+            backgroundColor: colors.cardMuted,
+            borderColor: colors.border,
+          },
+        ]}
       >
-        <WorkshopScreenHeader
-          onBack={onBack}
-          section="Vehículos"
-          subtitle="Registro operativo separado de la ficha del cliente para mantener una sola acción por pantalla."
-          title={editingVehicleId ? "Editar vehículo" : "Asociar vehículo"}
-        />
-
-        <View
-          style={[
-            styles.clientBadge,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text style={[styles.clientLabel, { color: colors.textSecondary }]}>
+        <Ionicons color={colors.primary} name="person-outline" size={24} />
+        <View style={styles.ownerCopy}>
+          <Text style={[styles.ownerLabel, { color: colors.textTertiary }]}>
             Cliente
           </Text>
-          <Text style={[styles.clientValue, { color: colors.text }]}>
+          <Text style={[styles.ownerValue, { color: colors.text }]}>
             {clientLabel}
           </Text>
         </View>
+      </View>
 
-        <View
-          style={[
-            styles.formCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <View
-            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
-          >
-            <View style={styles.cardHeaderCopy}>
-              <Text style={[styles.cardEyebrow, { color: colors.accent }]}>
-                Taller
-              </Text>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
-                Identificación del vehículo
-              </Text>
-            </View>
-            <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingVehicleId ? "Edición" : "Asociación"}
-            </Text>
-          </View>
-
-          <View style={styles.formGrid}>
-            <View style={[styles.formGroup, styles.fullWidth]}>
-              <Text
-                style={[styles.fieldLabel, { color: colors.textSecondary }]}
-              >
-                Placa
-              </Text>
-              <TextInput
-                autoCapitalize="characters"
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, plate: value }))
-                }
-                placeholder="AB123CD"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.plate}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text
-                style={[styles.fieldLabel, { color: colors.textSecondary }]}
-              >
-                Marca
-              </Text>
-              <TextInput
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, brand: value }))
-                }
-                placeholder="Toyota"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.brand}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text
-                style={[styles.fieldLabel, { color: colors.textSecondary }]}
-              >
-                Modelo
-              </Text>
-              <TextInput
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, model: value }))
-                }
-                placeholder="Hilux"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.model}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text
-                style={[styles.fieldLabel, { color: colors.textSecondary }]}
-              >
-                Ano
-              </Text>
-              <TextInput
-                keyboardType="number-pad"
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, year: value }))
-                }
-                placeholder="2019"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.year}
-              />
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text
-                style={[styles.fieldLabel, { color: colors.textSecondary }]}
-              >
-                Color
-              </Text>
-              <TextInput
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, color: value }))
-                }
-                placeholder="Blanco"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.color}
-              />
-            </View>
-
-            <View style={[styles.formGroup, styles.fullWidth]}>
-              <Text
-                style={[styles.fieldLabel, { color: colors.textSecondary }]}
-              >
-                VIN
-              </Text>
-              <TextInput
-                autoCapitalize="characters"
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, vin: value }))
-                }
-                placeholder="8X1ABC12345678901"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.vin}
-              />
-            </View>
-
-            <View style={[styles.formGroup, styles.fullWidth]}>
-              <Text
-                style={[styles.fieldLabel, { color: colors.textSecondary }]}
-              >
-                Kilometraje
-              </Text>
-              <TextInput
-                keyboardType="number-pad"
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, mileage: value }))
-                }
-                placeholder="120000"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.mileage}
-              />
-            </View>
-
-            <View style={[styles.formGroup, styles.fullWidth]}>
-              <Text
-                style={[styles.fieldLabel, { color: colors.textSecondary }]}
-              >
-                Notas del vehículo
-              </Text>
-              <TextInput
-                multiline
-                numberOfLines={4}
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, notes: value }))
-                }
-                placeholder="Observaciones, accesorios y condición general"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.textArea,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                textAlignVertical="top"
-                value={form.notes}
-              />
-            </View>
-          </View>
-
-          <Pressable
-            onPress={handleSubmit}
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              {submitting
-                ? "Guardando vehículo..."
-                : editingVehicleId
-                  ? "Guardar vehículo"
-                  : "Asociar vehículo"}
-            </Text>
-          </Pressable>
+      <FormField
+        autoCapitalize="characters"
+        label="Placa"
+        onChangeText={setField("plate")}
+        placeholder="AB123CD"
+        style={styles.plateInput}
+        value={form.plate}
+      />
+      <FormField
+        label="Marca"
+        onChangeText={setField("brand")}
+        placeholder="Toyota"
+        value={form.brand}
+      />
+      <FormField
+        label="Modelo"
+        onChangeText={setField("model")}
+        placeholder="Hilux"
+        value={form.model}
+      />
+      <View style={styles.pair}>
+        <View style={styles.pairItem}>
+          <FormField
+            keyboardType="number-pad"
+            label="Año"
+            onChangeText={setField("year")}
+            placeholder="2019"
+            value={String(form.year ?? "")}
+          />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+        <View style={styles.pairItem}>
+          <FormField
+            label="Color"
+            onChangeText={setField("color")}
+            placeholder="Blanco"
+            value={form.color}
+          />
+        </View>
+      </View>
+      <FormField
+        keyboardType="number-pad"
+        label="Kilometraje"
+        onChangeText={setField("mileage")}
+        placeholder="120000"
+        value={form.mileage}
+      />
+      <FormField
+        autoCapitalize="characters"
+        label="VIN"
+        onChangeText={setField("vin")}
+        placeholder="8X1ABC12345678901"
+        value={form.vin}
+      />
+      <FormField
+        label="Notas del vehículo"
+        multiline
+        onChangeText={setField("notes")}
+        placeholder="Observaciones, accesorios y condición general"
+        value={form.notes}
+      />
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
-  },
-  formCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  cardHeader: {
+  owner: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    paddingBottom: spacing.xs,
-    borderBottomWidth: 1,
+    gap: 12,
+    minHeight: TOUCH.min,
+    borderWidth: 1,
+    borderRadius: TOUCH.radius,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
-  cardHeaderCopy: { flex: 1, gap: 2 },
-  cardEyebrow: {
-    fontSize: rf(12),
+  ownerCopy: { flex: 1 },
+  ownerLabel: {
+    fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
-  cardTitle: { fontSize: rf(17), fontWeight: "800" },
-  cardMeta: { fontSize: rf(13), fontWeight: "700" },
-  clientBadge: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.sm,
-    gap: spacing.xs,
-  },
-  clientLabel: {
-    fontSize: rf(13),
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  clientValue: { fontSize: rf(17), fontWeight: "800" },
-  formGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  formGroup: { width: "47%", gap: spacing.sm },
-  fullWidth: { width: "100%" },
-  fieldLabel: {
-    fontSize: rf(16),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    fontSize: rf(16),
-    minHeight: 52,
-  },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    fontSize: rf(16),
-    minHeight: 120,
-  },
-  primaryAction: {
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    alignItems: "center",
-    minHeight: 56,
-    justifyContent: "center",
-  },
-  primaryActionText: {
-    fontSize: rf(17),
-    fontWeight: "800",
-  },
+  ownerValue: { fontSize: 18, fontWeight: "800" },
+  plateInput: { fontSize: 26, fontWeight: "900", letterSpacing: 2 },
+  pair: { flexDirection: "row", gap: 12 },
+  pairItem: { flex: 1 },
 });

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +9,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import BigButton from "../components/common/BigButton";
+import BigChip from "../components/common/BigChip";
+import DetailHero from "../components/common/DetailHero";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { hasPermission, isMechanicRole } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +28,8 @@ import { createDiagnosticQuotePdf } from "../services/diagnostics/diagnosticQuot
 import { listMechanicProfiles } from "../services/admin/staffAdmin";
 import { listVehicles } from "../services/vehicles/vehicleService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
+import { getDiagnosticTone } from "../utils/statusTone";
+import { TOUCH } from "../utils/touch";
 
 function getDiagnosticId(diagnostic) {
   return diagnostic?.refId || diagnostic?.id || null;
@@ -237,6 +242,54 @@ export default function DiagnosticFormScreen({
     }
   };
 
+  const statusLabel =
+    diagnosticStatusOptions.find((item) => item.key === form.status)?.label ||
+    "Sin estado";
+  const statusTone = getDiagnosticTone(form.status, colors);
+  const vehicleTitle = [
+    selectedVehicle?.brand,
+    selectedVehicle?.model,
+    selectedVehicle?.year,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const submitLabel = isClosedDiagnostic
+    ? "Diagnóstico cerrado"
+    : submitting
+      ? "Guardando diagnóstico..."
+      : editingDiagnosticId
+        ? "Guardar cambios"
+        : "Crear diagnóstico";
+
+  const setField = (key) => (value) =>
+    setForm((current) => ({ ...current, [key]: value }));
+
+  const inputBase = {
+    backgroundColor: colors.inputBackground,
+    borderColor: colors.borderStrong,
+    color: colors.text,
+  };
+
+  const renderTextField = (label, hint, key, props = {}) => (
+    <View style={styles.group}>
+      <Text style={[styles.groupLabel, { color: colors.text }]}>{label}</Text>
+      {hint ? (
+        <Text style={[styles.hint, { color: colors.textSecondary }]}>
+          {hint}
+        </Text>
+      ) : null}
+      <TextInput
+        editable={!isClosedDiagnostic}
+        onChangeText={setField(key)}
+        placeholderTextColor={colors.textTertiary}
+        style={[styles.input, props.multiline && styles.textArea, inputBase]}
+        textAlignVertical={props.multiline ? "top" : "center"}
+        value={form[key]}
+        {...props}
+      />
+    </View>
+  );
+
   return (
     <SafeAreaView
       edges={["left", "right"]}
@@ -244,576 +297,251 @@ export default function DiagnosticFormScreen({
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
           onBack={onBack}
           section="Diagnósticos"
-          subtitle="Completa la ficha técnica en una pantalla dedicada y vuelve a la lista para decidir la siguiente acción."
+          subtitle={
+            editingDiagnosticId
+              ? "Actualiza la ficha técnica y el estado."
+              : "Registra el motivo de ingreso y la cotización."
+          }
           title={
             editingDiagnosticId ? "Editar diagnóstico" : "Registrar diagnóstico"
           }
         />
 
-        <View
-          style={[
-            styles.formCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <View
-            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
-          >
-            <View style={styles.cardHeaderCopy}>
-              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-                Taller
+        {shouldRenderSelectionSummary ? (
+          <DetailHero
+            code={editingDiagnosticId || "Nuevo"}
+            facts={[
+              {
+                label: "Cliente",
+                value:
+                  selectedClient?.fullName || form.clientId || "Sin cliente",
+              },
+              {
+                label: "Kilometraje",
+                value: selectedVehicle?.mileage
+                  ? `${selectedVehicle.mileage} km`
+                  : "Sin kilometraje",
+              },
+            ]}
+            plate={selectedVehicle?.plate}
+            statusLabel={statusLabel}
+            title={vehicleTitle}
+            tone={statusTone}
+          />
+        ) : null}
+
+        {!shouldLockVehicleContext ? (
+          <>
+            <View style={styles.group}>
+              <Text style={[styles.groupLabel, { color: colors.text }]}>
+                Cliente
               </Text>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
-                Apertura técnica
-              </Text>
-            </View>
-            <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingDiagnosticId ? "Revisión" : "Ingreso"}
-            </Text>
-          </View>
-
-          {shouldLockVehicleContext ? (
-            <View style={styles.selectionSummary}>
-              <Text
-                style={[styles.selectionLine, { color: colors.textSecondary }]}
-              >
-                <Text
-                  style={[styles.selectionLineLabel, { color: colors.text }]}
-                >
-                  Cliente:
-                </Text>{" "}
-                {selectedClient?.fullName || form.clientId || "Sin cliente"}
-              </Text>
-
-              <Text
-                style={[styles.vehicleSummaryLabel, { color: colors.accent }]}
-              >
-                Vehículo:
-              </Text>
-              <View
-                style={[
-                  styles.seededVehicleCard,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text style={[styles.selectionValue, { color: colors.text }]}>
-                  {[
-                    selectedVehicle?.brand,
-                    selectedVehicle?.model,
-                    selectedVehicle?.year,
-                  ]
-                    .filter(Boolean)
-                    .join(" ") ||
-                    selectedVehicle?.plate ||
-                    form.vehicleId ||
-                    "Sin vehículo"}
-                </Text>
-                <View
-                  style={[
-                    styles.seededVehicleDivider,
-                    { backgroundColor: colors.border },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.selectionMeta,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  <Text
-                    style={[styles.selectionMetaLabel, { color: colors.text }]}
-                  >
-                    Placa:
-                  </Text>{" "}
-                  {selectedVehicle?.plate || "Sin placa"}
-                </Text>
-                <Text
-                  style={[
-                    styles.selectionMeta,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  <Text
-                    style={[styles.selectionMetaLabel, { color: colors.text }]}
-                  >
-                    Kilometraje:
-                  </Text>{" "}
-                  {selectedVehicle?.mileage
-                    ? `${selectedVehicle.mileage} km`
-                    : "Sin kilometraje"}
-                </Text>
-              </View>
-            </View>
-          ) : (
-            <>
-              <View style={styles.formGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Cliente
-                </Text>
-                <View style={styles.optionWrap}>
-                  {clients.slice(0, 8).map((client) => {
-                    const selected = form.clientId === client.id;
-
-                    return (
-                      <Pressable
-                        key={client.id}
-                        onPress={() =>
-                          setForm((current) => ({
-                            ...current,
-                            clientId: client.id,
-                            vehicleId:
-                              current.vehicleId &&
-                              vehicles.find(
-                                (item) => item.id === current.vehicleId,
-                              )?.clientId === client.id
-                                ? current.vehicleId
-                                : "",
-                          }))
-                        }
-                        style={[
-                          styles.optionChip,
-                          {
-                            backgroundColor: selected
-                              ? colors.primary
-                              : colors.cardMuted,
-                            borderColor: selected
-                              ? colors.primary
-                              : colors.border,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            { color: selected ? colors.white : colors.text },
-                          ]}
-                        >
-                          {client.id} · {client.fullName}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Vehículo
-                </Text>
-                <View style={styles.optionWrap}>
-                  {filteredVehicles.slice(0, 8).map((vehicle) => {
-                    const selected = form.vehicleId === vehicle.id;
-
-                    return (
-                      <Pressable
-                        key={vehicle.id}
-                        onPress={() =>
-                          setForm((current) => ({
-                            ...current,
-                            vehicleId: vehicle.id,
-                          }))
-                        }
-                        style={[
-                          styles.optionChip,
-                          {
-                            backgroundColor: selected
-                              ? colors.accent
-                              : colors.cardMuted,
-                            borderColor: selected
-                              ? colors.accent
-                              : colors.border,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            { color: selected ? colors.white : colors.text },
-                          ]}
-                        >
-                          {vehicle.id} · {vehicle.plate}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-
-              {shouldRenderSelectionSummary ? (
-                <View style={styles.selectionSummary}>
-                  <Text
-                    style={[
-                      styles.selectionLine,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.selectionLineLabel,
-                        { color: colors.text },
-                      ]}
-                    >
-                      Cliente:
-                    </Text>{" "}
-                    {selectedClient?.fullName || form.clientId || "Sin cliente"}
-                  </Text>
-
-                  <Text
-                    style={[
-                      styles.vehicleSummaryLabel,
-                      { color: colors.accent },
-                    ]}
-                  >
-                    Vehículo:
-                  </Text>
-                  <View
-                    style={[
-                      styles.seededVehicleCard,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.selectionValue, { color: colors.text }]}
-                    >
-                      {[
-                        selectedVehicle?.brand,
-                        selectedVehicle?.model,
-                        selectedVehicle?.year,
-                      ]
-                        .filter(Boolean)
-                        .join(" ") ||
-                        selectedVehicle?.plate ||
-                        form.vehicleId ||
-                        "Sin vehículo"}
-                    </Text>
-                    <View
-                      style={[
-                        styles.seededVehicleDivider,
-                        { backgroundColor: colors.border },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.selectionMeta,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.selectionMetaLabel,
-                          { color: colors.text },
-                        ]}
-                      >
-                        Placa:
-                      </Text>{" "}
-                      {selectedVehicle?.plate || "Sin placa"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.selectionMeta,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.selectionMetaLabel,
-                          { color: colors.text },
-                        ]}
-                      >
-                        Kilometraje:
-                      </Text>{" "}
-                      {selectedVehicle?.mileage
-                        ? `${selectedVehicle.mileage} km`
-                        : "Sin kilometraje"}
-                    </Text>
-                  </View>
-                </View>
-              ) : null}
-            </>
-          )}
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Mecánico asignado
-            </Text>
-            {canManageDiagnostics ? (
               <View style={styles.optionWrap}>
-                {mechanics.length ? (
-                  mechanics.map((mechanic) => {
-                    const selected = form.assignedMechanicUid === mechanic.uid;
-
-                    return (
-                      <Pressable
-                        key={mechanic.uid}
-                        onPress={() =>
-                          setForm((current) => ({
-                            ...current,
-                            assignedMechanicUid: selected ? "" : mechanic.uid,
-                          }))
-                        }
-                        style={[
-                          styles.optionChip,
-                          {
-                            backgroundColor: selected
-                              ? colors.primaryStrong
-                              : colors.cardMuted,
-                            borderColor: selected
-                              ? colors.primaryStrong
-                              : colors.border,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            { color: selected ? colors.white : colors.text },
-                          ]}
-                        >
-                          {mechanic.fullName ||
-                            mechanic.email ||
-                            mechanic.userCode}
-                        </Text>
-                      </Pressable>
-                    );
-                  })
-                ) : (
-                  <Text
-                    style={[styles.helperText, { color: colors.textSecondary }]}
-                  >
-                    No hay mecánicos disponibles para asignar.
-                  </Text>
-                )}
-              </View>
-            ) : (
-              <Text
-                style={[styles.helperText, { color: colors.textSecondary }]}
-              >
-                Este diagnóstico queda asignado a ti.
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Estado
-            </Text>
-            <View style={styles.optionWrap}>
-              {editableStatusOptions.map((statusOption) => {
-                const selected = form.status === statusOption.key;
-
-                return (
-                  <Pressable
-                    key={statusOption.key}
+                {clients.slice(0, 8).map((client) => (
+                  <BigChip
+                    key={client.id}
+                    label={`${client.id} · ${client.fullName}`}
                     onPress={() =>
                       setForm((current) => ({
                         ...current,
-                        status: statusOption.key,
+                        clientId: client.id,
+                        vehicleId:
+                          current.vehicleId &&
+                          vehicles.find((item) => item.id === current.vehicleId)
+                            ?.clientId === client.id
+                            ? current.vehicleId
+                            : "",
                       }))
                     }
-                    style={[
-                      styles.optionChip,
-                      {
-                        backgroundColor: selected
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
-                    >
-                      {statusOption.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                    selected={form.clientId === client.id}
+                    style={styles.optionChip}
+                  />
+                ))}
+              </View>
             </View>
-          </View>
 
-          {isClosedDiagnostic ? (
-            <Text style={[styles.closedNote, { color: colors.textSecondary }]}>
-              Este diagnóstico ya fue cerrado al crear su orden y queda solo en
-              consulta.
+            <View style={styles.group}>
+              <Text style={[styles.groupLabel, { color: colors.text }]}>
+                Vehículo
+              </Text>
+              {!filteredVehicles.length ? (
+                <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                  Este cliente no tiene vehículos. Regístralo desde Clientes.
+                </Text>
+              ) : null}
+              <View style={styles.optionWrap}>
+                {filteredVehicles.slice(0, 8).map((vehicle) => (
+                  <BigChip
+                    key={vehicle.id}
+                    label={[
+                      vehicle.plate,
+                      [vehicle.brand, vehicle.model].filter(Boolean).join(" "),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    onPress={() =>
+                      setForm((current) => ({
+                        ...current,
+                        vehicleId: vehicle.id,
+                      }))
+                    }
+                    selected={form.vehicleId === vehicle.id}
+                    style={styles.optionChip}
+                  />
+                ))}
+              </View>
+            </View>
+          </>
+        ) : null}
+
+        <View style={styles.group}>
+          <Text style={[styles.groupLabel, { color: colors.text }]}>
+            Estado
+          </Text>
+          <View style={styles.statusGrid}>
+            {editableStatusOptions.map((statusOption) => (
+              <BigChip
+                color={getDiagnosticTone(statusOption.key, colors)}
+                disabled={isClosedDiagnostic}
+                key={statusOption.key}
+                label={statusOption.label}
+                onPress={() =>
+                  setForm((current) => ({
+                    ...current,
+                    status: statusOption.key,
+                  }))
+                }
+                selected={form.status === statusOption.key}
+                style={styles.statusChip}
+              />
+            ))}
+          </View>
+          {form.status === "quoted" ? (
+            <Text style={[styles.hint, { color: colors.textSecondary }]}>
+              Al guardar como Cotizado se genera el PDF de la cotización.
             </Text>
           ) : null}
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Motivo de ingreso
-            </Text>
-            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
-              {FIELD_HELP_TEXT.concerns}
-            </Text>
-            <TextInput
-              multiline
-              numberOfLines={4}
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, concerns: value }))
-              }
-              placeholder="Síntomas, hallazgo inicial, solicitud del cliente"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical="top"
-              value={form.concerns}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Servicios sugeridos
-            </Text>
-            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
-              {FIELD_HELP_TEXT.serviceItemsText}
-            </Text>
-            <TextInput
-              multiline
-              numberOfLines={4}
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, serviceItemsText: value }))
-              }
-              placeholder="Una línea por servicio"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical="top"
-              value={form.serviceItemsText}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Repuestos detectados
-            </Text>
-            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
-              {FIELD_HELP_TEXT.sparePartsText}
-            </Text>
-            <TextInput
-              multiline
-              numberOfLines={4}
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, sparePartsText: value }))
-              }
-              placeholder="Una línea por repuesto"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical="top"
-              value={form.sparePartsText}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Costo
-            </Text>
-            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
-              {FIELD_HELP_TEXT.quoteCost}
-            </Text>
-            <TextInput
-              keyboardType="decimal-pad"
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, quoteCost: value }))
-              }
-              placeholder="0.00"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={form.quoteCost}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Notas
-            </Text>
-            <TextInput
-              multiline
-              numberOfLines={4}
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, notes: value }))
-              }
-              placeholder="Contexto adicional para orden y aprobación"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical="top"
-              value={form.notes}
-            />
-          </View>
-
-          <Pressable
-            disabled={isClosedDiagnostic || submitting}
-            onPress={handleSubmit}
-            style={[
-              styles.primaryAction,
-              {
-                backgroundColor: isClosedDiagnostic
-                  ? colors.cardMuted
-                  : colors.primary,
-              },
-            ]}
-          >
-            <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              {isClosedDiagnostic
-                ? "Diagnóstico cerrado"
-                : submitting
-                  ? "Guardando diagnóstico..."
-                  : editingDiagnosticId
-                    ? "Guardar cambios"
-                    : "Crear diagnóstico"}
-            </Text>
-          </Pressable>
         </View>
+
+        <View style={styles.group}>
+          <Text style={[styles.groupLabel, { color: colors.text }]}>
+            Mecánico asignado
+          </Text>
+          {canManageDiagnostics ? (
+            mechanics.length ? (
+              <View style={styles.optionWrap}>
+                {mechanics.map((mechanic) => {
+                  const selected = form.assignedMechanicUid === mechanic.uid;
+
+                  return (
+                    <BigChip
+                      key={mechanic.uid}
+                      label={
+                        mechanic.fullName || mechanic.email || mechanic.userCode
+                      }
+                      onPress={() =>
+                        setForm((current) => ({
+                          ...current,
+                          assignedMechanicUid: selected ? "" : mechanic.uid,
+                        }))
+                      }
+                      selected={selected}
+                      style={styles.optionChip}
+                    />
+                  );
+                })}
+              </View>
+            ) : (
+              <Text style={[styles.hint, { color: colors.textSecondary }]}>
+                No hay mecánicos disponibles para asignar.
+              </Text>
+            )
+          ) : (
+            <View
+              style={[
+                styles.selfRow,
+                {
+                  backgroundColor: colors.cardMuted,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Ionicons
+                color={colors.primary}
+                name="construct-outline"
+                size={24}
+              />
+              <Text style={[styles.selfText, { color: colors.text }]}>
+                Este diagnóstico queda asignado a ti.
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {isClosedDiagnostic ? (
+          <Text style={[styles.closedNote, { color: colors.textSecondary }]}>
+            Este diagnóstico ya fue cerrado al crear su orden y queda solo en
+            consulta.
+          </Text>
+        ) : null}
+
+        {renderTextField(
+          "Motivo de ingreso",
+          FIELD_HELP_TEXT.concerns,
+          "concerns",
+          {
+            multiline: true,
+            placeholder: "Síntomas, hallazgo inicial, solicitud del cliente",
+          },
+        )}
+        {renderTextField(
+          "Servicios sugeridos",
+          FIELD_HELP_TEXT.serviceItemsText,
+          "serviceItemsText",
+          { multiline: true, placeholder: "Una línea por servicio" },
+        )}
+        {renderTextField(
+          "Repuestos detectados",
+          FIELD_HELP_TEXT.sparePartsText,
+          "sparePartsText",
+          { multiline: true, placeholder: "Una línea por repuesto" },
+        )}
+        {renderTextField(
+          "Costo estimado",
+          FIELD_HELP_TEXT.quoteCost,
+          "quoteCost",
+          { keyboardType: "decimal-pad", placeholder: "0.00" },
+        )}
+        {renderTextField("Notas", null, "notes", {
+          multiline: true,
+          placeholder: "Contexto adicional para orden y aprobación",
+        })}
       </ScrollView>
+
+      <View
+        style={[
+          styles.actionBar,
+          {
+            backgroundColor: colors.cardBackground,
+            borderTopColor: colors.border,
+          },
+        ]}
+      >
+        <BigButton
+          disabled={isClosedDiagnostic}
+          haptic="medium"
+          icon={isClosedDiagnostic ? "lock-closed-outline" : "save-outline"}
+          label={submitLabel}
+          loading={submitting}
+          onPress={handleSubmit}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -822,96 +550,39 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xl,
     gap: spacing.lg,
   },
-  formCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  cardHeader: {
+  group: { gap: spacing.sm },
+  groupLabel: { fontSize: rf(18), fontWeight: "800" },
+  hint: { fontSize: rf(14), lineHeight: rf(20) },
+  optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: TOUCH.gap },
+  optionChip: { flexGrow: 1 },
+  statusGrid: { flexDirection: "row", flexWrap: "wrap", gap: TOUCH.gap },
+  statusChip: { flexBasis: "47%", flexGrow: 1 },
+  selfRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    paddingBottom: spacing.xs,
-    borderBottomWidth: 1,
-  },
-  cardHeaderCopy: { flex: 1, gap: 2 },
-  cardEyebrow: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  cardTitle: { fontSize: rf(17), fontWeight: "800" },
-  cardMeta: { fontSize: rf(13), fontWeight: "700" },
-  formGroup: { gap: spacing.sm },
-  fieldLabel: {
-    fontSize: rf(16),
-    fontWeight: "700",
-  },
-  optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
-  optionChip: {
+    gap: 12,
+    minHeight: TOUCH.min,
     borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    minHeight: 48,
-    justifyContent: "center",
+    borderRadius: TOUCH.radius,
+    paddingHorizontal: 16,
   },
-  optionText: { fontSize: rf(15), fontWeight: "700" },
-  helperText: { fontSize: rf(14), lineHeight: rf(20) },
-  fieldHint: { fontSize: rf(14), lineHeight: rf(19) },
-  selectionSummary: { gap: spacing.xs },
-  selectionLine: { fontSize: rf(14), lineHeight: rf(21) },
-  selectionLineLabel: { fontSize: rf(14), fontWeight: "800" },
-  vehicleSummaryLabel: {
-    fontSize: rf(14),
-    fontWeight: "900",
-    lineHeight: rf(19),
-    textTransform: "none",
-  },
-  seededVehicleCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  seededVehicleDivider: {
-    height: 1,
-    width: "100%",
-    borderRadius: borderRadius.pill,
-  },
-  selectionValue: { fontSize: rf(16), fontWeight: "800" },
-  selectionMeta: { fontSize: rf(14), lineHeight: rf(19) },
-  selectionMetaLabel: { fontSize: rf(14), fontWeight: "800" },
-  closedNote: { fontSize: rf(13), lineHeight: rf(19) },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 120,
-    fontSize: rf(16),
-  },
+  selfText: { flex: 1, fontSize: TOUCH.fontLabel, fontWeight: "700" },
+  closedNote: { fontSize: rf(14), lineHeight: rf(20) },
   input: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: rf(16),
-    minHeight: 52,
-  },
-  primaryAction: {
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    alignItems: "center",
+    fontSize: rf(17),
     minHeight: 56,
-    justifyContent: "center",
   },
-  primaryActionText: { fontSize: rf(17), fontWeight: "800" },
+  textArea: { minHeight: 120 },
+  actionBar: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+  },
 });

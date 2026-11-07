@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DetailHero from "../components/common/DetailHero";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import { useTheme } from "../context/ThemeContext";
 import { listStaffProfiles } from "../services/admin/staffAdmin";
@@ -23,6 +24,7 @@ import {
   workOrderStatusOptions,
 } from "../services/workOrders/workOrderService";
 import { borderRadius, rf, spacing } from "../utils/responsive";
+import { getWorkOrderTone } from "../utils/statusTone";
 
 function getEntityId(entity) {
   return entity?.refId || entity?.id || "";
@@ -255,7 +257,6 @@ export default function WorkOrderHistoryTimelineScreen({
     assignedMechanics[0]?.userCode ||
     staffLookup[deliveryEntry?.authorUid]?.fullName ||
     staffLookup[deliveryEntry?.authorUid]?.email ||
-    deliveryEntry?.authorUid ||
     "Sin técnico asignado";
 
   const intervenedSparePartsCount = useMemo(() => {
@@ -287,165 +288,36 @@ export default function WorkOrderHistoryTimelineScreen({
         <WorkshopScreenHeader
           onBack={onBack}
           section="Operación"
-          subtitle="Vista histórica de solo lectura para revisar la cronología final de esta orden por unidad."
+          subtitle="Solo lectura: así terminó esta orden."
           title="Cronología de orden"
         />
 
-        <View
-          style={[
-            styles.summaryCard,
+        <DetailHero
+          code={selectedWorkOrder?.id || selectedWorkOrder?.refId || "Orden"}
+          facts={[
             {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              label: "Cliente",
+              value: client?.fullName || "Sin cliente asociado",
+            },
+            { label: responsibilityLabel, value: responsibleTechnicianLabel },
+            { label: "Inicio", value: formatDateTime(startedTimestamp) },
+            { label: "Entrega", value: formatDateTime(deliveryTimestamp) },
+            {
+              label: "Resumen",
+              value: `${progressEntries.length} registros · ${intervenedSparePartsCount} repuestos intervenidos`,
             },
           ]}
-        >
-          <View style={styles.summaryTopRow}>
-            <View
-              style={[
-                styles.summaryIconWrap,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Ionicons
-                color={colors.warning}
-                name="clipboard-outline"
-                size={rf(18)}
-              />
-            </View>
-            <View style={styles.summaryCopy}>
-              <Text style={[styles.summaryTitle, { color: colors.text }]}>
-                {selectedWorkOrder?.id || selectedWorkOrder?.refId || "Orden"}
-              </Text>
-              <Text style={[styles.summaryMeta, { color: colors.text }]}>
-                {buildVehicleTitle(resolvedVehicle)}
-              </Text>
-              <Text style={[styles.summaryPlate, { color: colors.accent }]}>
-                Placa: {resolvedVehicle?.plate || "Sin placa"}
-              </Text>
-              <Text
-                style={[styles.summarySupport, { color: colors.textSecondary }]}
-              >
-                Cliente: {client?.fullName || "Sin cliente asociado"}
-              </Text>
-              <View style={styles.summaryDatesRow}>
-                <Text
-                  style={[
-                    styles.summaryDatePill,
-                    { color: colors.textSecondary },
-                  ]}
-                >
-                  Inicio: {formatDateTime(startedTimestamp)}
-                </Text>
-                <Text
-                  style={[styles.summaryDatePill, { color: colors.success }]}
-                >
-                  Entrega: {formatDateTime(deliveryTimestamp)}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.countRow}>
-            <View
-              style={[
-                styles.countCard,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.countValue, { color: colors.text }]}>
-                {selectedWorkOrder?.progressPercent || 0}%
-              </Text>
-              <Text
-                style={[styles.countLabel, { color: colors.textSecondary }]}
-              >
-                Avance final
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.countCard,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.countValue, { color: colors.text }]}>
-                {progressEntries.length}
-              </Text>
-              <Text
-                style={[styles.countLabel, { color: colors.textSecondary }]}
-              >
-                Registros
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.countRow}>
-            <View
-              style={[
-                styles.countCard,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text
-                numberOfLines={2}
-                style={[styles.countSupportValue, { color: colors.text }]}
-              >
-                {responsibleTechnicianLabel}
-              </Text>
-              <Text
-                style={[styles.countLabel, { color: colors.textSecondary }]}
-              >
-                {responsibilityLabel}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.countCard,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.countValue, { color: colors.text }]}>
-                {intervenedSparePartsCount}
-              </Text>
-              <Text
-                style={[styles.countLabel, { color: colors.textSecondary }]}
-              >
-                Repuestos intervenidos
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.statusChip,
-              {
-                backgroundColor: colors.cardMuted,
-                borderColor: colors.success,
-              },
-            ]}
-          >
-            <Text style={[styles.statusChipText, { color: colors.success }]}>
-              {resolveWorkOrderStatusLabel(
-                selectedWorkOrder?.status || "delivered",
-              )}
-            </Text>
-          </View>
-        </View>
+          plate={resolvedVehicle?.plate}
+          progress={selectedWorkOrder?.progressPercent || 0}
+          statusLabel={resolveWorkOrderStatusLabel(
+            selectedWorkOrder?.status || "delivered",
+          )}
+          title={buildVehicleTitle(resolvedVehicle)}
+          tone={getWorkOrderTone(
+            selectedWorkOrder?.status || "delivered",
+            colors,
+          )}
+        />
 
         <View
           style={[
@@ -545,11 +417,8 @@ export default function WorkOrderHistoryTimelineScreen({
                           { color: colors.textSecondary },
                         ]}
                       >
-                        {author?.fullName ||
-                          author?.email ||
-                          entry.authorUid ||
-                          "Sin autor"}{" "}
-                        · {formatDateTime(entry.createdAt)}
+                        {author?.fullName || author?.email || "Colaborador"} ·{" "}
+                        {formatDateTime(entry.createdAt)}
                       </Text>
 
                       {entry.type === "status" ? (

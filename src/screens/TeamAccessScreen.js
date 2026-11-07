@@ -8,10 +8,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import FormField from "../components/common/FormField";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
 import {
   hasPermission,
@@ -702,7 +702,8 @@ export default function TeamAccessScreen({
               </Text>
               {canManageWorkshop ? (
                 <>
-                  <TextInput
+                  <FormField
+                    label="Nombre del taller activo"
                     onChangeText={(value) =>
                       setActiveWorkshopForm((current) => ({
                         ...current,
@@ -710,18 +711,10 @@ export default function TeamAccessScreen({
                       }))
                     }
                     placeholder="Nombre del taller activo"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
                     value={activeWorkshopForm.name}
                   />
-                  <TextInput
+                  <FormField
+                    label="Teléfono del taller"
                     onChangeText={(value) =>
                       setActiveWorkshopForm((current) => ({
                         ...current,
@@ -729,18 +722,10 @@ export default function TeamAccessScreen({
                       }))
                     }
                     placeholder="Teléfono del taller"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
                     value={activeWorkshopForm.phone}
                   />
-                  <TextInput
+                  <FormField
+                    label="Correo del taller"
                     autoCapitalize="none"
                     keyboardType="email-address"
                     onChangeText={(value) =>
@@ -750,18 +735,10 @@ export default function TeamAccessScreen({
                       }))
                     }
                     placeholder="Correo del taller"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
                     value={activeWorkshopForm.email}
                   />
-                  <TextInput
+                  <FormField
+                    label="Dirección del taller"
                     onChangeText={(value) =>
                       setActiveWorkshopForm((current) => ({
                         ...current,
@@ -769,18 +746,10 @@ export default function TeamAccessScreen({
                       }))
                     }
                     placeholder="Dirección del taller"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
                     value={activeWorkshopForm.address}
                   />
-                  <TextInput
+                  <FormField
+                    label="RIF o identificación fiscal"
                     onChangeText={(value) =>
                       setActiveWorkshopForm((current) => ({
                         ...current,
@@ -788,15 +757,6 @@ export default function TeamAccessScreen({
                       }))
                     }
                     placeholder="RIF o identificación fiscal"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
                     value={activeWorkshopForm.rif}
                   />
                   <View style={styles.logoActionsRow}>
@@ -912,9 +872,9 @@ export default function TeamAccessScreen({
                       </Text>
                     </View>
                   )}
-                  <TextInput
+                  <FormField
+                    label="Notas comerciales, slogan o texto breve para documentos"
                     multiline
-                    numberOfLines={4}
                     onChangeText={(value) =>
                       setActiveWorkshopForm((current) => ({
                         ...current,
@@ -922,17 +882,6 @@ export default function TeamAccessScreen({
                       }))
                     }
                     placeholder="Notas comerciales, slogan o texto breve para documentos"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      styles.notesInput,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
-                    textAlignVertical="top"
                     value={activeWorkshopForm.commercialNotes}
                   />
                   <Pressable
@@ -1162,7 +1111,8 @@ export default function TeamAccessScreen({
                   <Text style={[styles.fieldLabel, { color: colors.text }]}>
                     Nombre completo
                   </Text>
-                  <TextInput
+                  <FormField
+                    label="Nombre del colaborador"
                     onChangeText={(value) =>
                       setStaffForm((current) => ({
                         ...current,
@@ -1170,15 +1120,6 @@ export default function TeamAccessScreen({
                       }))
                     }
                     placeholder="Nombre del colaborador"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
                     value={staffForm.fullName}
                   />
                 </View>
@@ -1187,7 +1128,8 @@ export default function TeamAccessScreen({
                   <Text style={[styles.fieldLabel, { color: colors.text }]}>
                     Teléfono
                   </Text>
-                  <TextInput
+                  <FormField
+                    label="Número de contacto"
                     keyboardType="phone-pad"
                     onChangeText={(value) =>
                       setStaffForm((current) => ({
@@ -1196,15 +1138,6 @@ export default function TeamAccessScreen({
                       }))
                     }
                     placeholder="Número de contacto"
-                    placeholderTextColor={colors.textTertiary}
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.inputBackground,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      },
-                    ]}
                     value={staffForm.phone}
                   />
                 </View>
@@ -1356,7 +1289,8 @@ export default function TeamAccessScreen({
                 <Text style={[styles.fieldLabel, { color: colors.text }]}>
                   Correo del colaborador
                 </Text>
-                <TextInput
+                <FormField
+                  label="técnico@taller.com"
                   autoCapitalize="none"
                   keyboardType="email-address"
                   onChangeText={(value) =>
@@ -1366,15 +1300,6 @@ export default function TeamAccessScreen({
                     }))
                   }
                   placeholder="técnico@taller.com"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
                   value={invitationForm.email}
                 />
               </View>
@@ -2047,10 +1972,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(14),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+    fontSize: rf(16),
+    fontWeight: "800",
   },
   input: {
     borderWidth: 1,
@@ -2142,9 +2065,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 56,
   },
   primaryActionText: {
-    fontSize: rf(14),
+    fontSize: rf(17),
     fontWeight: "800",
   },
   listGrid: {
@@ -2222,12 +2147,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.pill,
     paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-    minHeight: 48,
+    paddingHorizontal: spacing.lg,
+    minHeight: 56,
     justifyContent: "center",
   },
   secondaryActionText: {
-    fontSize: rf(14),
+    fontSize: rf(16),
     fontWeight: "700",
   },
   secondaryFilledAction: {
@@ -2236,13 +2161,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 56,
   },
   secondaryFilledActionText: {
-    fontSize: rf(13),
+    fontSize: rf(16),
     fontWeight: "800",
   },
   dangerAction: {
-    minHeight: rf(46),
+    minHeight: 56,
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     alignItems: "center",
@@ -2250,7 +2177,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   dangerActionText: {
-    fontSize: rf(13),
+    fontSize: rf(16),
     fontWeight: "800",
   },
   disabledAction: {

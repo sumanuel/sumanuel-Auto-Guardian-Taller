@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import BigChip from "../components/common/BigChip";
+import DetailHero from "../components/common/DetailHero";
+import FormScreen from "../components/common/FormScreen";
 import { useTheme } from "../context/ThemeContext";
 import { listStaffProfiles } from "../services/admin/staffAdmin";
 import { listClients } from "../services/clients/clientService";
@@ -24,7 +17,8 @@ import {
   updateWorkOrder,
   workOrderStatusOptions,
 } from "../services/workOrders/workOrderService";
-import { borderRadius, rf, spacing } from "../utils/responsive";
+import { getWorkOrderTone } from "../utils/statusTone";
+import { TOUCH } from "../utils/touch";
 
 function getWorkOrderId(workOrder) {
   return workOrder?.refId || workOrder?.id || null;
@@ -158,360 +152,143 @@ export default function WorkOrderFormScreen({
     });
   };
 
-  return (
-    <SafeAreaView
-      edges={["left", "right"]}
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <WorkshopScreenHeader
-          onBack={onBack}
-          section="Órdenes"
-          subtitle="La orden queda en una pantalla dedicada y luego vuelve a la lista para seguir con repuestos o cambios de estado."
-          title={editingWorkOrderId ? "Editar orden" : "Registrar orden"}
-        />
+  const statusLabel =
+    workOrderStatusOptions.find((item) => item.key === form.status)?.label ||
+    "Sin estado";
+  const hasContext = Boolean(selectedDiagnostic || selectedVehicle);
 
-        <View
-          style={[
-            styles.formCard,
+  return (
+    <FormScreen
+      actionLabel={
+        submitting
+          ? "Guardando orden..."
+          : editingWorkOrderId
+            ? "Guardar cambios"
+            : "Crear orden"
+      }
+      onBack={onBack}
+      onSubmit={handleSubmit}
+      section="Órdenes"
+      submitting={submitting}
+      subtitle="Elige el diagnóstico base, el estado y quién trabaja la orden."
+      title={editingWorkOrderId ? "Editar orden" : "Registrar orden"}
+    >
+      {hasContext ? (
+        <DetailHero
+          code={editingWorkOrderId || "Nueva"}
+          facts={[
             {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              label: "Cliente",
+              value: clientName || form.clientId || "Sin cliente",
+            },
+            {
+              label: "Kilometraje",
+              value: selectedVehicle?.mileage
+                ? `${selectedVehicle.mileage} km`
+                : "Sin kilometraje",
             },
           ]}
-        >
-          <View
-            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
-          >
-            <View style={styles.cardHeaderCopy}>
-              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-                Operación
-              </Text>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
-                Plan de trabajo
-              </Text>
-            </View>
-            <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingWorkOrderId ? "Actualización" : "Nueva orden"}
-            </Text>
-          </View>
+          plate={selectedVehicle?.plate}
+          statusLabel={statusLabel}
+          title={[
+            selectedVehicle?.brand,
+            selectedVehicle?.model,
+            selectedVehicle?.year,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          tone={getWorkOrderTone(form.status, colors)}
+        />
+      ) : null}
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Diagnóstico base
-            </Text>
-            <View style={styles.optionWrap}>
-              {selectableDiagnostics.slice(0, 10).map((diagnostic) => {
-                const selected = form.diagnosticId === diagnostic.id;
-                const isClosed = isDiagnosticClosed(diagnostic.status);
+      <View style={styles.group}>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>
+          Diagnóstico base
+        </Text>
+        {!selectableDiagnostics.length ? (
+          <Text style={[styles.hint, { color: colors.textSecondary }]}>
+            No hay diagnósticos abiertos. Registra un diagnóstico primero y
+            luego crea la orden desde él.
+          </Text>
+        ) : null}
+        <View style={styles.optionWrap}>
+          {selectableDiagnostics.slice(0, 10).map((diagnostic) => {
+            const isClosed = isDiagnosticClosed(diagnostic.status);
 
-                return (
-                  <Pressable
-                    key={diagnostic.id}
-                    disabled={isClosed}
-                    onPress={() =>
-                      setForm((current) => ({
-                        ...current,
-                        diagnosticId: diagnostic.id,
-                        clientId: diagnostic.clientId,
-                        vehicleId: diagnostic.vehicleId,
-                      }))
-                    }
-                    style={[
-                      styles.optionChip,
-                      {
-                        backgroundColor: selected
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.primary : colors.border,
-                        opacity: isClosed ? 0.55 : 1,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
-                    >
-                      {diagnostic.id}
-                      {isClosed ? " · Cerrado" : ""}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {!selectableDiagnostics.length ? (
-              <Text
-                style={[styles.helperText, { color: colors.textSecondary }]}
-              >
-                No hay diagnósticos abiertos disponibles para crear una orden.
-              </Text>
-            ) : null}
-          </View>
-
-          <View style={styles.summaryPanel}>
-            <Text style={[styles.summaryText, { color: colors.text }]}>
-              <Text style={[styles.summaryTextLabel, { color: colors.text }]}>
-                Cliente:{" "}
-              </Text>
-              {clientName || form.clientId || "Sin cliente"}
-            </Text>
-            <Text
-              style={[styles.vehicleSummaryLabel, { color: colors.accent }]}
-            >
-              Vehículo:
-            </Text>
-            <View
-              style={[
-                styles.vehicleCard,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[styles.vehicleTitle, { color: colors.text }]}>
-                {[
-                  selectedVehicle?.brand,
-                  selectedVehicle?.model,
-                  selectedVehicle?.year,
-                ]
-                  .filter(Boolean)
-                  .join(" ") ||
-                  selectedVehicle?.plate ||
-                  form.vehicleId ||
-                  "Sin vehículo"}
-              </Text>
-              <View
-                style={[
-                  styles.vehicleDivider,
-                  { backgroundColor: colors.border },
-                ]}
+            return (
+              <BigChip
+                disabled={isClosed}
+                key={diagnostic.id}
+                label={`${diagnostic.id}${isClosed ? " · Cerrado" : ""}`}
+                onPress={() =>
+                  setForm((current) => ({
+                    ...current,
+                    diagnosticId: diagnostic.id,
+                    clientId: diagnostic.clientId,
+                    vehicleId: diagnostic.vehicleId,
+                  }))
+                }
+                selected={form.diagnosticId === diagnostic.id}
+                style={styles.optionChip}
               />
-              <Text
-                style={[styles.vehicleMeta, { color: colors.textSecondary }]}
-              >
-                <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
-                  Placa:
-                </Text>{" "}
-                {selectedVehicle?.plate || "Sin placa"}
-              </Text>
-              <Text
-                style={[styles.vehicleMeta, { color: colors.textSecondary }]}
-              >
-                <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
-                  Kilometraje:
-                </Text>{" "}
-                {selectedVehicle?.mileage
-                  ? `${selectedVehicle.mileage} km`
-                  : "Sin kilometraje"}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Estado
-            </Text>
-            <View style={styles.optionWrap}>
-              {workOrderStatusOptions.map((statusOption) => {
-                const selected = form.status === statusOption.key;
-
-                return (
-                  <Pressable
-                    key={statusOption.key}
-                    onPress={() =>
-                      setForm((current) => ({
-                        ...current,
-                        status: statusOption.key,
-                      }))
-                    }
-                    style={[
-                      styles.optionChip,
-                      {
-                        backgroundColor: selected
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
-                    >
-                      {statusOption.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Responsables asignados
-            </Text>
-            <View style={styles.optionWrap}>
-              {assignableStaff.length ? (
-                assignableStaff.map((mechanic) => {
-                  const selected = form.assignedMechanicUids.includes(
-                    mechanic.uid,
-                  );
-
-                  return (
-                    <Pressable
-                      key={mechanic.uid}
-                      onPress={() => toggleMechanic(mechanic.uid)}
-                      style={[
-                        styles.optionChip,
-                        {
-                          backgroundColor: selected
-                            ? colors.primaryStrong
-                            : colors.cardMuted,
-                          borderColor: selected
-                            ? colors.primaryStrong
-                            : colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.optionText,
-                          { color: selected ? colors.white : colors.text },
-                        ]}
-                      >
-                        {mechanic.fullName ||
-                          mechanic.email ||
-                          mechanic.userCode}
-                      </Text>
-                    </Pressable>
-                  );
-                })
-              ) : (
-                <Text
-                  style={[styles.helperText, { color: colors.textSecondary }]}
-                >
-                  No hay responsables disponibles para asignar.
-                </Text>
-              )}
-            </View>
-            <Text style={[styles.helperText, { color: colors.textSecondary }]}>
-              Puedes asignar o quitar administradores y colaboradores antes de
-              iniciar la orden.
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={handleSubmit}
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              {submitting
-                ? "Guardando orden..."
-                : editingWorkOrderId
-                  ? "Guardar cambios"
-                  : "Crear orden"}
-            </Text>
-          </Pressable>
+            );
+          })}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+
+      <View style={styles.group}>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>Estado</Text>
+        <View style={styles.statusGrid}>
+          {workOrderStatusOptions.map((statusOption) => (
+            <BigChip
+              color={getWorkOrderTone(statusOption.key, colors)}
+              key={statusOption.key}
+              label={statusOption.label}
+              onPress={() =>
+                setForm((current) => ({ ...current, status: statusOption.key }))
+              }
+              selected={form.status === statusOption.key}
+              style={styles.statusChip}
+            />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.group}>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>
+          Responsables asignados
+        </Text>
+        <Text style={[styles.hint, { color: colors.textSecondary }]}>
+          Toca para asignar o quitar antes de iniciar la orden.
+        </Text>
+        {assignableStaff.length ? (
+          <View style={styles.optionWrap}>
+            {assignableStaff.map((mechanic) => (
+              <BigChip
+                key={mechanic.uid}
+                label={mechanic.fullName || mechanic.email || mechanic.userCode}
+                onPress={() => toggleMechanic(mechanic.uid)}
+                selected={form.assignedMechanicUids.includes(mechanic.uid)}
+                style={styles.optionChip}
+              />
+            ))}
+          </View>
+        ) : (
+          <Text style={[styles.hint, { color: colors.textSecondary }]}>
+            No hay responsables disponibles para asignar.
+          </Text>
+        )}
+      </View>
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
-  },
-  formCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    paddingBottom: spacing.xs,
-    borderBottomWidth: 1,
-  },
-  cardHeaderCopy: { flex: 1, gap: 2 },
-  cardEyebrow: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  cardTitle: { fontSize: rf(17), fontWeight: "800" },
-  cardMeta: { fontSize: rf(13), fontWeight: "700" },
-  formGroup: { gap: spacing.sm },
-  fieldLabel: {
-    fontSize: rf(16),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
-  optionChip: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    minHeight: 48,
-    justifyContent: "center",
-  },
-  optionText: { fontSize: rf(15), fontWeight: "700" },
-  helperText: { fontSize: rf(14), lineHeight: rf(20) },
-  summaryPanel: { gap: spacing.xs },
-  summaryText: { fontSize: rf(14), lineHeight: rf(20) },
-  summaryTextLabel: { fontSize: rf(14), fontWeight: "800" },
-  vehicleSummaryLabel: {
-    fontSize: rf(14),
-    fontWeight: "900",
-    lineHeight: rf(19),
-    textTransform: "none",
-  },
-  vehicleCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  vehicleTitle: { fontSize: rf(15), fontWeight: "800", lineHeight: rf(21) },
-  vehicleDivider: {
-    height: 1,
-    width: "100%",
-    borderRadius: borderRadius.pill,
-  },
-  vehicleMeta: { fontSize: rf(14), lineHeight: rf(19) },
-  vehicleMetaLabel: { fontSize: rf(14), fontWeight: "800" },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    minHeight: 120,
-    fontSize: rf(16),
-  },
-  primaryAction: {
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    alignItems: "center",
-    minHeight: 56,
-    justifyContent: "center",
-  },
-  primaryActionText: { fontSize: rf(17), fontWeight: "800" },
+  group: { gap: 8 },
+  groupLabel: { fontSize: 18, fontWeight: "800" },
+  hint: { fontSize: 14, lineHeight: 20 },
+  optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: TOUCH.gap },
+  optionChip: { flexGrow: 1 },
+  statusGrid: { flexDirection: "row", flexWrap: "wrap", gap: TOUCH.gap },
+  statusChip: { flexBasis: "47%", flexGrow: 1 },
 });

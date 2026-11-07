@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import BigChip from "../components/common/BigChip";
+import FormField from "../components/common/FormField";
+import FormScreen from "../components/common/FormScreen";
 import { hasPermission } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -18,7 +11,7 @@ import {
   createStockMovement,
   stockMovementTypeOptions,
 } from "../services/stockItems/stockItemService";
-import { borderRadius, rf, spacing } from "../utils/responsive";
+import { TOUCH } from "../utils/touch";
 
 function getMovementMeta(movementType) {
   return movementType === "out"
@@ -79,6 +72,9 @@ export default function StockMovementFormScreen({
       : currentQuantity + movementQuantity;
   })();
 
+  const setField = (key) => (value) =>
+    setForm((current) => ({ ...current, [key]: value }));
+
   const handleSubmit = async () => {
     if (!canManageInventory) {
       Alert.alert(
@@ -126,288 +122,156 @@ export default function StockMovementFormScreen({
     }
   };
 
+  const isOut = form.movementType === "out";
+  const movementColor = isOut ? colors.warning : colors.success;
+
   return (
-    <SafeAreaView
-      edges={["left", "right"]}
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    <FormScreen
+      actionDisabled={!canManageInventory}
+      actionIcon={
+        isOut ? "arrow-down-circle-outline" : "arrow-up-circle-outline"
+      }
+      actionLabel={
+        submitting ? "Registrando movimiento..." : movementMeta.title
+      }
+      actionVariant={isOut ? "warning" : "success"}
+      onBack={onBack}
+      onSubmit={handleSubmit}
+      section="Stock y herramientas"
+      submitting={submitting}
+      subtitle={movementMeta.subtitle}
+      title={movementMeta.title}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <View
+        style={[
+          styles.summary,
+          {
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.border,
+            borderLeftColor: movementColor,
+          },
+        ]}
       >
-        <WorkshopScreenHeader
-          onBack={onBack}
-          section="Stock y herramientas"
-          subtitle={movementMeta.subtitle}
-          title={movementMeta.title}
-        />
-
-        <View
-          style={[
-            styles.summaryCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.summaryEyebrow,
-              { color: colors[movementMeta.tone] },
-            ]}
-          >
-            Item seleccionado
-          </Text>
-          <Text style={[styles.summaryTitle, { color: colors.text }]}>
-            {initialStockItem?.name || "Sin item"}
-          </Text>
-          <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
-            Stock actual: {currentQuantity} · Tipo:{" "}
-            {initialStockItem?.itemType === "tool" ? "Herramienta" : "Repuesto"}
-          </Text>
-          <Text
-            style={[
-              styles.summaryText,
-              {
-                color:
-                  projectedQuantity < 0 ? colors.danger : colors.textSecondary,
-              },
-            ]}
-          >
-            Stock proyectado: {projectedQuantity}
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.formCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Tipo de movimiento
+        <Text style={[styles.summaryTitle, { color: colors.text }]}>
+          {initialStockItem?.name || "Sin item"}
+        </Text>
+        <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
+          {initialStockItem?.itemType === "tool" ? "Herramienta" : "Repuesto"}
+        </Text>
+        <View style={styles.stockRow}>
+          <View style={styles.stockCell}>
+            <Text style={[styles.stockLabel, { color: colors.textTertiary }]}>
+              Stock actual
             </Text>
-            <View style={styles.optionWrap}>
-              {stockMovementTypeOptions.map((movementTypeOption) => {
-                const selected = form.movementType === movementTypeOption.key;
-
-                return (
-                  <Pressable
-                    key={movementTypeOption.key}
-                    onPress={() =>
-                      setForm((current) => ({
-                        ...current,
-                        movementType: movementTypeOption.key,
-                      }))
-                    }
-                    style={[
-                      styles.optionChip,
-                      {
-                        backgroundColor: selected
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
-                    >
-                      {movementTypeOption.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={styles.gridRow}>
-            <View style={[styles.formGroup, styles.gridItem]}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Cantidad
-              </Text>
-              <TextInput
-                keyboardType="number-pad"
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, quantity: value }))
-                }
-                placeholder="0"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.quantity}
-              />
-            </View>
-            <View style={[styles.formGroup, styles.gridItem]}>
-              <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                Costo unitario
-              </Text>
-              <TextInput
-                keyboardType="decimal-pad"
-                onChangeText={(value) =>
-                  setForm((current) => ({ ...current, unitCost: value }))
-                }
-                placeholder="Opcional"
-                placeholderTextColor={colors.textTertiary}
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={form.unitCost}
-              />
-            </View>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Notas
+            <Text style={[styles.stockValue, { color: colors.text }]}>
+              {currentQuantity}
             </Text>
-            <TextInput
-              multiline
-              numberOfLines={4}
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, notes: value }))
-              }
-              placeholder="Compra, reposición, consumo interno, salida a servicio o detalle técnico"
-              placeholderTextColor={colors.textTertiary}
+          </View>
+          <View style={styles.stockCell}>
+            <Text style={[styles.stockLabel, { color: colors.textTertiary }]}>
+              Quedaría en
+            </Text>
+            <Text
               style={[
-                styles.input,
-                styles.notesInput,
+                styles.stockValue,
                 {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
+                  color: projectedQuantity < 0 ? colors.danger : movementColor,
                 },
               ]}
-              textAlignVertical="top"
-              value={form.notes}
-            />
-          </View>
-
-          <Pressable
-            disabled={!canManageInventory || submitting}
-            onPress={handleSubmit}
-            style={[
-              styles.primaryAction,
-              {
-                backgroundColor: canManageInventory
-                  ? colors.primary
-                  : colors.cardMuted,
-              },
-            ]}
-          >
-            <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              {submitting ? "Registrando movimiento..." : movementMeta.title}
+            >
+              {projectedQuantity}
             </Text>
-          </Pressable>
+          </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+        {projectedQuantity < 0 ? (
+          <Text style={[styles.summaryText, { color: colors.danger }]}>
+            La salida supera el stock disponible.
+          </Text>
+        ) : null}
+      </View>
+
+      <View style={styles.group}>
+        <Text style={[styles.groupLabel, { color: colors.text }]}>
+          Tipo de movimiento
+        </Text>
+        <View style={styles.statusGrid}>
+          {stockMovementTypeOptions.map((movementTypeOption) => (
+            <BigChip
+              color={
+                movementTypeOption.key === "out"
+                  ? colors.warning
+                  : colors.success
+              }
+              key={movementTypeOption.key}
+              label={movementTypeOption.label}
+              onPress={() =>
+                setForm((current) => ({
+                  ...current,
+                  movementType: movementTypeOption.key,
+                }))
+              }
+              selected={form.movementType === movementTypeOption.key}
+              style={styles.statusChip}
+            />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.pair}>
+        <View style={styles.pairItem}>
+          <FormField
+            keyboardType="number-pad"
+            label="Cantidad"
+            onChangeText={setField("quantity")}
+            placeholder="0"
+            value={String(form.quantity ?? "")}
+          />
+        </View>
+        <View style={styles.pairItem}>
+          <FormField
+            keyboardType="decimal-pad"
+            label="Costo unitario"
+            onChangeText={setField("unitCost")}
+            placeholder="Opcional"
+            value={String(form.unitCost ?? "")}
+          />
+        </View>
+      </View>
+
+      <FormField
+        label="Notas"
+        multiline
+        onChangeText={setField("notes")}
+        placeholder="Compra, reposición, consumo interno o salida a servicio"
+        value={form.notes}
+      />
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl * 2,
-    gap: spacing.lg,
-  },
-  summaryCard: {
+  summary: {
     borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.sm,
+    borderLeftWidth: 8,
+    borderRadius: 20,
+    padding: 16,
+    gap: 6,
   },
-  summaryEyebrow: {
-    fontSize: rf(11),
+  summaryTitle: { fontSize: 22, fontWeight: "900" },
+  summaryText: { fontSize: 15, fontWeight: "600" },
+  stockRow: { flexDirection: "row", gap: 12, marginTop: 6 },
+  stockCell: { flex: 1, gap: 2 },
+  stockLabel: {
+    fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
-  summaryTitle: {
-    fontSize: rf(20),
-    fontWeight: "800",
-  },
-  summaryText: {
-    fontSize: rf(14),
-    lineHeight: rf(18),
-  },
-  formCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.lg,
-  },
-  formGroup: {
-    gap: spacing.sm,
-  },
-  fieldLabel: {
-    fontSize: rf(16),
-    fontWeight: "700",
-  },
-  optionWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  optionChip: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.md,
-    minHeight: 48,
-    justifyContent: "center",
-  },
-  optionText: {
-    fontSize: rf(15),
-    fontWeight: "700",
-  },
-  gridRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  gridItem: {
-    flex: 1,
-  },
-  input: {
-    minHeight: rf(52),
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    fontSize: rf(16),
-  },
-  notesInput: {
-    minHeight: rf(120),
-    paddingTop: spacing.md,
-  },
-  primaryAction: {
-    minHeight: 56,
-    borderRadius: borderRadius.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryActionText: {
-    fontSize: rf(17),
-    fontWeight: "800",
-  },
+  stockValue: { fontSize: 34, fontWeight: "900" },
+  group: { gap: 8 },
+  groupLabel: { fontSize: 18, fontWeight: "800" },
+  statusGrid: { flexDirection: "row", flexWrap: "wrap", gap: TOUCH.gap },
+  statusChip: { flexBasis: "47%", flexGrow: 1 },
+  pair: { flexDirection: "row", gap: 12 },
+  pairItem: { flex: 1 },
 });

@@ -3,29 +3,25 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MenuRow from "../components/common/MenuRow";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
-import { isMechanicRole, ROLE_LABELS } from "../constants/accessControl";
+import { getRoleLabel } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { borderRadius, rf, spacing } from "../utils/responsive";
-
-const roleLabels = ROLE_LABELS;
 
 export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
   const { colors } = useTheme();
-  const { activeWorkshopId, activeWorkshop, memberships, switchWorkshop } =
-    useAuth();
+  const { activeWorkshopId, memberships, switchWorkshop } = useAuth();
   const [switchingId, setSwitchingId] = useState(null);
 
   const handleSwitchWorkshop = async (workshopId) => {
-    if (workshopId === activeWorkshopId) {
+    if (workshopId === activeWorkshopId || switchingId !== null) {
       return;
     }
 
@@ -48,115 +44,49 @@ export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
       edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <WorkshopScreenHeader
           onBack={onBack}
           section="Gestión de talleres"
           subtitle={
             memberships.length > 1
-              ? "Tienes acceso a varios talleres. Selecciona el que quieras usar como contexto activo."
-              : "Este es el taller al que perteneces actualmente."
+              ? "Toca un taller para usarlo como taller activo."
+              : "Este es el taller al que perteneces."
           }
           title="Mis talleres"
         />
 
-        <View style={styles.listWrap}>
-          {memberships.map((membership) => {
-            const isActive = membership.workshopId === activeWorkshopId;
-            const isSwitching = switchingId === membership.workshopId;
-            const workshopName = membership.workshopName || "Taller sin nombre";
-            const roleLabel =
-              roleLabels[membership.role] || membership.role || "Sin rol";
+        {memberships.map((membership) => {
+          const isActive = membership.workshopId === activeWorkshopId;
+          const isSwitching = switchingId === membership.workshopId;
 
-            return (
-              <Pressable
-                key={membership.workshopId}
-                onPress={() => handleSwitchWorkshop(membership.workshopId)}
-                disabled={isActive || switchingId !== null}
-                style={[
-                  styles.workshopRow,
-                  {
-                    backgroundColor: isActive
-                      ? colors.cardBackground
-                      : colors.cardMuted,
-                    borderColor: isActive ? colors.primary : colors.border,
-                    opacity: isSwitching ? 0.6 : 1,
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.iconWrap,
-                    {
-                      backgroundColor: isActive
-                        ? colors.primary
-                        : colors.cardBackground,
-                      borderColor: isActive ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    color={isActive ? colors.white : colors.textTertiary}
-                    name="construct-outline"
-                    size={rf(20)}
-                  />
-                </View>
-
-                <View style={styles.workshopCopy}>
-                  <View style={styles.workshopTopRow}>
-                    <Text
-                      style={[styles.workshopName, { color: colors.text }]}
-                      numberOfLines={1}
-                    >
-                      {workshopName}
-                    </Text>
-                    {isActive ? (
-                      <View
-                        style={[
-                          styles.activeBadge,
-                          {
-                            backgroundColor: colors.primary,
-                          },
-                        ]}
-                      >
-                        <Text style={styles.activeBadgeText}>Activo</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  <Text
-                    style={[
-                      styles.workshopRole,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    {roleLabel}
-                  </Text>
-                </View>
-
-                {isSwitching ? (
+          return (
+            <MenuRow
+              badge={isActive ? "Taller activo" : "Toca para entrar"}
+              disabled={isActive || switchingId !== null}
+              icon={isActive ? "checkmark-circle" : "construct-outline"}
+              key={membership.workshopId}
+              onPress={() => handleSwitchWorkshop(membership.workshopId)}
+              selected={isActive}
+              subtitle={getRoleLabel(membership.role)}
+              title={membership.workshopName || "Taller sin nombre"}
+              tone={isActive ? "success" : "primary"}
+              trailing={
+                isSwitching ? (
                   <ActivityIndicator color={colors.primary} size="small" />
-                ) : !isActive ? (
-                  <Pressable
-                    onPress={() => handleSwitchWorkshop(membership.workshopId)}
-                    style={[
-                      styles.enterButton,
-                      {
-                        backgroundColor: colors.primary,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.enterButtonText}>Entrar</Text>
-                  </Pressable>
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
+                ) : null
+              }
+            />
+          );
+        })}
 
         {memberships.length === 0 ? (
           <View
             style={[
-              styles.emptyCard,
+              styles.empty,
               {
                 backgroundColor: colors.cardBackground,
                 borderColor: colors.border,
@@ -166,14 +96,15 @@ export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
             <Ionicons
               color={colors.textTertiary}
               name="business-outline"
-              size={rf(32)}
+              size={36}
             />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
               Sin talleres
             </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No perteneces a ningún taller aun. Si recibiste una invitación,
-              revisa tu correo o contacta al administrador.
+              No perteneces a ningún taller todavía. Si recibiste una
+              invitación, revisa tu correo o pide al administrador que te
+              agregue.
             </Text>
           </View>
         ) : null}
@@ -184,86 +115,14 @@ export default function WorkshopManagementScreen({ onBack, onSwitchWorkshop }) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  scrollContent: {
-    padding: spacing.lg,
-    gap: spacing.xl,
-    paddingBottom: spacing.xxl,
-  },
-  listWrap: {
-    gap: spacing.sm,
-  },
-  workshopRow: {
-    minHeight: 80,
+  scrollContent: { padding: 20, paddingBottom: 32, gap: 12 },
+  empty: {
     borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    flexDirection: "row",
+    borderRadius: 20,
+    padding: 24,
     alignItems: "center",
-    gap: spacing.md,
+    gap: 12,
   },
-  iconWrap: {
-    width: rf(48),
-    height: rf(48),
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  workshopCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  workshopTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  workshopName: {
-    fontSize: rf(18),
-    fontWeight: "800",
-    flex: 1,
-  },
-  workshopRole: {
-    fontSize: rf(14),
-    fontWeight: "600",
-  },
-  activeBadge: {
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  activeBadgeText: {
-    color: "#ffffff",
-    fontSize: rf(12),
-    fontWeight: "800",
-  },
-  enterButton: {
-    minHeight: 48,
-    justifyContent: "center",
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  enterButtonText: {
-    color: "#ffffff",
-    fontSize: rf(14),
-    fontWeight: "900",
-  },
-  emptyCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  emptyTitle: {
-    fontSize: rf(18),
-    fontWeight: "800",
-  },
-  emptyText: {
-    fontSize: rf(15),
-    lineHeight: rf(20),
-    textAlign: "center",
-    fontWeight: "500",
-  },
+  emptyTitle: { fontSize: 20, fontWeight: "900" },
+  emptyText: { fontSize: 16, lineHeight: 23, textAlign: "center" },
 });

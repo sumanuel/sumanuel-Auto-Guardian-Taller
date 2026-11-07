@@ -1,47 +1,45 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
-import { ROLE_LABELS, USER_STATUSES } from "../constants/accessControl";
+import BigButton from "../components/common/BigButton";
+import FormField from "../components/common/FormField";
+import { getRoleLabel, USER_STATUSES } from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
-import { borderRadius, rf, spacing } from "../utils/responsive";
 
 const statusContent = {
   missing: {
     title: "Perfil no disponible",
     description:
-      "La cuenta existe en autenticación, pero no tiene un perfil operativo en el taller.",
+      "Tu cuenta existe, pero todavía no tiene un perfil dentro de un taller.",
     label: "Requiere revisión",
+    icon: "help-circle-outline",
+    tone: "warning",
   },
   [USER_STATUSES.PENDING_APPROVAL]: {
     title: "Cuenta en revisión",
     description:
-      "Tu acceso ya fue creado, pero aún falta la aprobación interna del taller para habilitar la operación.",
-    label: "Pendiente",
+      "Tu acceso ya fue creado. Falta que el taller lo apruebe para que puedas operar.",
+    label: "Pendiente de aprobación",
+    icon: "hourglass-outline",
+    tone: "warning",
   },
   [USER_STATUSES.SUSPENDED]: {
     title: "Cuenta suspendida",
     description:
-      "El acceso fue suspendido temporalmente. Contacta al administrador para revisar el estado.",
+      "Tu acceso fue suspendido temporalmente. Contacta al administrador para revisarlo.",
     label: "Suspendida",
+    icon: "pause-circle-outline",
+    tone: "danger",
   },
   [USER_STATUSES.DISABLED]: {
     title: "Cuenta deshabilitada",
-    description:
-      "El acceso fue deshabilitado y no puede operar dentro de la aplicación.",
+    description: "Tu acceso fue deshabilitado y no puede usar la aplicación.",
     label: "Bloqueada",
+    icon: "ban-outline",
+    tone: "danger",
   },
 };
-
-const roleLabels = ROLE_LABELS;
 
 export default function AccessStatusScreen({
   authUser,
@@ -50,9 +48,10 @@ export default function AccessStatusScreen({
   pendingInvitation,
   userProfile,
 }) {
-  const { colors, isDarkMode } = useTheme();
+  const { colors } = useTheme();
   const currentStatus = userProfile?.status || "missing";
   const content = statusContent[currentStatus] || statusContent.missing;
+  const accent = colors[content.tone] || colors.warning;
   const [acceptingInvitation, setAcceptingInvitation] = useState(false);
   const [invitationForm, setInvitationForm] = useState({
     fullName: authUser?.displayName || "",
@@ -74,6 +73,9 @@ export default function AccessStatusScreen({
     pendingInvitation?.invitationCode,
   ]);
 
+  const setInvitationField = (key) => (value) =>
+    setInvitationForm((current) => ({ ...current, [key]: value }));
+
   const handleAcceptInvitation = async () => {
     if (!pendingInvitation || !onAcceptInvitation) {
       return;
@@ -94,294 +96,178 @@ export default function AccessStatusScreen({
     }
   };
 
+  const showInvitation = currentStatus === "missing" && pendingInvitation;
+
   return (
     <SafeAreaView
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <LinearGradient
-          colors={
-            isDarkMode
-              ? ["#18314b", "#0c1724", "#09111a"]
-              : ["#dce8f7", "#f2f6fb", "#eef2f6"]
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.card, { borderColor: colors.borderStrong }]}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={[
+            styles.hero,
+            {
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+              borderLeftColor: accent,
+            },
+          ]}
         >
-          <Text style={[styles.kicker, { color: colors.primary }]}>
-            Estado de acceso
-          </Text>
+          <View
+            style={[styles.heroIcon, { backgroundColor: colors.cardMuted }]}
+          >
+            <Ionicons color={accent} name={content.icon} size={34} />
+          </View>
+          <View style={[styles.pill, { backgroundColor: accent }]}>
+            <Text style={styles.pillText}>{content.label}</Text>
+          </View>
           <Text style={[styles.title, { color: colors.text }]}>
             {content.title}
           </Text>
           <Text style={[styles.description, { color: colors.textSecondary }]}>
             {content.description}
           </Text>
+          <Text style={[styles.user, { color: colors.textTertiary }]}>
+            {userProfile?.fullName || authUser?.email || "Sin perfil asignado"}
+          </Text>
+        </View>
 
+        {showInvitation ? (
           <View
             style={[
-              styles.statusBox,
+              styles.invitation,
               {
                 backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
+                borderColor: colors.primary,
               },
             ]}
           >
-            <Text style={[styles.statusLabel, { color: colors.textTertiary }]}>
-              Usuario
+            <Text style={[styles.invitationTitle, { color: colors.text }]}>
+              Tienes una invitación
             </Text>
-            <Text style={[styles.statusValue, { color: colors.text }]}>
-              {userProfile?.fullName || "Sin perfil asignado"}
+            <Text style={[styles.description, { color: colors.textSecondary }]}>
+              Encontramos una invitación pendiente para {authUser?.email}. Al
+              aceptarla se crea tu perfil con el rol asignado.
             </Text>
-            <Text style={[styles.statusMeta, { color: colors.primary }]}>
-              {content.label}
-            </Text>
-          </View>
-
-          {currentStatus === "missing" && pendingInvitation ? (
             <View
               style={[
-                styles.invitationCard,
+                styles.roleRow,
                 {
-                  backgroundColor: colors.cardBackground,
+                  backgroundColor: colors.cardMuted,
                   borderColor: colors.border,
                 },
               ]}
             >
-              <Text
-                style={[styles.invitationKicker, { color: colors.primary }]}
-              >
-                Invitación detectada
-              </Text>
-              <Text style={[styles.invitationTitle, { color: colors.text }]}>
-                Ya puedes unirte al taller
-              </Text>
-              <Text
-                style={[
-                  styles.invitationDescription,
-                  { color: colors.textSecondary },
-                ]}
-              >
-                Encontramos una invitacion pendiente para {authUser?.email}. Al
-                aceptarla se creará tu perfil operativo con el rol asignado.
-              </Text>
-
-              <View style={styles.statusBox}>
+              <Ionicons
+                color={colors.primary}
+                name="ribbon-outline"
+                size={24}
+              />
+              <View style={styles.roleCopy}>
                 <Text
-                  style={[styles.statusLabel, { color: colors.textTertiary }]}
+                  style={[styles.roleLabel, { color: colors.textTertiary }]}
                 >
                   Rol asignado
                 </Text>
-                <Text style={[styles.statusValue, { color: colors.text }]}>
-                  {roleLabels[pendingInvitation.role] || pendingInvitation.role}
-                </Text>
-                <Text style={[styles.statusMeta, { color: colors.primary }]}>
-                  Codigo{" "}
-                  {pendingInvitation.id || pendingInvitation.invitationCode}
+                <Text style={[styles.roleValue, { color: colors.text }]}>
+                  {getRoleLabel(pendingInvitation.role, pendingInvitation.role)}
                 </Text>
               </View>
-
-              <View style={styles.formGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Nombre completo
-                </Text>
-                <TextInput
-                  onChangeText={(value) =>
-                    setInvitationForm((current) => ({
-                      ...current,
-                      fullName: value,
-                    }))
-                  }
-                  placeholder="Nombre del colaborador"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={invitationForm.fullName}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Teléfono
-                </Text>
-                <TextInput
-                  keyboardType="phone-pad"
-                  onChangeText={(value) =>
-                    setInvitationForm((current) => ({
-                      ...current,
-                      phone: value,
-                    }))
-                  }
-                  placeholder="0412-0000000"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={invitationForm.phone}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                  Código visible
-                </Text>
-                <TextInput
-                  autoCapitalize="characters"
-                  onChangeText={(value) =>
-                    setInvitationForm((current) => ({
-                      ...current,
-                      invitationCode: value,
-                    }))
-                  }
-                  placeholder="INV-000001"
-                  placeholderTextColor={colors.textTertiary}
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: colors.inputBackground,
-                      borderColor: colors.border,
-                      color: colors.text,
-                    },
-                  ]}
-                  value={invitationForm.invitationCode}
-                />
-              </View>
-
-              <Pressable
-                onPress={handleAcceptInvitation}
-                style={[styles.button, { backgroundColor: colors.primary }]}
-              >
-                {acceptingInvitation ? (
-                  <ActivityIndicator color={colors.white} />
-                ) : (
-                  <Text style={[styles.buttonText, { color: colors.white }]}>
-                    Aceptar invitación
-                  </Text>
-                )}
-              </Pressable>
             </View>
-          ) : null}
 
-          <Pressable
-            onPress={onSignOut}
-            style={[styles.button, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.buttonText, { color: colors.white }]}>
-              Cerrar sesión
-            </Text>
-          </Pressable>
-        </LinearGradient>
+            <FormField
+              label="Nombre completo"
+              onChangeText={setInvitationField("fullName")}
+              placeholder="Tu nombre"
+              value={invitationForm.fullName}
+            />
+            <FormField
+              keyboardType="phone-pad"
+              label="Teléfono"
+              onChangeText={setInvitationField("phone")}
+              placeholder="0412-0000000"
+              value={invitationForm.phone}
+            />
+            <FormField
+              autoCapitalize="characters"
+              label="Código de invitación"
+              onChangeText={setInvitationField("invitationCode")}
+              placeholder="INV-000001"
+              value={invitationForm.invitationCode}
+            />
+            <BigButton
+              icon="checkmark-circle-outline"
+              label="Aceptar invitación"
+              loading={acceptingInvitation}
+              onPress={handleAcceptInvitation}
+            />
+          </View>
+        ) : null}
+
+        <BigButton
+          icon="log-out-outline"
+          label="Cerrar sesión"
+          onPress={onSignOut}
+          variant="secondary"
+        />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
+  safeArea: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: spacing.lg,
+    padding: 20,
+    gap: 16,
   },
-  card: {
+  hero: {
     borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
+    borderLeftWidth: 8,
+    borderRadius: 20,
+    padding: 20,
+    gap: 10,
+    alignItems: "flex-start",
   },
-  kicker: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  title: {
-    fontSize: rf(30),
-    fontWeight: "900",
-    letterSpacing: -0.8,
-  },
-  description: {
-    fontSize: rf(14),
-    lineHeight: rf(21),
-  },
-  statusBox: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    gap: spacing.xs,
-  },
-  statusLabel: {
-    fontSize: rf(11),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  statusValue: {
-    fontSize: rf(18),
-    fontWeight: "800",
-  },
-  statusMeta: {
-    fontSize: rf(12),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  invitationCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  invitationKicker: {
-    fontSize: rf(11),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  invitationTitle: {
-    fontSize: rf(20),
-    fontWeight: "800",
-  },
-  invitationDescription: {
-    fontSize: rf(13),
-    lineHeight: rf(20),
-  },
-  formGroup: {
-    gap: spacing.xs,
-  },
-  fieldLabel: {
-    fontSize: rf(14),
-    fontWeight: "700",
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: rf(15),
-    minHeight: 48,
-  },
-  button: {
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+  heroIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
     alignItems: "center",
+    justifyContent: "center",
   },
-  buttonText: {
-    fontSize: rf(14),
+  pill: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6 },
+  pillText: { color: "#ffffff", fontSize: 14, fontWeight: "900" },
+  title: { fontSize: 28, fontWeight: "900" },
+  description: { fontSize: 16, lineHeight: 23 },
+  user: { fontSize: 14, fontWeight: "700" },
+  invitation: {
+    borderWidth: 2,
+    borderRadius: 20,
+    padding: 16,
+    gap: 16,
+  },
+  invitationTitle: { fontSize: 22, fontWeight: "900" },
+  roleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+  },
+  roleCopy: { flex: 1 },
+  roleLabel: {
+    fontSize: 12,
     fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
+  roleValue: { fontSize: 18, fontWeight: "800" },
 });

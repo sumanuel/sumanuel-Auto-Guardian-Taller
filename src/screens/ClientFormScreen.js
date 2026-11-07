@@ -1,18 +1,8 @@
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
-import { useTheme } from "../context/ThemeContext";
+import { Alert } from "react-native";
+import FormField from "../components/common/FormField";
+import FormScreen from "../components/common/FormScreen";
 import { createClient, updateClient } from "../services/clients/clientService";
-import { borderRadius, rf, spacing } from "../utils/responsive";
 
 function getClientId(client) {
   return client?.refId || client?.id || null;
@@ -35,11 +25,12 @@ export default function ClientFormScreen({
   onSaved,
   userProfile,
 }) {
-  const { colors } = useTheme();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(buildClientForm(initialClient));
 
   const editingClientId = getClientId(initialClient);
+  const setField = (key) => (value) =>
+    setForm((current) => ({ ...current, [key]: value }));
 
   useEffect(() => {
     setForm(buildClientForm(initialClient));
@@ -84,269 +75,62 @@ export default function ClientFormScreen({
   };
 
   return (
-    <SafeAreaView
-      edges={["left", "right"]}
-      style={[styles.safeArea, { backgroundColor: colors.background }]}
+    <FormScreen
+      actionLabel={
+        submitting
+          ? "Guardando cliente..."
+          : editingClientId
+            ? "Guardar cambios"
+            : "Crear cliente"
+      }
+      onBack={onBack}
+      onSubmit={handleSubmit}
+      section="Clientes"
+      submitting={submitting}
+      subtitle="Nombre y datos de contacto para avisarle del avance."
+      title={editingClientId ? "Editar cliente" : "Registrar cliente"}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <WorkshopScreenHeader
-          onBack={onBack}
-          section="Clientes"
-          subtitle="Completa la ficha de contacto en una pantalla dedicada, separada de la lista operativa."
-          title={editingClientId ? "Editar cliente" : "Registrar cliente"}
-        />
-
-        <View
-          style={[
-            styles.formCard,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <View
-            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
-          >
-            <View style={styles.cardHeaderCopy}>
-              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-                Recepción
-              </Text>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
-                Ficha de contacto
-              </Text>
-            </View>
-            <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>
-              {editingClientId ? "Actualización" : "Alta"}
-            </Text>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Identificación
-            </Text>
-            <TextInput
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, identification: value }))
-              }
-              placeholder="V-12345678"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={form.identification}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Nombre completo
-            </Text>
-            <TextInput
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, fullName: value }))
-              }
-              placeholder="Cliente principal"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={form.fullName}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Teléfono
-            </Text>
-            <TextInput
-              keyboardType="phone-pad"
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, phone: value }))
-              }
-              placeholder="0412-0000000"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={form.phone}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Correo
-            </Text>
-            <TextInput
-              autoCapitalize="none"
-              keyboardType="email-address"
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, email: value }))
-              }
-              placeholder="cliente@correo.com"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={form.email}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Dirección
-            </Text>
-            <TextInput
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, address: value }))
-              }
-              placeholder="Sector, avenida, referencia"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              value={form.address}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Notas operativas
-            </Text>
-            <TextInput
-              multiline
-              numberOfLines={5}
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, notes: value }))
-              }
-              placeholder="Preferencias, observaciones o instrucciones de atención"
-              placeholderTextColor={colors.textTertiary}
-              style={[
-                styles.textArea,
-                {
-                  backgroundColor: colors.inputBackground,
-                  borderColor: colors.border,
-                  color: colors.text,
-                },
-              ]}
-              textAlignVertical="top"
-              value={form.notes}
-            />
-          </View>
-
-          <Pressable
-            onPress={handleSubmit}
-            style={[styles.primaryAction, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.primaryActionText, { color: colors.white }]}>
-              {submitting
-                ? "Guardando cliente..."
-                : editingClientId
-                  ? "Guardar cambios"
-                  : "Crear cliente"}
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <FormField
+        label="Nombre completo"
+        onChangeText={setField("fullName")}
+        placeholder="Cliente principal"
+        value={form.fullName}
+      />
+      <FormField
+        hint="Se usa para llamar o escribir por WhatsApp."
+        keyboardType="phone-pad"
+        label="Teléfono"
+        onChangeText={setField("phone")}
+        placeholder="0412-0000000"
+        value={form.phone}
+      />
+      <FormField
+        label="Identificación"
+        onChangeText={setField("identification")}
+        placeholder="V-12345678"
+        value={form.identification}
+      />
+      <FormField
+        autoCapitalize="none"
+        keyboardType="email-address"
+        label="Correo"
+        onChangeText={setField("email")}
+        placeholder="cliente@correo.com"
+        value={form.email}
+      />
+      <FormField
+        label="Dirección"
+        onChangeText={setField("address")}
+        placeholder="Sector, avenida, referencia"
+        value={form.address}
+      />
+      <FormField
+        label="Notas"
+        multiline
+        onChangeText={setField("notes")}
+        placeholder="Preferencias, observaciones o instrucciones de atención"
+        value={form.notes}
+      />
+    </FormScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
-  },
-  formCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    paddingBottom: spacing.xs,
-    borderBottomWidth: 1,
-  },
-  cardHeaderCopy: { flex: 1, gap: 2 },
-  cardEyebrow: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  cardTitle: { fontSize: rf(17), fontWeight: "800" },
-  cardMeta: { fontSize: rf(13), fontWeight: "700" },
-  formGroup: {
-    gap: spacing.sm,
-  },
-  fieldLabel: {
-    fontSize: rf(16),
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    fontSize: rf(16),
-    minHeight: 52,
-  },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    fontSize: rf(16),
-    minHeight: 120,
-  },
-  primaryAction: {
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    alignItems: "center",
-    minHeight: 56,
-    justifyContent: "center",
-  },
-  primaryActionText: {
-    fontSize: rf(17),
-    fontWeight: "800",
-  },
-});

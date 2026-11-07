@@ -88,5 +88,6 @@ const styles = StyleSheet.create({
   track: { height: 12, borderRadius: 6, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 6 },
   presetRow: { flexDirection: "row", gap: 8 },
-  preset: { flex: 1, paddingHorizontal: 0 },
+  // minWidth 0: cinco chips de 56 dp no caben en una tarjeta de teléfono.
+  preset: { flex: 1, minWidth: 0, paddingHorizontal: 0 },
 });
