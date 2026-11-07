@@ -121,7 +121,11 @@ export default function WorkshopScreenHeader({
           <View style={styles.titleWrap}>
             {section ? <Text style={styles.section}>{section}</Text> : null}
             <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            {subtitle ? (
+              <Text numberOfLines={2} style={styles.subtitle}>
+                {subtitle}
+              </Text>
+            ) : null}
           </View>
         </View>
       </LinearGradient>
@@ -162,7 +166,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs / 2,
   },
   section: {
-    fontSize: rf(11),
+    fontSize: rf(12),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -175,20 +179,20 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   subtitle: {
-    fontSize: rf(12),
-    lineHeight: rf(17),
+    fontSize: rf(14),
+    lineHeight: rf(19),
     color: "rgba(255,255,255,0.84)",
   },
   iconButton: {
-    width: rf(44),
-    height: rf(44),
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.pill,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   iconButtonSpacer: {
-    width: rf(44),
-    height: rf(44),
+    width: 48,
+    height: 48,
   },
 });

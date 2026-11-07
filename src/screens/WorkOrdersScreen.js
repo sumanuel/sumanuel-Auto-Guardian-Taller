@@ -21,6 +21,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import OperationCard from "../components/common/OperationCard";
+import { getWorkOrderTone } from "../utils/statusTone";
 import {
   isMechanicRole,
   isWorkOrderAssignedToUser,
@@ -1071,7 +1073,7 @@ export default function WorkOrdersScreen({
             style={[
               styles.input,
               styles.searchInput,
-              isMechanicUser && styles.inputLarge,
+              styles.inputLarge,
               {
                 backgroundColor: colors.inputBackground,
                 borderColor: colors.border,
@@ -1084,7 +1086,7 @@ export default function WorkOrdersScreen({
             onPress={() => setIsDateFilterVisible(true)}
             style={[
               styles.iconAction,
-              isMechanicUser && styles.iconActionLarge,
+              styles.iconActionLarge,
               {
                 backgroundColor: colors.cardMuted,
                 borderColor: colors.border,
@@ -1104,7 +1106,7 @@ export default function WorkOrdersScreen({
             }}
             style={[
               styles.iconAction,
-              isMechanicUser && styles.iconActionLarge,
+              styles.iconActionLarge,
               {
                 backgroundColor: colors.cardMuted,
                 borderColor: colors.border,
@@ -1134,7 +1136,7 @@ export default function WorkOrdersScreen({
                   onPress={() => setActiveFilter(filter.key)}
                   style={[
                     styles.filterChip,
-                    isMechanicUser && styles.filterChipLarge,
+                    styles.filterChipLarge,
                     {
                       backgroundColor: selected
                         ? colors.primary
@@ -1146,7 +1148,7 @@ export default function WorkOrdersScreen({
                   <Text
                     style={[
                       styles.filterChipText,
-                      isMechanicUser && styles.filterChipTextLarge,
+                      styles.filterChipTextLarge,
                       { color: selected ? colors.white : colors.text },
                     ]}
                   >
@@ -1177,174 +1179,50 @@ export default function WorkOrdersScreen({
               viewState?.selectedWorkOrderId === getEntityId(workOrder);
 
             return (
-              <View
+              <OperationCard
+                actions={
+                  isMechanicUser
+                    ? []
+                    : [
+                        {
+                          key: "edit",
+                          icon: "create-outline",
+                          label: "Editar orden",
+                          onPress: () => onOpenWorkOrderForm?.(workOrder),
+                        },
+                      ]
+                }
+                code={workOrder.id}
                 key={getEntityId(workOrder)}
-                style={[
-                  styles.row,
+                lines={[
                   {
-                    backgroundColor: colors.cardBackground,
-                    borderColor: isSelected ? colors.primary : colors.border,
+                    label: "Cliente",
+                    value:
+                      client?.fullName || workOrder.clientId || "Sin cliente",
+                  },
+                  {
+                    label: "Responsables",
+                    value: assignedMechanics || "Sin mecánicos asignados",
                   },
                 ]}
-              >
-                <Pressable
-                  onPress={() => openWorkOrderDetail(workOrder)}
-                  style={styles.rowCopy}
-                >
-                  <View
-                    style={[
-                      styles.cardHeader,
-                      { borderBottomColor: colors.border },
-                    ]}
-                  >
-                    <View style={styles.cardHeaderCopy}>
-                      <Text
-                        style={[styles.cardEyebrow, { color: colors.primary }]}
-                      >
-                        Operación
-                      </Text>
-                      <Text style={[styles.rowTitle, { color: colors.text }]}>
-                        {workOrder.id}
-                      </Text>
-                    </View>
-                    <Text style={[styles.cardTag, { color: colors.primary }]}>
-                      {workOrderStatusOptions.find(
-                        (item) => item.key === workOrder.status,
-                      )?.label || workOrder.status}
-                    </Text>
-                  </View>
-                  <View style={styles.cardBody}>
-                    <Text
-                      style={[
-                        styles.detailMetaLine,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.detailMetaLabel, { color: colors.text }]}
-                      >
-                        Diagnóstico:
-                      </Text>{" "}
-                      {diagnostic?.id ||
-                        workOrder.diagnosticId ||
-                        "Sin diagnóstico"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.detailMetaLine,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.detailMetaLabel, { color: colors.text }]}
-                      >
-                        Cliente:
-                      </Text>{" "}
-                      {client?.fullName || workOrder.clientId || "Sin cliente"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.vehicleSectionLabel,
-                        { color: colors.accent },
-                      ]}
-                    >
-                      vehículo:
-                    </Text>
-                    <View
-                      style={[
-                        styles.vehicleCard,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.vehicleTitle, { color: colors.text }]}
-                      >
-                        {[vehicle?.brand, vehicle?.model, vehicle?.year]
-                          .filter(Boolean)
-                          .join(" ") ||
-                          vehicle?.plate ||
-                          workOrder.vehicleId ||
-                          "Sin vehículo"}
-                      </Text>
-                      <View
-                        style={[
-                          styles.vehicleDivider,
-                          { backgroundColor: colors.border },
-                        ]}
-                      />
-                      <Text
-                        style={[styles.vehiclePlate, { color: colors.accent }]}
-                      >
-                        <Text
-                          style={[
-                            styles.vehiclePlateLabel,
-                            { color: colors.accent },
-                          ]}
-                        >
-                          Placa:
-                        </Text>{" "}
-                        {vehicle?.plate || "Sin placa"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.vehicleMeta,
-                          { color: colors.textTertiary },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.vehicleMetaLabel,
-                            { color: colors.text },
-                          ]}
-                        >
-                          Kilometraje:
-                        </Text>{" "}
-                        {vehicle?.mileage
-                          ? `${vehicle.mileage} km`
-                          : "Sin kilometraje"}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.detailMetaLine,
-                        { color: colors.textTertiary },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.detailMetaLabel, { color: colors.text }]}
-                      >
-                        Responsables:
-                      </Text>{" "}
-                      {assignedMechanics || "Sin mecánicos asignados"}
-                    </Text>
-                  </View>
-                </Pressable>
-
-                {!isMechanicUser ? (
-                  <View style={styles.iconActionRow}>
-                    <Pressable
-                      onPress={() => onOpenWorkOrderForm?.(workOrder)}
-                      style={[
-                        styles.iconAction,
-                        isMechanicUser && styles.iconActionLarge,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.textTertiary}
-                        name="create-outline"
-                        size={rf(17)}
-                      />
-                    </Pressable>
-                  </View>
-                ) : null}
-              </View>
+                onPress={() => openWorkOrderDetail(workOrder)}
+                plate={vehicle?.plate}
+                progress={workOrder.progressPercent}
+                selected={isSelected}
+                statusLabel={
+                  workOrderStatusOptions.find(
+                    (item) => item.key === workOrder.status,
+                  )?.label || workOrder.status
+                }
+                title={
+                  [vehicle?.brand, vehicle?.model, vehicle?.year]
+                    .filter(Boolean)
+                    .join(" ") ||
+                  workOrder.vehicleId ||
+                  "Sin vehículo"
+                }
+                tone={getWorkOrderTone(workOrder.status, colors)}
+              />
             );
           })}
         </View>
@@ -1526,7 +1404,7 @@ export default function WorkOrdersScreen({
                     <Text
                       style={[
                         styles.filterChipText,
-                        isMechanicUser && styles.filterChipTextLarge,
+                        styles.filterChipTextLarge,
                         { color: colors.text },
                       ]}
                     >
@@ -1567,7 +1445,7 @@ export default function WorkOrdersScreen({
                 onPress={() => onOpenWorkOrderForm?.(selectedWorkOrder)}
                 style={[
                   styles.secondaryAction,
-                  isMechanicUser && styles.secondaryActionLarge,
+                  styles.secondaryActionLarge,
                   {
                     backgroundColor: colors.cardMuted,
                     borderColor: colors.border,
@@ -1577,7 +1455,7 @@ export default function WorkOrdersScreen({
                 <Text
                   style={[
                     styles.secondaryActionText,
-                    isMechanicUser && styles.secondaryActionTextLarge,
+                    styles.secondaryActionTextLarge,
                     { color: colors.primary },
                   ]}
                 >
@@ -1591,7 +1469,7 @@ export default function WorkOrdersScreen({
               onPress={() => onOpenSpareParts?.(selectedWorkOrder)}
               style={[
                 styles.secondaryAction,
-                isMechanicUser && styles.secondaryActionLarge,
+                styles.secondaryActionLarge,
                 {
                   backgroundColor: colors.cardMuted,
                   borderColor: colors.border,
@@ -1601,7 +1479,7 @@ export default function WorkOrdersScreen({
               <Text
                 style={[
                   styles.secondaryActionText,
-                  isMechanicUser && styles.secondaryActionTextLarge,
+                  styles.secondaryActionTextLarge,
                   { color: colors.accent },
                 ]}
               >
@@ -1681,7 +1559,7 @@ export default function WorkOrdersScreen({
                   }
                   style={[
                     styles.filterChip,
-                    isMechanicUser && styles.filterChipLarge,
+                    styles.filterChipLarge,
                     {
                       backgroundColor: selected
                         ? palette.accent
@@ -1694,7 +1572,7 @@ export default function WorkOrdersScreen({
                   <Text
                     style={[
                       styles.filterChipText,
-                      isMechanicUser && styles.filterChipTextLarge,
+                      styles.filterChipTextLarge,
                       { color: selected ? colors.white : palette.text },
                     ]}
                   >
@@ -1767,7 +1645,7 @@ export default function WorkOrdersScreen({
                       }
                       style={[
                         styles.filterChip,
-                        isMechanicUser && styles.filterChipLarge,
+                        styles.filterChipLarge,
                         {
                           backgroundColor: selected
                             ? colors.warning
@@ -1782,7 +1660,7 @@ export default function WorkOrdersScreen({
                       <Text
                         style={[
                           styles.filterChipText,
-                          isMechanicUser && styles.filterChipTextLarge,
+                          styles.filterChipTextLarge,
                           {
                             color: selected
                               ? colors.white
@@ -2011,7 +1889,7 @@ export default function WorkOrdersScreen({
                               }
                               style={[
                                 styles.filterChip,
-                                isMechanicUser && styles.filterChipLarge,
+                                styles.filterChipLarge,
                                 {
                                   backgroundColor: selected
                                     ? colors.textTertiary
@@ -2025,7 +1903,7 @@ export default function WorkOrdersScreen({
                               <Text
                                 style={[
                                   styles.filterChipText,
-                                  isMechanicUser && styles.filterChipTextLarge,
+                                  styles.filterChipTextLarge,
                                   {
                                     color: selected
                                       ? colors.white
@@ -2096,7 +1974,7 @@ export default function WorkOrdersScreen({
               placeholderTextColor={colors.textTertiary}
               style={[
                 styles.textArea,
-                isMechanicUser && styles.textAreaLarge,
+                styles.textAreaLarge,
                 {
                   backgroundColor: colors.inputBackground,
                   borderColor: colors.border,
@@ -2117,7 +1995,7 @@ export default function WorkOrdersScreen({
                   onPress={() => addPhoto("camera")}
                   style={[
                     styles.secondaryAction,
-                    isMechanicUser && styles.secondaryActionLarge,
+                    styles.secondaryActionLarge,
                     {
                       backgroundColor: colors.cardMuted,
                       borderColor: colors.border,
@@ -2127,7 +2005,7 @@ export default function WorkOrdersScreen({
                   <Text
                     style={[
                       styles.secondaryActionText,
-                      isMechanicUser && styles.secondaryActionTextLarge,
+                      styles.secondaryActionTextLarge,
                       { color: colors.primary },
                     ]}
                   >
@@ -2140,7 +2018,7 @@ export default function WorkOrdersScreen({
                   onPress={() => addPhoto("library")}
                   style={[
                     styles.secondaryAction,
-                    isMechanicUser && styles.secondaryActionLarge,
+                    styles.secondaryActionLarge,
                     {
                       backgroundColor: colors.cardMuted,
                       borderColor: colors.border,
@@ -2150,7 +2028,7 @@ export default function WorkOrdersScreen({
                   <Text
                     style={[
                       styles.secondaryActionText,
-                      isMechanicUser && styles.secondaryActionTextLarge,
+                      styles.secondaryActionTextLarge,
                       { color: colors.textSecondary },
                     ]}
                   >
@@ -2170,7 +2048,7 @@ export default function WorkOrdersScreen({
             onPress={() => handleProgressSubmit()}
             style={[
               styles.primaryButton,
-              isMechanicUser && styles.primaryButtonLarge,
+              styles.primaryButtonLarge,
               {
                 backgroundColor: getProgressTypePalette(
                   progressForm.type,
@@ -2183,7 +2061,7 @@ export default function WorkOrdersScreen({
             <Text
               style={[
                 styles.primaryButtonText,
-                isMechanicUser && styles.primaryButtonTextLarge,
+                styles.primaryButtonTextLarge,
                 { color: colors.white },
               ]}
             >
@@ -2512,20 +2390,22 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: rf(14),
+    fontSize: rf(15),
+    minHeight: 48,
   },
   searchInput: {
     flex: 1,
   },
   iconAction: {
-    width: rf(46),
+    width: 48,
     borderWidth: 1,
     borderRadius: borderRadius.md,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 48,
   },
   rangeSummary: {
-    fontSize: rf(12),
+    fontSize: rf(13),
     lineHeight: rf(17),
     fontWeight: "700",
   },
@@ -2535,8 +2415,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    minHeight: 48,
+    justifyContent: "center",
   },
-  filterChipText: { fontSize: rf(12), fontWeight: "700" },
+  filterChipText: { fontSize: rf(14), fontWeight: "700" },
   listBody: { gap: spacing.sm },
   listHeaderRow: {
     flexDirection: "row",
@@ -2564,19 +2446,19 @@ const styles = StyleSheet.create({
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
+  cardTag: { fontSize: rf(12), fontWeight: "800", textAlign: "right" },
   cardBody: { gap: spacing.xs },
   rowTitle: { fontSize: rf(17), fontWeight: "800" },
-  rowMeta: { fontSize: rf(13), lineHeight: rf(19) },
-  detailMetaLine: { fontSize: rf(13), lineHeight: rf(19) },
-  detailMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  rowMeta: { fontSize: rf(14), lineHeight: rf(19) },
+  detailMetaLine: { fontSize: rf(14), lineHeight: rf(19) },
+  detailMetaLabel: { fontSize: rf(14), fontWeight: "800" },
   formGroup: { gap: spacing.sm },
-  fieldLabel: { fontSize: rf(13), fontWeight: "700" },
+  fieldLabel: { fontSize: rf(14), fontWeight: "700" },
   vehicleSectionLabel: {
     fontSize: rf(13),
     fontWeight: "900",
@@ -2606,8 +2488,8 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: borderRadius.pill,
   },
-  vehicleMeta: { fontSize: rf(13), lineHeight: rf(19) },
-  vehicleMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  vehicleMeta: { fontSize: rf(14), lineHeight: rf(19) },
+  vehicleMetaLabel: { fontSize: rf(14), fontWeight: "800" },
   vehiclePlate: {
     fontSize: rf(16),
     lineHeight: rf(20),
@@ -2626,14 +2508,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     alignSelf: "flex-start",
+    minHeight: 48,
+    justifyContent: "center",
   },
-  secondaryActionText: { fontSize: rf(13), fontWeight: "800" },
+  secondaryActionText: { fontSize: rf(14), fontWeight: "800" },
   iconActionRow: { gap: spacing.xs, justifyContent: "center" },
   iconAction: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    width: rf(36),
-    height: rf(36),
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -2642,8 +2526,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    minHeight: rf(88),
-    fontSize: rf(14),
+    minHeight: 110,
+    fontSize: rf(15),
   },
   progressPanel: {
     borderWidth: 1,
@@ -2664,7 +2548,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.xs,
   },
-  progressScaleText: { fontSize: rf(11), fontWeight: "700" },
+  progressScaleText: { fontSize: rf(12), fontWeight: "700" },
   partsList: { gap: spacing.sm },
   partCard: {
     borderWidth: 1,
@@ -2676,8 +2560,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     alignItems: "center",
+    minHeight: 56,
+    justifyContent: "center",
   },
-  primaryButtonText: { fontSize: rf(15), fontWeight: "800" },
+  primaryButtonText: { fontSize: rf(16), fontWeight: "800" },
   timelineList: { gap: spacing.sm },
   timelineTitleRow: {
     flexDirection: "row",
@@ -2703,7 +2589,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
   },
-  timelineTypeChipText: { fontSize: rf(11), fontWeight: "800" },
+  timelineTypeChipText: { fontSize: rf(12), fontWeight: "800" },
   timelineProgressText: { fontSize: rf(18), fontWeight: "900" },
   timelineProgressPrefix: { fontSize: rf(14), fontWeight: "700" },
   timelineNestedList: { gap: 2 },
@@ -2714,7 +2600,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   emptyEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -2727,7 +2613,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   emptyInlineChipText: { fontSize: rf(11), fontWeight: "700" },
-  emptyText: { fontSize: rf(14), lineHeight: rf(21) },
+  emptyText: { fontSize: rf(15), lineHeight: rf(21) },
   quickPhraseGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   quickPhraseChip: { flexBasis: "48%", flexGrow: 1, paddingHorizontal: 8 },
   filterChipLarge: {

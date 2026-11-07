@@ -546,13 +546,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   emptyEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   emptyText: {
-    fontSize: rf(13),
+    fontSize: rf(15),
     lineHeight: rf(19),
   },
 });

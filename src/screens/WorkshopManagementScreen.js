@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   workshopRow: {
+    minHeight: 80,
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
@@ -218,12 +219,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   workshopName: {
-    fontSize: rf(16),
+    fontSize: rf(18),
     fontWeight: "800",
     flex: 1,
   },
   workshopRole: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     fontWeight: "600",
   },
   activeBadge: {
@@ -233,17 +234,19 @@ const styles = StyleSheet.create({
   },
   activeBadgeText: {
     color: "#ffffff",
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
   },
   enterButton: {
+    minHeight: 48,
+    justifyContent: "center",
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   enterButtonText: {
     color: "#ffffff",
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "900",
   },
   emptyCard: {
@@ -258,7 +261,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   emptyText: {
-    fontSize: rf(14),
+    fontSize: rf(15),
     lineHeight: rf(20),
     textAlign: "center",
     fontWeight: "500",

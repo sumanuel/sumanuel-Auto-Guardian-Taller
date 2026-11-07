@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   cardMeta: { fontSize: rf(12), fontWeight: "700" },
   formGroup: { gap: spacing.sm },
   fieldLabel: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -494,15 +494,15 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: borderRadius.pill,
   },
-  vehicleMeta: { fontSize: rf(13), lineHeight: rf(19) },
-  vehicleMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  vehicleMeta: { fontSize: rf(14), lineHeight: rf(19) },
+  vehicleMetaLabel: { fontSize: rf(14), fontWeight: "800" },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    minHeight: rf(92),
-    fontSize: rf(14),
+    minHeight: 110,
+    fontSize: rf(15),
   },
   primaryAction: {
     borderRadius: borderRadius.md,

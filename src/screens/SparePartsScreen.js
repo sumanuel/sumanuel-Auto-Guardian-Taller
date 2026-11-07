@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import OperationCard from "../components/common/OperationCard";
+import { getSparePartTone } from "../utils/statusTone";
 import { useTheme } from "../context/ThemeContext";
 import { listDiagnostics } from "../services/diagnostics/diagnosticService";
 import { createProgressEntry } from "../services/progressEntries/progressEntryService";
@@ -310,113 +312,58 @@ export default function SparePartsScreen({
               const canDelete = canDeleteSparePartStatus(part.status);
 
               return (
-                <View
-                  key={getEntityId(part)}
-                  style={[
-                    styles.row,
+                <OperationCard
+                  actions={[
                     {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: isSelected ? colors.primary : colors.border,
+                      key: "edit",
+                      icon: "create-outline",
+                      color: colors.primary,
+                      borderColor: colors.primary,
+                      label: "Editar repuesto",
+                      onPress: () => onOpenSparePartForm?.(part),
+                    },
+                    {
+                      key: "delete",
+                      icon: "trash-outline",
+                      color: canDelete ? colors.danger : colors.textTertiary,
+                      borderColor: canDelete ? colors.danger : colors.border,
+                      disabled: !canDelete,
+                      label: "Eliminar repuesto",
+                      onPress: () => handleDelete(part),
                     },
                   ]}
-                >
-                  <View style={styles.rowCopy}>
-                    <View
-                      style={[
-                        styles.cardHeader,
-                        { borderBottomColor: colors.border },
-                      ]}
-                    >
-                      <View style={styles.cardHeaderCopy}>
-                        <Text
-                          style={[
-                            styles.cardEyebrow,
-                            { color: colors.primary },
-                          ]}
-                        >
-                          Costos
-                        </Text>
-                        <Text style={[styles.rowTitle, { color: colors.text }]}>
-                          {part.name}
-                        </Text>
-                      </View>
-                      <Text style={[styles.cardTag, { color: colors.primary }]}>
-                        {sparePartStatusOptions.find(
-                          (item) => item.key === part.status,
-                        )?.label || part.status}
-                      </Text>
-                    </View>
-                    <View style={styles.cardBody}>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {part.id} · Cant. {part.quantity || 0} · Costo{" "}
-                        {part.unitCost || 0}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {relatedWorkOrder?.id ||
-                          part.workOrderId ||
-                          "Sin orden"}{" "}
-                        ·{" "}
-                        {relatedDiagnostic?.id ||
-                          part.diagnosticId ||
-                          "Sin diagnóstico"}
-                      </Text>
-                      <Text
-                        style={[styles.rowMeta, { color: colors.textTertiary }]}
-                      >
-                        {part.supplier || "Sin proveedor"}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.iconActionRow}>
-                    <Pressable
-                      onPress={() => onOpenSparePartForm?.(part)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.primary,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.primary}
-                        name="create-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                    <Pressable
-                      disabled={!canDelete}
-                      onPress={() => handleDelete(part)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: canDelete
-                            ? colors.danger
-                            : colors.border,
-                          opacity: canDelete ? 1 : 0.45,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={canDelete ? colors.danger : colors.textTertiary}
-                        name="trash-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                  </View>
-                </View>
+                  code={part.id}
+                  key={getEntityId(part)}
+                  lines={[
+                    {
+                      label: "Cantidad",
+                      value: `${part.quantity || 0} · Costo ${part.unitCost || 0}`,
+                    },
+                    {
+                      label: "Orden",
+                      value: `${
+                        relatedWorkOrder?.id || part.workOrderId || "Sin orden"
+                      } · ${
+                        relatedDiagnostic?.id ||
+                        part.diagnosticId ||
+                        "Sin diagnóstico"
+                      }`,
+                    },
+                    {
+                      label: "Proveedor",
+                      value: part.supplier || "Sin proveedor",
+                    },
+                  ]}
+                  plain
+                  plate={part.name}
+                  selected={isSelected}
+                  statusLabel={
+                    sparePartStatusOptions.find(
+                      (item) => item.key === part.status,
+                    )?.label || part.status
+                  }
+                  tone={getSparePartTone(part.status, colors)}
+                />
               );
             })}
           </View>
@@ -485,7 +432,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: rf(14),
+    fontSize: rf(15),
+    minHeight: 48,
   },
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   filterChip: {
@@ -493,8 +441,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    minHeight: 48,
+    justifyContent: "center",
   },
-  filterChipText: { fontSize: rf(12), fontWeight: "700" },
+  filterChipText: { fontSize: rf(14), fontWeight: "700" },
   listBody: { gap: spacing.sm },
   row: {
     borderWidth: 1,
@@ -516,21 +466,21 @@ const styles = StyleSheet.create({
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
+  cardTag: { fontSize: rf(12), fontWeight: "800", textAlign: "right" },
   cardBody: { gap: spacing.xs },
   rowTitle: { fontSize: rf(17), fontWeight: "800" },
-  rowMeta: { fontSize: rf(13), lineHeight: rf(19) },
+  rowMeta: { fontSize: rf(14), lineHeight: rf(19) },
   iconActionRow: { gap: spacing.xs, justifyContent: "center" },
   iconAction: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    width: rf(38),
-    height: rf(38),
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -541,10 +491,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   emptyEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  emptyText: { fontSize: rf(14), lineHeight: rf(21) },
+  emptyText: { fontSize: rf(15), lineHeight: rf(21) },
 });

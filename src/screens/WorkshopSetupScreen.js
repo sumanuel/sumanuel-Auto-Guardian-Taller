@@ -65,7 +65,10 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
       await refreshWorkshopContext();
       onSaved?.();
     } catch (error) {
-      Alert.alert("Taller", error?.message || "No se pudo guardar la información del taller.");
+      Alert.alert(
+        "Taller",
+        error?.message || "No se pudo guardar la información del taller.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -81,7 +84,10 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
       await refreshWorkshopContext();
       onSaved?.();
     } catch (error) {
-      Alert.alert("Taller", error?.message || "No se pudo configurar el taller.");
+      Alert.alert(
+        "Taller",
+        error?.message || "No se pudo configurar el taller.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -236,19 +242,29 @@ export default function WorkshopSetupScreen({ onSaved, userProfile }) {
                   },
                 ]}
               >
-                <Text style={[styles.secondaryActionText, { color: colors.textSecondary }]}>
+                <Text
+                  style={[
+                    styles.secondaryActionText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Ahora no
                 </Text>
               </Pressable>
 
               <Pressable
                 onPress={handleSave}
-                style={[styles.primaryAction, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.primaryAction,
+                  { backgroundColor: colors.primary },
+                ]}
               >
-                <Ionicons color={colors.white} name="save-outline" size={rf(18)} />
-                <Text style={styles.primaryActionText}>
-                  Configurar taller
-                </Text>
+                <Ionicons
+                  color={colors.white}
+                  name="save-outline"
+                  size={rf(18)}
+                />
+                <Text style={styles.primaryActionText}>Configurar taller</Text>
               </Pressable>
             </View>
           )}
@@ -276,7 +292,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     fontWeight: "800",
   },
   input: {
@@ -284,11 +300,12 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: rf(14),
+    fontSize: rf(15),
     fontWeight: "600",
+    minHeight: 48,
   },
   textArea: {
-    minHeight: rf(80),
+    minHeight: 110,
     textAlignVertical: "top",
   },
   infoCard: {

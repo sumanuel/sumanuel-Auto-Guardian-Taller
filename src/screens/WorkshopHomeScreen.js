@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import OperationCard from "../components/common/OperationCard";
 import {
   isDiagnosticAssignedToUser,
   isMechanicRole,
@@ -608,7 +609,7 @@ export default function WorkshopHomeScreen({
                   onPress={() => setSelectedType(option.key)}
                   style={[
                     styles.tabCard,
-                    isMechanicUser && styles.tabCardLarge,
+                    styles.tabCardLarge,
                     {
                       backgroundColor: isActive
                         ? colors.primary
@@ -650,7 +651,7 @@ export default function WorkshopHomeScreen({
               <View
                 style={[
                   styles.searchShell,
-                  isMechanicUser && styles.searchShellLarge,
+                  styles.searchShellLarge,
                   {
                     backgroundColor: colors.inputBackground,
                     borderColor: colors.border,
@@ -667,7 +668,7 @@ export default function WorkshopHomeScreen({
                   placeholderTextColor={colors.textTertiary}
                   style={[
                     styles.searchInput,
-                    isMechanicUser && styles.searchInputLarge,
+                    styles.searchInputLarge,
                     { color: colors.text },
                   ]}
                   value={plateQuery}
@@ -680,7 +681,7 @@ export default function WorkshopHomeScreen({
                 onPress={() => setIsDateFilterVisible(true)}
                 style={[
                   styles.iconAction,
-                  isMechanicUser && styles.iconActionLarge,
+                  styles.iconActionLarge,
                   {
                     backgroundColor: colors.cardMuted,
                     borderColor: colors.border,
@@ -701,7 +702,7 @@ export default function WorkshopHomeScreen({
                 }}
                 style={[
                   styles.iconAction,
-                  isMechanicUser && styles.iconActionLarge,
+                  styles.iconActionLarge,
                   {
                     backgroundColor: colors.cardMuted,
                     borderColor: colors.border,
@@ -779,7 +780,7 @@ export default function WorkshopHomeScreen({
                       onPress={() => setSelectedStatus(option.value)}
                       style={[
                         styles.filterChip,
-                        isMechanicUser && styles.filterChipLarge,
+                        styles.filterChipLarge,
                         styles.filterChipCompact,
                         {
                           backgroundColor: isActive
@@ -794,7 +795,7 @@ export default function WorkshopHomeScreen({
                       <Text
                         style={[
                           styles.filterChipText,
-                          isMechanicUser && styles.filterChipTextLarge,
+                          styles.filterChipTextLarge,
                           { color: isActive ? colors.white : colors.text },
                         ]}
                       >
@@ -817,7 +818,8 @@ export default function WorkshopHomeScreen({
               const caseColor = getQueueCaseColor(item, colors);
 
               return (
-                <Pressable
+                <OperationCard
+                  code={`${getQueueTypeLabel(item.type)} ${item.detail}`}
                   key={item.key}
                   onPress={() => {
                     if (item.type === "diagnostic") {
@@ -827,87 +829,11 @@ export default function WorkshopHomeScreen({
 
                     onOpenWorkOrderDetail?.(item.recordId);
                   }}
-                  style={[
-                    styles.queueRow,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <View style={styles.queueCopy}>
-                    <View style={styles.queueTopRow}>
-                      <View
-                        style={[
-                          styles.queueTypeBadge,
-                          {
-                            backgroundColor: colors.cardMuted,
-                            borderColor: colors.border,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          color={accentColor}
-                          name={getQueueIconName(item.type)}
-                          size={rf(15)}
-                        />
-                        <Text
-                          style={[
-                            styles.queueTypeBadgeText,
-                            { color: accentColor },
-                          ]}
-                        >
-                          {getQueueTypeLabel(item.type)}
-                        </Text>
-                      </View>
-                      <View
-                        style={[
-                          styles.queueStatusBadge,
-                          {
-                            backgroundColor: colors.cardMuted,
-                            borderColor: accentColor,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[styles.queueStatus, { color: accentColor }]}
-                        >
-                          {item.status}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Text style={[styles.queueTitle, { color: colors.text }]}>
-                      {item.title}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.queuePlate,
-                        isMechanicUser && styles.queuePlateLarge,
-                        { color: colors.accent },
-                      ]}
-                    >
-                      Placa: {item.plate}
-                    </Text>
-                    <Text style={[styles.queueCaseTag, { color: caseColor }]}>
-                      {item.detail}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.queueDetail,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      {item.type === "diagnostic"
-                        ? "Listo para revisión técnica, cotización o aprobación."
-                        : item.statusKey === "delivered"
-                          ? "Orden cerrada y vehículo ya entregado."
-                          : item.statusKey === "ready"
-                            ? "Orden lista para coordinar la entrega del vehículo."
-                            : "Sigue el avance de ejecución y prepara la entrega del vehículo."}
-                    </Text>
-                  </View>
-                </Pressable>
+                  plate={item.plate === "Sin placa" ? "" : item.plate}
+                  statusLabel={item.status}
+                  title={item.title}
+                  tone={accentColor}
+                />
               );
             })
           ) : (
@@ -1068,20 +994,21 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   iconAction: {
-    width: rf(46),
+    width: 48,
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 48,
   },
   searchInput: {
     flex: 1,
     paddingVertical: spacing.sm,
-    fontSize: rf(14),
+    fontSize: rf(15),
     fontWeight: "600",
   },
   rangeSummary: {
-    fontSize: rf(12),
+    fontSize: rf(13),
     lineHeight: rf(17),
     fontWeight: "700",
   },
@@ -1103,7 +1030,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   contextStripSubtitle: {
-    fontSize: rf(12),
+    fontSize: rf(13),
     lineHeight: rf(17),
   },
   contextBadge: {
@@ -1126,12 +1053,14 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    minHeight: 48,
+    justifyContent: "center",
   },
   filterChipCompact: {
     paddingHorizontal: spacing.sm,
   },
   filterChipText: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "800",
   },
   panelEyebrow: {
@@ -1186,7 +1115,7 @@ const styles = StyleSheet.create({
   },
   queueStatus: { fontSize: rf(14), fontWeight: "900", textAlign: "right" },
   queueCaseTag: { fontSize: rf(15), fontWeight: "900", lineHeight: rf(20) },
-  queueDetail: { fontSize: rf(13), lineHeight: rf(18) },
+  queueDetail: { fontSize: rf(14), lineHeight: rf(18) },
   tabCardLarge: { minHeight: 72, justifyContent: "center" },
   iconActionLarge: { width: 56, minHeight: 56 },
   filterChipLarge: {

@@ -97,6 +97,9 @@ export default function WorkshopTabBar({
                 />
               </View>
               <Text
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+                numberOfLines={1}
                 style={[
                   styles.tabLabel,
                   large && styles.tabLabelLarge,

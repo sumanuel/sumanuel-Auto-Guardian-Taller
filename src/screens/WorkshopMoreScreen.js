@@ -645,11 +645,12 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   sectionSubtitle: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     lineHeight: rf(19),
   },
   listWrap: { gap: spacing.sm },
   row: {
+    minHeight: 76,
     borderWidth: 1,
     borderRadius: borderRadius.xl,
     padding: spacing.md,
@@ -672,7 +673,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   rowEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -684,11 +685,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   stateBadgeText: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
   },
-  rowTitle: { fontSize: rf(15), fontWeight: "800" },
-  rowSubtitle: { fontSize: rf(12), lineHeight: rf(18) },
+  rowTitle: { fontSize: rf(17), fontWeight: "800" },
+  rowSubtitle: { fontSize: rf(14), lineHeight: rf(18) },
   actionList: {
     gap: spacing.sm,
   },

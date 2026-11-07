@@ -18,6 +18,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import BigButton from "../components/common/BigButton";
+import OperationCard from "../components/common/OperationCard";
+import { getDiagnosticTone } from "../utils/statusTone";
 import {
   isDiagnosticAssignedToUser,
   isMechanicRole,
@@ -491,256 +494,87 @@ export default function DiagnosticsScreen({
               viewState?.selectedDiagnosticId === getEntityId(diagnostic);
 
             return (
-              <View
+              <OperationCard
+                actions={[
+                  !isClosedDiagnostic && {
+                    key: "edit",
+                    icon: "create-outline",
+                    label: "Editar diagnóstico",
+                    onPress: () => onOpenDiagnosticForm?.(diagnostic),
+                  },
+                  hasQuotePdf && {
+                    key: "pdf",
+                    icon: "document-text-outline",
+                    color: colors.accent,
+                    label: "Ver cotización",
+                    onPress: () => handleOpenQuotePdf(diagnostic),
+                  },
+                  hasQuotePdf &&
+                    !isClosedDiagnostic && {
+                      key: "whatsapp",
+                      icon: "logo-whatsapp",
+                      color: "#25D366",
+                      label: "Enviar por WhatsApp",
+                      onPress: () =>
+                        handleSendQuoteWhatsapp(diagnostic, client),
+                    },
+                ].filter(Boolean)}
+                code={diagnostic.id}
                 key={getEntityId(diagnostic)}
-                style={[
-                  styles.row,
+                lines={[
                   {
-                    backgroundColor: colors.cardBackground,
-                    borderColor: isSelected ? colors.primary : colors.border,
+                    label: "Cliente",
+                    value:
+                      client?.fullName || diagnostic.clientId || "Sin cliente",
+                  },
+                  {
+                    label: "Hallazgos",
+                    value: diagnostic.concerns || "Sin hallazgos registrados",
                   },
                 ]}
+                onPress={() => openDiagnosticDetail(diagnostic)}
+                plate={vehicle?.plate}
+                selected={isSelected}
+                statusLabel={
+                  diagnosticStatusOptions.find(
+                    (item) => item.key === diagnostic.status,
+                  )?.label ||
+                  diagnostic.status ||
+                  "Sin estado"
+                }
+                title={
+                  [vehicle?.brand, vehicle?.model, vehicle?.year]
+                    .filter(Boolean)
+                    .join(" ") ||
+                  diagnostic.vehicleId ||
+                  "Sin vehículo"
+                }
+                tone={getDiagnosticTone(diagnostic.status, colors)}
               >
-                <Pressable
-                  onPress={() => openDiagnosticDetail(diagnostic)}
-                  style={styles.rowCopy}
-                >
-                  <View
-                    style={[
-                      styles.cardHeader,
-                      { borderBottomColor: colors.border },
-                    ]}
+                {isClosedDiagnostic ? (
+                  <Text
+                    style={[styles.closedNoticeTitle, { color: colors.accent }]}
                   >
-                    <View style={styles.cardHeaderCopy}>
-                      <Text
-                        style={[styles.cardEyebrow, { color: colors.primary }]}
-                      >
-                        Taller
-                      </Text>
-                      <Text style={[styles.rowTitle, { color: colors.text }]}>
-                        {diagnostic.id}
-                      </Text>
-                    </View>
-                    <Text style={[styles.cardTag, { color: colors.primary }]}>
-                      {diagnosticStatusOptions.find(
-                        (item) => item.key === diagnostic.status,
-                      )?.label ||
-                        diagnostic.status ||
-                        "Sin estado"}
-                    </Text>
-                  </View>
-                  <View style={styles.cardBody}>
-                    <Text
-                      style={[
-                        styles.detailMetaLine,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.detailMetaLabel, { color: colors.text }]}
-                      >
-                        Cliente:
-                      </Text>{" "}
-                      {client?.fullName || diagnostic.clientId || "Sin cliente"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.vehicleSectionLabel,
-                        { color: colors.accent },
-                      ]}
-                    >
-                      vehículo:
-                    </Text>
-                    <View
-                      style={[
-                        styles.vehicleCard,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
+                    Ya convertido en orden de trabajo
+                  </Text>
+                ) : null}
+                {!isClosedDiagnostic && !isMechanicUser ? (
+                  <BigButton
+                    icon="clipboard-outline"
+                    label="Crear orden desde este diagnóstico"
+                    onPress={() =>
+                      onOpenWorkOrderForm?.(null, {
+                        seedData: {
+                          diagnosticId: diagnostic.id,
+                          clientId: diagnostic.clientId,
+                          vehicleId: diagnostic.vehicleId,
                         },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.vehicleTitle, { color: colors.text }]}
-                      >
-                        {[vehicle?.brand, vehicle?.model, vehicle?.year]
-                          .filter(Boolean)
-                          .join(" ") ||
-                          vehicle?.plate ||
-                          diagnostic.vehicleId ||
-                          "Sin vehículo"}
-                      </Text>
-                      <View
-                        style={[
-                          styles.vehicleDivider,
-                          { backgroundColor: colors.border },
-                        ]}
-                      />
-                      <Text
-                        style={[styles.vehiclePlate, { color: colors.accent }]}
-                      >
-                        <Text
-                          style={[
-                            styles.vehiclePlateLabel,
-                            { color: colors.accent },
-                          ]}
-                        >
-                          Placa:
-                        </Text>{" "}
-                        {vehicle?.plate || "Sin placa"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.vehicleMeta,
-                          { color: colors.textTertiary },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.vehicleMetaLabel,
-                            { color: colors.text },
-                          ]}
-                        >
-                          Kilometraje:
-                        </Text>{" "}
-                        {vehicle?.mileage
-                          ? `${vehicle.mileage} km`
-                          : "Sin kilometraje"}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.detailMetaLine,
-                        { color: colors.textTertiary },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.detailMetaLabel, { color: colors.text }]}
-                      >
-                        Hallazgos:
-                      </Text>{" "}
-                      {diagnostic.concerns || "Sin hallazgos registrados"}
-                    </Text>
-                    {isClosedDiagnostic ? (
-                      <View
-                        style={[
-                          styles.closedNotice,
-                          {
-                            backgroundColor: colors.cardMuted,
-                            borderColor: colors.border,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.closedNoticeTitle,
-                            { color: colors.accent },
-                          ]}
-                        >
-                          Ya convertido en orden
-                        </Text>
-                        <Text
-                          style={[
-                            styles.closedNoticeText,
-                            { color: colors.textSecondary },
-                          ]}
-                        >
-                          Este diagnóstico ya fue cerrado al abrir su orden de
-                          trabajo.
-                        </Text>
-                      </View>
-                    ) : null}
-                    {!isClosedDiagnostic && !isMechanicUser ? (
-                      <Pressable
-                        onPress={() =>
-                          onOpenWorkOrderForm?.(null, {
-                            seedData: {
-                              diagnosticId: diagnostic.id,
-                              clientId: diagnostic.clientId,
-                              vehicleId: diagnostic.vehicleId,
-                            },
-                          })
-                        }
-                        style={[
-                          styles.secondaryAction,
-                          {
-                            backgroundColor: colors.cardMuted,
-                            borderColor: colors.border,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.secondaryActionText,
-                            { color: colors.accent },
-                          ]}
-                        >
-                          Crear orden desde este diagnóstico
-                        </Text>
-                      </Pressable>
-                    ) : null}
-                  </View>
-                </Pressable>
-
-                <View style={styles.iconActionRow}>
-                  {!isClosedDiagnostic ? (
-                    <Pressable
-                      onPress={() => onOpenDiagnosticForm?.(diagnostic)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.textTertiary}
-                        name="create-outline"
-                        size={rf(17)}
-                      />
-                    </Pressable>
-                  ) : null}
-                  {hasQuotePdf ? (
-                    <Pressable
-                      onPress={() => handleOpenQuotePdf(diagnostic)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.accent}
-                        name="document-text-outline"
-                        size={rf(17)}
-                      />
-                    </Pressable>
-                  ) : null}
-                  {hasQuotePdf && !isClosedDiagnostic ? (
-                    <Pressable
-                      onPress={() =>
-                        handleSendQuoteWhatsapp(diagnostic, client)
-                      }
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color="#25D366"
-                        name="logo-whatsapp"
-                        size={rf(17)}
-                      />
-                    </Pressable>
-                  ) : null}
-                </View>
-              </View>
+                      })
+                    }
+                    variant="secondary"
+                  />
+                ) : null}
+              </OperationCard>
             );
           })}
         </View>
@@ -984,20 +818,22 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: rf(14),
+    fontSize: rf(15),
+    minHeight: 48,
   },
   searchInput: {
     flex: 1,
   },
   iconAction: {
-    width: rf(46),
+    width: 48,
     borderWidth: 1,
     borderRadius: borderRadius.md,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 48,
   },
   rangeSummary: {
-    fontSize: rf(12),
+    fontSize: rf(13),
     lineHeight: rf(17),
     fontWeight: "700",
   },
@@ -1007,8 +843,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    minHeight: 48,
+    justifyContent: "center",
   },
-  filterChipText: { fontSize: rf(12), fontWeight: "700" },
+  filterChipText: { fontSize: rf(14), fontWeight: "700" },
   detailCard: {
     borderWidth: 1,
     borderRadius: borderRadius.xl,
@@ -1036,18 +874,18 @@ const styles = StyleSheet.create({
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  cardTag: { fontSize: rf(11), fontWeight: "800", textAlign: "right" },
+  cardTag: { fontSize: rf(12), fontWeight: "800", textAlign: "right" },
   cardBody: { gap: spacing.xs },
   rowTitle: { fontSize: rf(17), fontWeight: "800" },
-  rowMeta: { fontSize: rf(13), lineHeight: rf(19) },
-  detailMetaLine: { fontSize: rf(13), lineHeight: rf(19) },
-  detailMetaLabel: { fontSize: rf(13), fontWeight: "800" },
-  fieldLabel: { fontSize: rf(13), fontWeight: "700" },
+  rowMeta: { fontSize: rf(14), lineHeight: rf(19) },
+  detailMetaLine: { fontSize: rf(14), lineHeight: rf(19) },
+  detailMetaLabel: { fontSize: rf(14), fontWeight: "800" },
+  fieldLabel: { fontSize: rf(14), fontWeight: "700" },
   vehicleSectionLabel: {
     fontSize: rf(13),
     fontWeight: "900",
@@ -1070,8 +908,8 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: borderRadius.pill,
   },
-  vehicleMeta: { fontSize: rf(13), lineHeight: rf(19) },
-  vehicleMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  vehicleMeta: { fontSize: rf(14), lineHeight: rf(19) },
+  vehicleMetaLabel: { fontSize: rf(14), fontWeight: "800" },
   vehiclePlate: {
     fontSize: rf(16),
     lineHeight: rf(20),
@@ -1099,14 +937,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     alignSelf: "flex-start",
+    minHeight: 48,
+    justifyContent: "center",
   },
-  secondaryActionText: { fontSize: rf(13), fontWeight: "800" },
+  secondaryActionText: { fontSize: rf(14), fontWeight: "800" },
   iconActionRow: { gap: spacing.xs, justifyContent: "center" },
   iconAction: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
-    width: rf(36),
-    height: rf(36),
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1117,10 +957,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   emptyEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  emptyText: { fontSize: rf(14), lineHeight: rf(21) },
+  emptyText: { fontSize: rf(15), lineHeight: rf(21) },
 });

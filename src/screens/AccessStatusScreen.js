@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   fieldLabel: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
   },
   input: {
@@ -372,7 +372,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    fontSize: rf(14),
+    fontSize: rf(15),
+    minHeight: 48,
   },
   button: {
     borderRadius: borderRadius.md,

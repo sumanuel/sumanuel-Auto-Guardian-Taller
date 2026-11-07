@@ -2020,7 +2020,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   panelText: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     lineHeight: rf(19),
   },
   refreshButton: {
@@ -2047,7 +2047,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -2057,7 +2057,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    fontSize: rf(14),
+    fontSize: rf(15),
+    minHeight: 48,
   },
   logoActionsRow: {
     flexDirection: "row",
@@ -2214,7 +2215,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   rowMeta: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     lineHeight: rf(17),
   },
   secondaryAction: {
@@ -2222,9 +2223,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
+    minHeight: 48,
+    justifyContent: "center",
   },
   secondaryActionText: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
   },
   secondaryFilledAction: {

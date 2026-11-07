@@ -1195,7 +1195,7 @@ function AppContent() {
         <OfflineBanner />
         <WorkshopTabBar
           activeTab={activeTab}
-          large={isMechanicUser}
+          large
           onChange={handleTabChange}
           visibleTabs={
             isMechanicUser

@@ -48,10 +48,7 @@ export default function DiagnosticFormScreen({
   const { colors } = useTheme();
   const { activeWorkshop } = useAuth();
   const isMechanicUser = isMechanicRole(currentRole);
-  const canManageDiagnostics = hasPermission(
-    currentRole,
-    "diagnostics.manage",
-  );
+  const canManageDiagnostics = hasPermission(currentRole, "diagnostics.manage");
   const [submitting, setSubmitting] = useState(false);
   const [clients, setClients] = useState([]);
   const [mechanics, setMechanics] = useState([]);
@@ -845,7 +842,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -854,7 +851,7 @@ const styles = StyleSheet.create({
   cardMeta: { fontSize: rf(12), fontWeight: "700" },
   formGroup: { gap: spacing.sm },
   fieldLabel: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -899,7 +896,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    minHeight: rf(88),
+    minHeight: 110,
     fontSize: rf(15),
   },
   input: {
@@ -908,6 +905,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: rf(15),
+    minHeight: 48,
   },
   primaryAction: {
     borderRadius: borderRadius.md,

@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import BigButton from "../components/common/BigButton";
+import OperationCard from "../components/common/OperationCard";
 import { hasPermission } from "../constants/accessControl";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -372,203 +374,100 @@ export default function StockItemsScreen({
                 viewState?.selectedStockItemId === getEntityId(item);
 
               return (
-                <View
-                  key={getEntityId(item)}
-                  style={[
-                    styles.row,
+                <OperationCard
+                  actions={[
                     {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: isSelected ? colors.primary : colors.border,
+                      key: "edit",
+                      icon: "create-outline",
+                      color: canManageInventory
+                        ? colors.primary
+                        : colors.textTertiary,
+                      borderColor: canManageInventory
+                        ? colors.primary
+                        : colors.border,
+                      disabled: !canManageInventory,
+                      label: "Editar ítem",
+                      onPress: () => onOpenStockItemForm?.(item),
+                    },
+                    {
+                      key: "delete",
+                      icon: "trash-outline",
+                      color: canManageInventory
+                        ? colors.danger
+                        : colors.textTertiary,
+                      borderColor: canManageInventory
+                        ? colors.danger
+                        : colors.border,
+                      disabled: !canManageInventory,
+                      label: "Eliminar ítem",
+                      onPress: () => handleDelete(item),
                     },
                   ]}
-                >
-                  <View style={styles.rowCopy}>
-                    <View
-                      style={[
-                        styles.cardHeader,
-                        { borderBottomColor: colors.border },
-                      ]}
-                    >
-                      <View style={styles.cardHeaderCopy}>
-                        <Text
-                          style={[
-                            styles.cardEyebrow,
-                            { color: colors.primary },
-                          ]}
-                        >
-                          {getItemTypeLabel(item.itemType)}
-                        </Text>
-                        <Text style={[styles.rowTitle, { color: colors.text }]}>
-                          {item.name}
-                        </Text>
-                      </View>
-                      <Text
-                        style={[
-                          styles.cardTag,
-                          { color: colors[inventoryState.tone] },
-                        ]}
-                      >
-                        {inventoryState.label}
-                      </Text>
-                    </View>
-
-                    <View style={styles.cardBody}>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        {item.id} · Cant. {item.quantity || 0}
-                        {item.minimumQuantity !== null &&
+                  code={item.id}
+                  key={getEntityId(item)}
+                  lines={[
+                    {
+                      label: "Existencias",
+                      value: `${item.quantity || 0}${
+                        item.minimumQuantity !== null &&
                         item.minimumQuantity !== undefined
-                          ? ` · Min. ${item.minimumQuantity}`
-                          : ""}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        Costo {item.unitCost || 0} ·{" "}
-                        {item.location || "Sin ubicación"}
-                      </Text>
-                      <Text
-                        style={[styles.rowMeta, { color: colors.textTertiary }]}
-                      >
-                        {item.supplier || "Sin proveedor"}
-                      </Text>
-                      {item.lastMovementType ? (
-                        <Text
-                          style={[
-                            styles.rowMeta,
-                            { color: colors.textSecondary },
-                          ]}
-                        >
-                          Ultimo movimiento:{" "}
-                          {getMovementLabel(item.lastMovementType)} de{" "}
-                          {item.lastMovementQuantity || 0} ·{" "}
-                          {formatMovementTimestamp(item.lastMovementAt)}
-                        </Text>
-                      ) : null}
-                    </View>
-
-                    <View style={styles.movementActionRow}>
-                      <Pressable
-                        disabled={!canManageInventory}
-                        onPress={() =>
-                          onOpenStockMovementForm?.(item, {
-                            movementType: "in",
-                          })
-                        }
-                        style={[
-                          styles.movementAction,
+                          ? ` · Mín. ${item.minimumQuantity}`
+                          : ""
+                      }`,
+                    },
+                    {
+                      label: "Costo y ubicación",
+                      value: `${item.unitCost || 0} · ${
+                        item.location || "Sin ubicación"
+                      }`,
+                    },
+                    {
+                      label: "Proveedor",
+                      value: item.supplier || "Sin proveedor",
+                    },
+                    ...(item.lastMovementType
+                      ? [
                           {
-                            backgroundColor: colors.cardMuted,
-                            borderColor: colors.accent,
-                            opacity: canManageInventory ? 1 : 0.45,
+                            label: "Último movimiento",
+                            value: `${getMovementLabel(
+                              item.lastMovementType,
+                            )} de ${item.lastMovementQuantity || 0} · ${formatMovementTimestamp(
+                              item.lastMovementAt,
+                            )}`,
                           },
-                        ]}
-                      >
-                        <Ionicons
-                          color={colors.accent}
-                          name="arrow-down-outline"
-                          size={rf(16)}
-                        />
-                        <Text
-                          style={[
-                            styles.movementActionText,
-                            { color: colors.text },
-                          ]}
-                        >
-                          Entrada
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        disabled={!canManageInventory}
-                        onPress={() =>
-                          onOpenStockMovementForm?.(item, {
-                            movementType: "out",
-                          })
-                        }
-                        style={[
-                          styles.movementAction,
-                          {
-                            backgroundColor: colors.cardMuted,
-                            borderColor: colors.warning,
-                            opacity: canManageInventory ? 1 : 0.45,
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          color={colors.warning}
-                          name="arrow-up-outline"
-                          size={rf(16)}
-                        />
-                        <Text
-                          style={[
-                            styles.movementActionText,
-                            { color: colors.text },
-                          ]}
-                        >
-                          Salida
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </View>
-
-                  <View style={styles.iconActionRow}>
-                    <Pressable
+                        ]
+                      : []),
+                  ]}
+                  plain
+                  plate={item.name}
+                  selected={isSelected}
+                  statusLabel={inventoryState.label}
+                  title={getItemTypeLabel(item.itemType)}
+                  tone={colors[inventoryState.tone]}
+                >
+                  <View style={styles.movementActionRow}>
+                    <BigButton
                       disabled={!canManageInventory}
-                      onPress={() => onOpenStockItemForm?.(item)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: canManageInventory
-                            ? colors.primary
-                            : colors.border,
-                          opacity: canManageInventory ? 1 : 0.45,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={
-                          canManageInventory
-                            ? colors.primary
-                            : colors.textTertiary
-                        }
-                        name="create-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
-                    <Pressable
+                      icon="arrow-down-outline"
+                      label="Entrada"
+                      onPress={() =>
+                        onOpenStockMovementForm?.(item, { movementType: "in" })
+                      }
+                      style={styles.movementButton}
+                      variant="secondary"
+                    />
+                    <BigButton
                       disabled={!canManageInventory}
-                      onPress={() => handleDelete(item)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: canManageInventory
-                            ? colors.danger
-                            : colors.border,
-                          opacity: canManageInventory ? 1 : 0.45,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={
-                          canManageInventory
-                            ? colors.danger
-                            : colors.textTertiary
-                        }
-                        name="trash-outline"
-                        size={rf(18)}
-                      />
-                    </Pressable>
+                      icon="arrow-up-outline"
+                      label="Salida"
+                      onPress={() =>
+                        onOpenStockMovementForm?.(item, { movementType: "out" })
+                      }
+                      style={styles.movementButton}
+                      variant="secondary"
+                    />
                   </View>
-                </View>
+                </OperationCard>
               );
             })}
           </View>
@@ -679,7 +578,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
-    fontSize: rf(14),
+    fontSize: rf(15),
   },
   filterRow: {
     flexDirection: "row",
@@ -691,9 +590,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingVertical: spacing.xs + 2,
     paddingHorizontal: spacing.md,
+    minHeight: 48,
+    justifyContent: "center",
   },
   filterChipText: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
   },
   listBody: {
@@ -721,13 +622,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   cardTag: {
-    fontSize: rf(11),
+    fontSize: rf(12),
     fontWeight: "800",
   },
   cardBody: {
@@ -738,7 +639,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   rowMeta: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     lineHeight: rf(17),
   },
   iconActionRow: {
@@ -765,8 +666,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   iconAction: {
-    width: rf(40),
-    height: rf(40),
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     alignItems: "center",
@@ -784,7 +685,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   emptyText: {
-    fontSize: rf(13),
+    fontSize: rf(15),
     lineHeight: rf(18),
   },
+  movementButton: { flex: 1 },
 });

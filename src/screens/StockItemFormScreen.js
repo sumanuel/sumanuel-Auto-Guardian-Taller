@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     fontWeight: "700",
   },
   optionWrap: {
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
-    fontSize: rf(14),
+    fontSize: rf(15),
   },
   notesInput: {
     minHeight: rf(120),

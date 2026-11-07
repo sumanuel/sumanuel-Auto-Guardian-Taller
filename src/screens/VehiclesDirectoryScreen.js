@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import OperationCard from "../components/common/OperationCard";
 import { useTheme } from "../context/ThemeContext";
 import { listClients } from "../services/clients/clientService";
 import { listDiagnostics } from "../services/diagnostics/diagnosticService";
@@ -304,119 +305,32 @@ export default function VehiclesDirectoryScreen({
                 resolveVehicleContextAction(operationalState);
 
               return (
-                <Pressable
+                <OperationCard
+                  code={vehicle.color || ""}
                   key={vehicle.refId || vehicle.id}
-                  onPress={() => onOpenClientDetail?.(vehicle.clientId)}
-                  style={[
-                    styles.vehicleCard,
+                  lines={[
                     {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.border,
+                      label: "Cliente",
+                      value: client?.fullName || "Sin cliente asociado",
                     },
-                  ]}
-                >
-                  <View style={styles.vehicleCardTopRow}>
-                    <View
-                      style={[
-                        styles.vehicleIconWrap,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.accent}
-                        name="car-sport-outline"
-                        size={rf(18)}
-                      />
-                    </View>
-                    <View style={styles.vehicleTitleBlock}>
-                      <Text
-                        style={[styles.vehicleTitle, { color: colors.text }]}
-                      >
-                        {buildVehicleTitle(vehicle)}
-                      </Text>
-                      <Text
-                        style={[styles.vehiclePlate, { color: colors.accent }]}
-                      >
-                        Placa: {vehicle.plate || "Sin placa"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.operationalSummary,
-                          { color: colors[contextAction.tone] },
-                        ]}
-                      >
-                        {contextAction.summary}
-                      </Text>
-                      <View style={styles.badgeRow}>
-                        {primaryBadge ? (
-                          <View
-                            style={[
-                              styles.stateBadge,
-                              {
-                                backgroundColor: colors.cardMuted,
-                                borderColor: colors[primaryBadge.tone],
-                              },
-                            ]}
-                          >
-                            <Ionicons
-                              color={colors[primaryBadge.tone]}
-                              name={primaryBadge.icon}
-                              size={rf(12)}
-                            />
-                            <Text
-                              style={[
-                                styles.stateBadgeText,
-                                { color: colors[primaryBadge.tone] },
-                              ]}
-                            >
-                              {primaryBadge.label}
-                            </Text>
-                          </View>
-                        ) : null}
-                      </View>
-                    </View>
-                  </View>
-
-                  <View style={styles.metaGrid}>
-                    <Text
-                      style={[styles.metaLine, { color: colors.textSecondary }]}
-                    >
-                      <Text style={[styles.metaLabel, { color: colors.text }]}>
-                        Cliente:
-                      </Text>{" "}
-                      {client?.fullName || "Sin cliente asociado"}
-                    </Text>
-                    <Text
-                      style={[styles.metaLine, { color: colors.textSecondary }]}
-                    >
-                      <Text style={[styles.metaLabel, { color: colors.text }]}>
-                        Color:
-                      </Text>{" "}
-                      {vehicle.color || "Sin color"}
-                    </Text>
-                    <Text
-                      style={[styles.metaLine, { color: colors.textSecondary }]}
-                    >
-                      <Text style={[styles.metaLabel, { color: colors.text }]}>
-                        Kilometraje:
-                      </Text>{" "}
-                      {vehicle.mileage
+                    {
+                      label: "Kilometraje",
+                      value: vehicle.mileage
                         ? `${vehicle.mileage} km`
-                        : "Sin kilometraje"}
-                    </Text>
-                    <Text
-                      style={[styles.metaLine, { color: colors.textSecondary }]}
-                    >
-                      <Text style={[styles.metaLabel, { color: colors.text }]}>
-                        VIN:
-                      </Text>{" "}
-                      {vehicle.vin || "Sin VIN"}
-                    </Text>
-                  </View>
-
+                        : "Sin kilometraje",
+                    },
+                    { label: "Estado", value: contextAction.summary },
+                  ]}
+                  onPress={() => onOpenClientDetail?.(vehicle.clientId)}
+                  plate={vehicle.plate}
+                  statusLabel={primaryBadge?.label}
+                  title={buildVehicleTitle(vehicle)}
+                  tone={
+                    primaryBadge
+                      ? colors[primaryBadge.tone]
+                      : colors[contextAction.tone]
+                  }
+                >
                   <View style={styles.actionRow}>
                     <Pressable
                       onPress={() => onOpenClientDetail?.(vehicle.clientId)}
@@ -497,7 +411,7 @@ export default function VehiclesDirectoryScreen({
                       </Text>
                     </Pressable>
                   </View>
-                </Pressable>
+                </OperationCard>
               );
             })
           ) : (
@@ -548,7 +462,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     paddingVertical: spacing.sm,
-    fontSize: rf(14),
+    fontSize: rf(15),
     fontWeight: "600",
   },
   summaryStrip: {
@@ -647,7 +561,7 @@ const styles = StyleSheet.create({
   secondaryAction: {
     flexGrow: 1,
     flexBasis: "47%",
-    minHeight: rf(42),
+    minHeight: 48,
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     alignItems: "center",
@@ -657,7 +571,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   secondaryActionText: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "800",
     textAlign: "center",
   },
@@ -668,13 +582,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   emptyEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   emptyText: {
-    fontSize: rf(13),
+    fontSize: rf(15),
     lineHeight: rf(19),
   },
 });

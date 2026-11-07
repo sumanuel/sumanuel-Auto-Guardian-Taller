@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import BigButton from "../components/common/BigButton";
+import OperationCard from "../components/common/OperationCard";
 import {
   canManageClients,
   canManageVehicles,
@@ -303,209 +305,64 @@ export default function ClientsScreen({
             const clientVehicles = vehiclesByClientId[client.id] || [];
 
             return (
-              <View
+              <OperationCard
+                actions={
+                  canEditClients
+                    ? [
+                        {
+                          key: "edit",
+                          icon: "create-outline",
+                          label: "Editar cliente",
+                          onPress: () =>
+                            onOpenClientForm?.(client, { returnTo: "detail" }),
+                        },
+                        {
+                          key: "delete",
+                          icon: "trash-outline",
+                          color: colors.danger,
+                          label: "Eliminar cliente",
+                          onPress: () => handleDeleteClient(client),
+                        },
+                      ]
+                    : []
+                }
                 key={getEntityId(client)}
-                style={[
-                  styles.clientRow,
+                lines={[
                   {
-                    backgroundColor: colors.cardBackground,
-                    borderColor: colors.border,
+                    label: "Identificación",
+                    value: client.identification || "Sin identificación",
+                  },
+                  {
+                    label: "Vehículos",
+                    value: clientVehicles.length
+                      ? clientVehicles
+                          .map(
+                            (vehicle) =>
+                              `${vehicle.plate || "Sin placa"} (${
+                                [vehicle.brand, vehicle.model]
+                                  .filter(Boolean)
+                                  .join(" ") || "sin descripción"
+                              })`,
+                          )
+                          .join(", ")
+                      : "Sin vehículos asociados",
                   },
                 ]}
+                onPress={() => openClientDetail(client)}
+                plain
+                plate={client.fullName}
+                title={client.phone || "Sin teléfono"}
+                tone={colors.primary}
               >
-                <Pressable
-                  onPress={() => openClientDetail(client)}
-                  style={styles.clientCopy}
-                >
-                  <View
-                    style={[
-                      styles.cardHeader,
-                      { borderBottomColor: colors.border },
-                    ]}
-                  >
-                    <View style={styles.cardHeaderCopy}>
-                      <Text
-                        style={[styles.cardEyebrow, { color: colors.primary }]}
-                      >
-                        Recepción
-                      </Text>
-                      <Text
-                        style={[styles.clientTitle, { color: colors.text }]}
-                      >
-                        {client.fullName}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.cardBody}>
-                    <Text
-                      style={[
-                        styles.fieldLine,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.fieldLineLabel, { color: colors.text }]}
-                      >
-                        Identificación:
-                      </Text>{" "}
-                      {client.identification || "Sin identificación"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.fieldLine,
-                        { color: colors.textSecondary },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.fieldLineLabel, { color: colors.text }]}
-                      >
-                        Teléfono:
-                      </Text>{" "}
-                      {client.phone || "Sin teléfono"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.vehicleSectionTitle,
-                        { color: colors.accent },
-                      ]}
-                    >
-                      Vehículos asociados:
-                    </Text>
-                    <Text
-                      style={[
-                        styles.vehicleSectionHint,
-                        { color: colors.textTertiary },
-                      ]}
-                    >
-                      Presione sobre un vehículo para ver detalles.
-                    </Text>
-                    {clientVehicles.length ? (
-                      clientVehicles.map((vehicle) => (
-                        <View
-                          key={getEntityId(vehicle)}
-                          style={[
-                            styles.vehicleInlineCard,
-                            {
-                              backgroundColor: colors.cardMuted,
-                              borderColor: colors.border,
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.vehicleInlineTitle,
-                              { color: colors.text },
-                            ]}
-                          >
-                            {[vehicle.brand, vehicle.model, vehicle.year]
-                              .filter(Boolean)
-                              .join(" ") || "Sin descripción"}
-                          </Text>
-                          <View
-                            style={[
-                              styles.vehicleInlineDivider,
-                              { backgroundColor: colors.border },
-                            ]}
-                          />
-                          <Text
-                            style={[
-                              styles.vehicleInlinePlate,
-                              { color: colors.accent },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.vehicleInlinePlateLabel,
-                                { color: colors.accent },
-                              ]}
-                            >
-                              Placa:
-                            </Text>{" "}
-                            {vehicle.plate || "Sin placa"}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.vehicleInlineMeta,
-                              { color: colors.textTertiary },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.vehicleInlineMetaLabel,
-                                { color: colors.text },
-                              ]}
-                            >
-                              Kilometraje:
-                            </Text>{" "}
-                            {vehicle.mileage
-                              ? `${vehicle.mileage} km`
-                              : "Sin kilometraje"}
-                          </Text>
-                        </View>
-                      ))
-                    ) : canEditVehicles ? (
-                      <Pressable
-                        onPress={() => onOpenVehicleForm?.(client, null)}
-                        style={[
-                          styles.linkHint,
-                          {
-                            backgroundColor: colors.cardMuted,
-                            borderColor: colors.border,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.linkHintText,
-                            { color: colors.accent },
-                          ]}
-                        >
-                          Asociar vehículo ahora
-                        </Text>
-                      </Pressable>
-                    ) : null}
-                  </View>
-                </Pressable>
-
-                {canEditClients ? (
-                  <View style={styles.iconActionRow}>
-                    <Pressable
-                      onPress={() =>
-                        onOpenClientForm?.(client, { returnTo: "detail" })
-                      }
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.textTertiary}
-                        name="create-outline"
-                        size={rf(17)}
-                      />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleDeleteClient(client)}
-                      style={[
-                        styles.iconAction,
-                        {
-                          backgroundColor: colors.cardBackground,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        color={colors.danger}
-                        name="trash-outline"
-                        size={rf(17)}
-                      />
-                    </Pressable>
-                  </View>
+                {!clientVehicles.length && canEditVehicles ? (
+                  <BigButton
+                    icon="car-sport-outline"
+                    label="Asociar vehículo ahora"
+                    onPress={() => onOpenVehicleForm?.(client, null)}
+                    variant="secondary"
+                  />
                 ) : null}
-              </View>
+              </OperationCard>
             );
           })}
         </View>
@@ -828,7 +685,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: rf(14),
+    fontSize: rf(15),
+    minHeight: 48,
   },
   listBody: { gap: spacing.sm },
   clientRow: {
@@ -851,7 +709,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -914,8 +772,8 @@ const styles = StyleSheet.create({
   iconActionRow: { flexDirection: "row", gap: spacing.xs },
   iconAction: {
     borderWidth: 1,
-    width: rf(36),
-    height: rf(36),
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.md,
     alignItems: "center",
     justifyContent: "center",
@@ -936,8 +794,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xs,
+    minHeight: 48,
+    justifyContent: "center",
   },
-  secondaryActionText: { fontSize: rf(12), fontWeight: "800" },
+  secondaryActionText: { fontSize: rf(14), fontWeight: "800" },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -953,12 +813,12 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   emptyEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  emptyText: { fontSize: rf(13), lineHeight: rf(20) },
+  emptyText: { fontSize: rf(15), lineHeight: rf(20) },
   diagnosticLinkWrap: {
     alignSelf: "flex-start",
     marginTop: spacing.xs,

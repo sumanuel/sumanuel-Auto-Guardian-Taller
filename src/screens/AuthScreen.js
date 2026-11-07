@@ -1115,6 +1115,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: hs(14),
     paddingVertical: vs(14),
     fontSize: rf(15),
+    minHeight: 48,
   },
   passwordField: {
     flexDirection: "row",
@@ -1154,13 +1155,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: vs(15),
+    minHeight: 56,
   },
   submitButtonDisabled: {
     opacity: 0.7,
   },
   submitButtonText: {
     color: "#ffffff",
-    fontSize: rf(15),
+    fontSize: rf(16),
     fontWeight: "800",
   },
   linkButton: {

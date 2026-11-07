@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -327,6 +327,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     fontSize: rf(15),
+    minHeight: 48,
   },
   textArea: {
     borderWidth: 1,
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     fontSize: rf(15),
-    minHeight: rf(96),
+    minHeight: 110,
   },
   primaryAction: {
     borderRadius: borderRadius.md,

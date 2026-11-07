@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   },
   cardHeaderCopy: { flex: 1, gap: 2 },
   cardEyebrow: {
-    fontSize: rf(10),
+    fontSize: rf(12),
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: rf(17), fontWeight: "800" },
   cardMeta: { fontSize: rf(12), fontWeight: "700" },
   formGroup: { gap: spacing.sm },
-  fieldLabel: { fontSize: rf(13), fontWeight: "700" },
+  fieldLabel: { fontSize: rf(14), fontWeight: "700" },
   optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   optionChip: {
     borderWidth: 1,
@@ -442,6 +442,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: rf(15),
+    minHeight: 48,
   },
   primaryAction: {
     borderRadius: borderRadius.md,
