@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateRangeFilterModal from "../components/common/DateRangeFilterModal";
 import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import BigButton from "../components/common/BigButton";
 import OperationCard from "../components/common/OperationCard";
 import {
   isDiagnosticAssignedToUser,
@@ -165,6 +166,7 @@ export default function WorkshopHomeScreen({
   onOpenWorkOrderDetail,
   onOpenClients,
   onOpenVehicles,
+  onOpenNewIntake,
   currentRole,
   userProfile,
 }) {
@@ -439,6 +441,63 @@ export default function WorkshopHomeScreen({
     (workOrder) => workOrder.status !== "delivered",
   ).length;
 
+  const boardTiles = useMemo(() => {
+    const ranged = queue.filter((item) =>
+      isWithinDateRange(item.createdAt, dateRange),
+    );
+    const count = (type, status) =>
+      ranged.filter((item) => item.type === type && item.statusKey === status)
+        .length;
+
+    return [
+      {
+        key: "in-progress",
+        type: "work-order",
+        status: "in-progress",
+        label: "En proceso",
+        icon: "construct-outline",
+        tone: "accent",
+        value: count("work-order", "in-progress"),
+      },
+      {
+        key: "paused",
+        type: "work-order",
+        status: "paused",
+        label: "En pausa",
+        icon: "pause-circle-outline",
+        tone: "danger",
+        value: count("work-order", "paused"),
+      },
+      {
+        key: "ready",
+        type: "work-order",
+        status: "ready",
+        label: "Listas para entregar",
+        icon: "checkmark-circle-outline",
+        tone: "success",
+        value: count("work-order", "ready"),
+      },
+      {
+        key: "quoted",
+        type: "diagnostic",
+        status: "quoted",
+        label: "Esperando aprobación",
+        icon: "hourglass-outline",
+        tone: "warning",
+        value: count("diagnostic", "quoted"),
+      },
+    ];
+  }, [dateRange, queue]);
+
+  const handleBoardTilePress = (tile) => {
+    const isActive =
+      selectedType === tile.type && selectedStatus === tile.status;
+
+    // Tocar de nuevo el mosaico activo quita el filtro.
+    setSelectedType(isActive ? "all" : tile.type);
+    setSelectedStatus(isActive ? "all" : tile.status);
+  };
+
   return (
     <SafeAreaView
       edges={["left", "right"]}
@@ -489,92 +548,71 @@ export default function WorkshopHomeScreen({
           </View>
 
           {!isMechanicUser ? (
-            <View style={styles.metricsGrid}>
-              <Pressable
-                onPress={onOpenVehicles}
-                style={[
-                  styles.metricTile,
-                  styles.metricActionTile,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <View style={styles.metricTileHeader}>
-                  <View
-                    style={[
-                      styles.metricIconWrap,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.accent}
-                      name="car-sport-outline"
-                      size={rf(18)}
-                    />
-                  </View>
-                  <Ionicons
-                    color={colors.textTertiary}
-                    name="chevron-forward"
-                    size={rf(16)}
-                  />
-                </View>
-                <Text style={[styles.metricValue, { color: colors.text }]}>
-                  {vehicles.length}
-                </Text>
-                <Text
-                  style={[styles.metricLabel, { color: colors.textSecondary }]}
-                >
-                  Vehículos
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={onOpenClients}
-                style={[
-                  styles.metricTile,
-                  styles.metricActionTile,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <View style={styles.metricTileHeader}>
-                  <View
-                    style={[
-                      styles.metricIconWrap,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      color={colors.primary}
-                      name="people-outline"
-                      size={rf(18)}
-                    />
-                  </View>
-                  <Ionicons
-                    color={colors.textTertiary}
-                    name="chevron-forward"
-                    size={rf(16)}
-                  />
-                </View>
-                <Text style={[styles.metricValue, { color: colors.text }]}>
-                  {clients.length}
-                </Text>
-                <Text
-                  style={[styles.metricLabel, { color: colors.textSecondary }]}
-                >
-                  Clientes
-                </Text>
-              </Pressable>
-            </View>
+            <>
+              <BigButton
+                icon="add-circle-outline"
+                label="Nuevo ingreso"
+                onPress={onOpenNewIntake}
+              />
+              <View style={styles.boardGrid}>
+                {boardTiles.map((tile) => {
+                  const tileColor = colors[tile.tone];
+                  const isActive =
+                    selectedType === tile.type &&
+                    selectedStatus === tile.status;
+
+                  return (
+                    <Pressable
+                      accessibilityRole="button"
+                      key={tile.key}
+                      onPress={() => handleBoardTilePress(tile)}
+                      style={({ pressed }) => [
+                        styles.boardTile,
+                        {
+                          backgroundColor: isActive
+                            ? colors.cardBackground
+                            : colors.cardMuted,
+                          borderColor: isActive ? tileColor : colors.border,
+                          borderLeftColor: tileColor,
+                          opacity: pressed ? 0.85 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={styles.boardTileTop}>
+                        <Text style={[styles.boardValue, { color: tileColor }]}>
+                          {tile.value}
+                        </Text>
+                        <Ionicons
+                          color={tileColor}
+                          name={tile.icon}
+                          size={26}
+                        />
+                      </View>
+                      <Text style={[styles.boardLabel, { color: colors.text }]}>
+                        {tile.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <View style={styles.boardShortcuts}>
+                <BigButton
+                  icon="people-outline"
+                  label={`Clientes (${clients.length})`}
+                  onPress={onOpenClients}
+                  style={styles.boardShortcut}
+                  variant="secondary"
+                />
+                <BigButton
+                  icon="car-sport-outline"
+                  label={`Vehículos (${vehicles.length})`}
+                  onPress={onOpenVehicles}
+                  style={styles.boardShortcut}
+                  variant="secondary"
+                />
+              </View>
+            </>
           ) : null}
         </View>
 
@@ -1128,4 +1166,25 @@ const styles = StyleSheet.create({
   searchShellLarge: { minHeight: 56 },
   searchInputLarge: { fontSize: 17 },
   queuePlateLarge: { fontSize: 26, letterSpacing: 1 },
+  boardGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  boardTile: {
+    flexBasis: "47%",
+    flexGrow: 1,
+    minHeight: 92,
+    borderWidth: 1,
+    borderLeftWidth: 6,
+    borderRadius: 16,
+    padding: 12,
+    gap: 4,
+    justifyContent: "space-between",
+  },
+  boardTileTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  boardValue: { fontSize: 34, fontWeight: "900" },
+  boardLabel: { fontSize: 15, fontWeight: "800" },
+  boardShortcuts: { flexDirection: "row", gap: 12 },
+  boardShortcut: { flex: 1 },
 });

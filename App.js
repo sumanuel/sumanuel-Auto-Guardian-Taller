@@ -24,6 +24,7 @@ import OnboardingScreen, {
 import WorkOrderFormScreen from "./src/screens/WorkOrderFormScreen";
 import WorkOrdersScreen from "./src/screens/WorkOrdersScreen";
 import MechanicHomeScreen from "./src/screens/MechanicHomeScreen";
+import NewIntakeScreen from "./src/screens/NewIntakeScreen";
 import WorkshopHomeScreen from "./src/screens/WorkshopHomeScreen";
 import WorkshopMoreScreen from "./src/screens/WorkshopMoreScreen";
 import VehicleFormScreen from "./src/screens/VehicleFormScreen";
@@ -41,6 +42,7 @@ const APP_SCREENS = {
   HOME: "home",
   CLIENTS: "clients",
   VEHICLES: "vehicles",
+  NEW_INTAKE: "new-intake",
   VEHICLE_HISTORY: "vehicle-history",
   WORK_ORDER_HISTORY_TIMELINE: "work-order-history-timeline",
   CLIENT_FORM: "client-form",
@@ -165,6 +167,10 @@ function AppContent() {
   const activeTab = useMemo(() => {
     if (ROOT_TABS.has(activeScreen)) {
       return activeScreen;
+    }
+
+    if (activeScreen === APP_SCREENS.NEW_INTAKE) {
+      return APP_SCREENS.HOME;
     }
 
     if (
@@ -425,6 +431,11 @@ function AppContent() {
           return true;
         }
 
+        if (activeScreen === APP_SCREENS.NEW_INTAKE) {
+          setActiveScreen(APP_SCREENS.HOME);
+          return true;
+        }
+
         if (activeScreen === APP_SCREENS.DIAGNOSTICS) {
           navigateBackFromDiagnostics();
           return true;
@@ -573,6 +584,59 @@ function AppContent() {
     setActiveScreen(APP_SCREENS.MORE);
   };
 
+  const openDiagnosticForVehicle = async (vehicle, client, returnTo) => {
+    try {
+      const vehicleId = vehicle?.id || vehicle?.refId || null;
+      const clientId = client?.id || client?.refId || vehicle?.clientId || null;
+
+      if (!vehicleId) {
+        Alert.alert(
+          "Diagnósticos",
+          "No se pudo identificar la unidad para abrir el diagnóstico.",
+        );
+        return;
+      }
+
+      const activeDiagnostic = await findActiveDiagnosticByVehicleId(vehicleId);
+
+      if (activeDiagnostic) {
+        Alert.alert(
+          "Diagnósticos",
+          "Esta unidad ya tiene un diagnóstico abierto. Se abrirá ese mismo registro para editarlo.",
+        );
+
+        setDiagnosticFormContext({
+          diagnostic: activeDiagnostic,
+          draft: {
+            clientId,
+            vehicleId,
+          },
+          returnTo,
+          clientId,
+        });
+        setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
+        return;
+      }
+
+      setDiagnosticFormContext({
+        diagnostic: null,
+        draft: {
+          clientId,
+          vehicleId,
+        },
+        returnTo,
+        clientId,
+      });
+      setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
+    } catch (error) {
+      Alert.alert(
+        "Diagnósticos",
+        error?.message ||
+          "No se pudo preparar el diagnóstico para esta unidad.",
+      );
+    }
+  };
+
   const renderAuthenticatedScreen = () => {
     if (activeScreen === APP_SCREENS.CLIENTS) {
       return (
@@ -644,6 +708,21 @@ function AppContent() {
       );
     }
 
+    if (activeScreen === APP_SCREENS.NEW_INTAKE) {
+      return (
+        <NewIntakeScreen
+          onBack={() => setActiveScreen(APP_SCREENS.HOME)}
+          onRegisterNew={() => {
+            setClientFormContext({ client: null, returnTo: "list" });
+            setActiveScreen(APP_SCREENS.CLIENT_FORM);
+          }}
+          onStartDiagnostic={(vehicle, client) =>
+            openDiagnosticForVehicle(vehicle, client, APP_SCREENS.HOME)
+          }
+        />
+      );
+    }
+
     if (activeScreen === APP_SCREENS.VEHICLES) {
       return (
         <VehiclesDirectoryScreen
@@ -665,60 +744,9 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.DIAGNOSTICS);
           }}
-          onOpenDiagnosticForm={async (vehicle, client) => {
-            try {
-              const vehicleId = vehicle?.id || vehicle?.refId || null;
-              const clientId =
-                client?.id || client?.refId || vehicle?.clientId || null;
-
-              if (!vehicleId) {
-                Alert.alert(
-                  "Diagnósticos",
-                  "No se pudo identificar la unidad para abrir el diagnóstico.",
-                );
-                return;
-              }
-
-              const activeDiagnostic =
-                await findActiveDiagnosticByVehicleId(vehicleId);
-
-              if (activeDiagnostic) {
-                Alert.alert(
-                  "Diagnósticos",
-                  "Esta unidad ya tiene un diagnóstico abierto. Se abrirá ese mismo registro para editarlo.",
-                );
-
-                setDiagnosticFormContext({
-                  diagnostic: activeDiagnostic,
-                  draft: {
-                    clientId,
-                    vehicleId,
-                  },
-                  returnTo: APP_SCREENS.VEHICLES,
-                  clientId,
-                });
-                setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
-                return;
-              }
-
-              setDiagnosticFormContext({
-                diagnostic: null,
-                draft: {
-                  clientId,
-                  vehicleId,
-                },
-                returnTo: APP_SCREENS.VEHICLES,
-                clientId,
-              });
-              setActiveScreen(APP_SCREENS.DIAGNOSTIC_FORM);
-            } catch (error) {
-              Alert.alert(
-                "Diagnósticos",
-                error?.message ||
-                  "No se pudo preparar el diagnóstico para esta unidad.",
-              );
-            }
-          }}
+          onOpenDiagnosticForm={(vehicle, client) =>
+            openDiagnosticForVehicle(vehicle, client, APP_SCREENS.VEHICLES)
+          }
           onOpenWorkOrderDetail={(workOrderId) => {
             setWorkOrdersViewState({
               selectedWorkOrderId: workOrderId || null,
@@ -1155,6 +1183,7 @@ function AppContent() {
           setActiveScreen(APP_SCREENS.DIAGNOSTICS);
         }}
         onOpenVehicles={() => setActiveScreen(APP_SCREENS.VEHICLES)}
+        onOpenNewIntake={() => setActiveScreen(APP_SCREENS.NEW_INTAKE)}
         onOpenSpareParts={() => {
           setSparePartsViewState({
             selectedSparePartId: null,

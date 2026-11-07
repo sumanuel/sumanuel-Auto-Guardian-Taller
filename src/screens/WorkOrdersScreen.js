@@ -1,5 +1,8 @@
 import Slider from "@react-native-community/slider";
+import BigButton from "../components/common/BigButton";
 import BigChip from "../components/common/BigChip";
+import ContactBar from "../components/common/ContactBar";
+import DetailHero from "../components/common/DetailHero";
 import ConfirmModal from "../components/common/ConfirmModal";
 import PhotoStrip from "../components/common/PhotoStrip";
 import RequestPartModal from "../components/common/RequestPartModal";
@@ -1271,122 +1274,55 @@ export default function WorkOrdersScreen({
 
     return (
       <>
-        <View
-          style={[
-            styles.detailCard,
+        <DetailHero
+          code={selectedWorkOrder?.id || "Sin orden"}
+          facts={[
             {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
+              label: "Cliente",
+              value:
+                client?.fullName ||
+                selectedWorkOrder?.clientId ||
+                "Sin cliente",
+            },
+            {
+              label: "Kilometraje",
+              value: vehicle?.mileage
+                ? `${vehicle.mileage} km`
+                : "Sin kilometraje",
+            },
+            {
+              label: "Diagnóstico",
+              value:
+                diagnostic?.id ||
+                selectedWorkOrder?.diagnosticId ||
+                "Sin diagnóstico",
             },
           ]}
+          plate={vehicle?.plate}
+          progress={selectedWorkOrder?.progressPercent}
+          statusLabel={resolveWorkOrderStatusLabel(selectedWorkOrder?.status)}
+          title={
+            [vehicle?.brand, vehicle?.model, vehicle?.year]
+              .filter(Boolean)
+              .join(" ") ||
+            selectedWorkOrder?.vehicleId ||
+            "Sin vehículo"
+          }
+          tone={getWorkOrderTone(selectedWorkOrder?.status, colors)}
         >
-          <View
-            style={[styles.cardHeader, { borderBottomColor: colors.border }]}
-          >
-            <View style={styles.cardHeaderCopy}>
-              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>
-                Operación
-              </Text>
-              <Text style={[styles.rowTitle, { color: colors.text }]}>
-                Resumen de orden
-              </Text>
-            </View>
-            <Text style={[styles.cardTag, { color: colors.primary }]}>
-              {selectedWorkOrder?.id || "Sin orden"}
-            </Text>
-          </View>
+          <ContactBar
+            message={`Hola, te escribimos del taller sobre tu vehículo ${
+              vehicle?.plate || ""
+            } (orden ${selectedWorkOrder?.id || ""}).`}
+            name={client?.fullName}
+            phone={client?.phone}
+          />
 
-          <View style={styles.detailLines}>
-            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-                Diagnóstico:
-              </Text>{" "}
-              {diagnostic?.id ||
-                selectedWorkOrder?.diagnosticId ||
-                "Sin diagnóstico"}
-            </Text>
-            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-                Cliente:
-              </Text>{" "}
-              {client?.fullName || selectedWorkOrder?.clientId || "Sin cliente"}
-            </Text>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Vehículo
-            </Text>
-            <View
-              style={[
-                styles.vehicleCard,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
+          <View style={styles.heroSection}>
+            <Text
+              style={[styles.heroSectionLabel, { color: colors.textTertiary }]}
             >
-              <Text style={[styles.vehicleTitle, { color: colors.text }]}>
-                {[vehicle?.brand, vehicle?.model, vehicle?.year]
-                  .filter(Boolean)
-                  .join(" ") ||
-                  vehicle?.plate ||
-                  selectedWorkOrder?.vehicleId ||
-                  "Sin vehículo"}
-              </Text>
-              <View
-                style={[
-                  styles.vehicleDivider,
-                  { backgroundColor: colors.border },
-                ]}
-              />
-              <Text style={[styles.vehiclePlate, { color: colors.accent }]}>
-                <Text
-                  style={[styles.vehiclePlateLabel, { color: colors.accent }]}
-                >
-                  Placa:
-                </Text>{" "}
-                {vehicle?.plate || "Sin placa"}
-              </Text>
-              <Text
-                style={[styles.vehicleMeta, { color: colors.textTertiary }]}
-              >
-                <Text style={[styles.vehicleMetaLabel, { color: colors.text }]}>
-                  Kilometraje:
-                </Text>{" "}
-                {vehicle?.mileage ? `${vehicle.mileage} km` : "Sin kilometraje"}
-              </Text>
-            </View>
-            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-                Estado:
-              </Text>{" "}
-              {workOrderStatusOptions.find(
-                (item) => item.key === selectedWorkOrder?.status,
-              )?.label ||
-                selectedWorkOrder?.status ||
-                "Sin estado"}
-            </Text>
-            <Text style={[styles.detailLine, { color: colors.textSecondary }]}>
-              <Text style={[styles.detailLineLabel, { color: colors.text }]}>
-                Avance:
-              </Text>{" "}
-              <Text
-                style={[
-                  styles.detailProgressValue,
-                  {
-                    color: getProgressMeterColor(
-                      selectedWorkOrder?.progressPercent,
-                      colors,
-                    ),
-                  },
-                ]}
-              >
-                {Math.round(Number(selectedWorkOrder?.progressPercent) || 0)}%
-              </Text>
-            </Text>
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={[styles.fieldLabel, { color: colors.text }]}>
-              Responsables asignados
+              Responsables
             </Text>
             <View style={styles.filterRow}>
               {assignedMechanics.length ? (
@@ -1394,7 +1330,7 @@ export default function WorkOrdersScreen({
                   <View
                     key={mechanic.uid}
                     style={[
-                      styles.filterChip,
+                      styles.mechanicChip,
                       {
                         backgroundColor: colors.cardMuted,
                         borderColor: colors.border,
@@ -1402,116 +1338,49 @@ export default function WorkOrdersScreen({
                     ]}
                   >
                     <Text
-                      style={[
-                        styles.filterChipText,
-                        styles.filterChipTextLarge,
-                        { color: colors.text },
-                      ]}
+                      style={[styles.mechanicChipText, { color: colors.text }]}
                     >
                       {mechanic.fullName || mechanic.email || mechanic.userCode}
                     </Text>
                   </View>
                 ))
               ) : (
-                <View
-                  style={[
-                    styles.emptyInlineChip,
-                    {
-                      backgroundColor: colors.cardMuted,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.emptyInlineChipText,
-                      { color: colors.textSecondary },
-                    ]}
-                  >
-                    Sin responsables asignados
-                  </Text>
-                </View>
+                <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
+                  Sin responsables asignados
+                </Text>
               )}
             </View>
-            <Text style={[styles.rowMeta, { color: colors.textSecondary }]}>
-              Usa editar responsables y orden para asignar o quitar personal
-              antes de iniciar la orden.
-            </Text>
           </View>
 
-          <View style={styles.detailActionRow}>
+          <View style={styles.heroActions}>
             {!isMechanicUser ? (
-              <Pressable
+              <BigButton
+                icon="create-outline"
+                label={
+                  assignedMechanics.length
+                    ? "Editar orden y responsables"
+                    : "Asignar responsables"
+                }
                 onPress={() => onOpenWorkOrderForm?.(selectedWorkOrder)}
-                style={[
-                  styles.secondaryAction,
-                  styles.secondaryActionLarge,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.secondaryActionText,
-                    styles.secondaryActionTextLarge,
-                    { color: colors.primary },
-                  ]}
-                >
-                  {assignedMechanics.length
-                    ? "Editar responsables y orden"
-                    : "Asignar responsables"}
-                </Text>
-              </Pressable>
+                variant="secondary"
+              />
             ) : null}
-            <Pressable
+            <BigButton
+              icon="cube-outline"
+              label="Repuestos de esta orden"
               onPress={() => onOpenSpareParts?.(selectedWorkOrder)}
-              style={[
-                styles.secondaryAction,
-                styles.secondaryActionLarge,
-                {
-                  backgroundColor: colors.cardMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.secondaryActionText,
-                  styles.secondaryActionTextLarge,
-                  { color: colors.accent },
-                ]}
-              >
-                Abrir repuestos de esta orden
-              </Text>
-            </Pressable>
+              variant="secondary"
+            />
             {isMechanicUser && !isProgressLocked ? (
-              <Pressable
-                accessibilityRole="button"
+              <BigButton
+                icon="construct-outline"
+                label="Pedir repuesto"
                 onPress={() => setPartModalVisible(true)}
-                style={[
-                  styles.secondaryAction,
-                  styles.secondaryActionLarge,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.warning,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.secondaryActionText,
-                    styles.secondaryActionTextLarge,
-                    { color: colors.warning },
-                  ]}
-                >
-                  Pedir repuesto
-                </Text>
-              </Pressable>
+                variant="warning"
+              />
             ) : null}
           </View>
-        </View>
+        </DetailHero>
 
         <View
           onLayout={(event) => {
@@ -2635,4 +2504,19 @@ const styles = StyleSheet.create({
   iconActionLarge: { width: 56, height: 56 },
   inputLarge: { fontSize: 17, minHeight: 56 },
   textAreaLarge: { fontSize: 17, minHeight: 120 },
+  heroSection: { gap: 6 },
+  heroSectionLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  heroActions: { gap: 12 },
+  mechanicChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  mechanicChipText: { fontSize: 15, fontWeight: "700" },
 });
