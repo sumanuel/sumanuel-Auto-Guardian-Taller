@@ -9,11 +9,9 @@ import { listDiagnostics } from "../services/diagnostics/diagnosticService";
 import {
   createEmptySparePartForm,
   createSparePart,
-  sparePartStatusOptions,
   updateSparePart,
 } from "../services/spareParts/sparePartService";
 import { listWorkOrders } from "../services/workOrders/workOrderService";
-import { getSparePartTone } from "../utils/statusTone";
 import { TOUCH } from "../utils/touch";
 
 function getSparePartId(sparePart) {
@@ -130,7 +128,7 @@ export default function SparePartFormScreen({
       onSubmit={handleSubmit}
       section="Repuestos"
       submitting={submitting}
-      subtitle="Nombre, cantidad, costo y estado de la pieza."
+      subtitle="Nombre, cantidad, costo y proveedor. El estado se cambia desde la lista de repuestos."
       title={editingSparePartId ? "Editar repuesto" : "Registrar repuesto"}
     >
       <View style={styles.group}>
@@ -207,24 +205,6 @@ export default function SparePartFormScreen({
         placeholder="Proveedor o contacto"
         value={form.supplier}
       />
-
-      <View style={styles.group}>
-        <Text style={[styles.groupLabel, { color: colors.text }]}>Estado</Text>
-        <View style={styles.statusGrid}>
-          {sparePartStatusOptions.map((statusOption) => (
-            <BigChip
-              color={getSparePartTone(statusOption.key, colors)}
-              key={statusOption.key}
-              label={statusOption.label}
-              onPress={() =>
-                setForm((current) => ({ ...current, status: statusOption.key }))
-              }
-              selected={form.status === statusOption.key}
-              style={styles.statusChip}
-            />
-          ))}
-        </View>
-      </View>
     </FormScreen>
   );
 }

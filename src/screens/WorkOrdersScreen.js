@@ -7,6 +7,7 @@ import ConfirmModal from "../components/common/ConfirmModal";
 import PhotoStrip from "../components/common/PhotoStrip";
 import ProgressTimeline from "../components/common/ProgressTimeline";
 import RequestPartModal from "../components/common/RequestPartModal";
+import ReasonModal from "../components/common/ReasonModal";
 import StatusActionBar from "../components/common/StatusActionBar";
 import StepperPercent from "../components/common/StepperPercent";
 import { Ionicons } from "@expo/vector-icons";
@@ -461,6 +462,25 @@ export default function WorkOrdersScreen({
     [selectedWorkOrder?.id, spareParts],
   );
 
+  const partsButtonLabel = (() => {
+    const total = selectedWorkOrderSpareParts.length;
+
+    if (!total) {
+      return "Repuestos de esta orden";
+    }
+
+    const installed = selectedWorkOrderSpareParts.filter(
+      (part) => part.status === "installed",
+    ).length;
+    const arriving = selectedWorkOrderSpareParts.filter(
+      (part) => part.status === "requested",
+    ).length;
+
+    return `Repuestos: ${installed}/${total} instalados${
+      arriving ? ` · ${arriving} por llegar` : ""
+    }`;
+  })();
+
   const filteredOrders = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
@@ -769,6 +789,7 @@ export default function WorkOrdersScreen({
   const scrollRef = useRef(null);
   const formAnchorY = useRef(0);
   const [pendingAction, setPendingAction] = useState(null);
+  const [pauseModalVisible, setPauseModalVisible] = useState(false);
 
   const scrollToProgressForm = () => {
     scrollRef.current?.scrollTo({
@@ -777,7 +798,7 @@ export default function WorkOrdersScreen({
     });
   };
 
-  const buildQuickForm = (kind) => {
+  const buildQuickForm = (kind, reason = "") => {
     const currentProgress = Number(selectedWorkOrder?.progressPercent) || 0;
     const locked = isWorkOrderProgressLocked(selectedWorkOrder?.status);
 
@@ -796,7 +817,9 @@ export default function WorkOrdersScreen({
       return {
         ...createEmptyProgressForm("note", currentProgress),
         operationalStatus: "paused",
-        message: "Orden en pausa.",
+        message: reason
+          ? `Orden en pausa. Motivo: ${reason}`
+          : "Orden en pausa.",
       };
     }
 
@@ -920,12 +943,18 @@ export default function WorkOrdersScreen({
     },
   };
 
-  const runQuickAction = async (kind) => {
+  const runQuickAction = async (kind, reason = "") => {
     setPendingAction(null);
-    await handleProgressSubmit(buildQuickForm(kind));
+    await handleProgressSubmit(buildQuickForm(kind, reason));
+    setPauseModalVisible(false);
   };
 
   const requestQuickAction = (kind) => {
+    if (kind === "pause") {
+      setPauseModalVisible(true);
+      return;
+    }
+
     if (kind === "start") {
       runQuickAction(kind);
       return;
@@ -962,7 +991,7 @@ export default function WorkOrdersScreen({
     }));
 
   const statusBarActions = (() => {
-    if (!isMechanicUser || !selectedWorkOrder) {
+    if (!selectedWorkOrder) {
       return [];
     }
 
@@ -1369,7 +1398,7 @@ export default function WorkOrdersScreen({
             ) : null}
             <BigButton
               icon="cube-outline"
-              label="Repuestos de esta orden"
+              label={partsButtonLabel}
               onPress={() => onOpenSpareParts?.(selectedWorkOrder)}
               variant="secondary"
             />
@@ -1410,48 +1439,50 @@ export default function WorkOrdersScreen({
           </View>
 
           <View style={styles.filterRow}>
-            {progressEntryTypeOptions.map((typeOption) => {
-              const selected = progressForm.type === typeOption.key;
-              const palette = getProgressTypePalette(typeOption.key, colors);
-              const isTypeLocked =
-                isProgressLocked && typeOption.key !== "note";
+            {progressEntryTypeOptions
+              .filter((typeOption) => typeOption.key !== "parts")
+              .map((typeOption) => {
+                const selected = progressForm.type === typeOption.key;
+                const palette = getProgressTypePalette(typeOption.key, colors);
+                const isTypeLocked =
+                  isProgressLocked && typeOption.key !== "note";
 
-              return (
-                <Pressable
-                  key={typeOption.key}
-                  disabled={isTypeLocked}
-                  onPress={() =>
-                    setProgressForm(
-                      createEmptyProgressForm(
-                        typeOption.key,
-                        Number(selectedWorkOrder?.progressPercent) || 0,
-                      ),
-                    )
-                  }
-                  style={[
-                    styles.filterChip,
-                    styles.filterChipLarge,
-                    {
-                      backgroundColor: selected
-                        ? palette.accent
-                        : colors.cardMuted,
-                      borderColor: selected ? palette.accent : colors.border,
-                      opacity: isTypeLocked ? 0.45 : 1,
-                    },
-                  ]}
-                >
-                  <Text
+                return (
+                  <Pressable
+                    key={typeOption.key}
+                    disabled={isTypeLocked}
+                    onPress={() =>
+                      setProgressForm(
+                        createEmptyProgressForm(
+                          typeOption.key,
+                          Number(selectedWorkOrder?.progressPercent) || 0,
+                        ),
+                      )
+                    }
                     style={[
-                      styles.filterChipText,
-                      styles.filterChipTextLarge,
-                      { color: selected ? colors.white : palette.text },
+                      styles.filterChip,
+                      styles.filterChipLarge,
+                      {
+                        backgroundColor: selected
+                          ? palette.accent
+                          : colors.cardMuted,
+                        borderColor: selected ? palette.accent : colors.border,
+                        opacity: isTypeLocked ? 0.45 : 1,
+                      },
                     ]}
                   >
-                    {typeOption.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        styles.filterChipTextLarge,
+                        { color: selected ? colors.white : palette.text },
+                      ]}
+                    >
+                      {typeOption.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
           </View>
 
           {isProgressLocked ? (
@@ -1679,121 +1710,6 @@ export default function WorkOrdersScreen({
                 </>
               )}
             </View>
-          ) : null}
-
-          {progressForm.type === "parts" ? (
-            selectedWorkOrderSpareParts.length ? (
-              <View style={styles.partsList}>
-                {selectedWorkOrderSpareParts.map((part) => {
-                  const selectedStatus =
-                    progressForm.partUpdates[getEntityId(part)] || "";
-
-                  return (
-                    <View
-                      key={getEntityId(part)}
-                      style={[
-                        styles.partCard,
-                        {
-                          backgroundColor: colors.cardMuted,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.rowTitle, { color: colors.text }]}>
-                        {part.name}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.rowMeta,
-                          { color: colors.textSecondary },
-                        ]}
-                      >
-                        Estado actual:{" "}
-                        {sparePartStatusOptions.find(
-                          (option) => option.key === part.status,
-                        )?.label ||
-                          part.status ||
-                          "Sin estado"}
-                      </Text>
-                      <View style={styles.filterRow}>
-                        {[
-                          { key: "received", label: "Recibido" },
-                          { key: "installed", label: "Instalado" },
-                          { key: "returned", label: "Devuelto" },
-                        ].map((statusOption) => {
-                          const selected = selectedStatus === statusOption.key;
-
-                          return (
-                            <Pressable
-                              key={statusOption.key}
-                              onPress={() =>
-                                setProgressForm((current) => ({
-                                  ...current,
-                                  partUpdates: {
-                                    ...current.partUpdates,
-                                    [getEntityId(part)]: selected
-                                      ? ""
-                                      : statusOption.key,
-                                  },
-                                }))
-                              }
-                              style={[
-                                styles.filterChip,
-                                styles.filterChipLarge,
-                                {
-                                  backgroundColor: selected
-                                    ? colors.textTertiary
-                                    : colors.cardBackground,
-                                  borderColor: selected
-                                    ? colors.textTertiary
-                                    : colors.border,
-                                },
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.filterChipText,
-                                  styles.filterChipTextLarge,
-                                  {
-                                    color: selected
-                                      ? colors.white
-                                      : colors.textSecondary,
-                                  },
-                                ]}
-                              >
-                                {statusOption.label}
-                              </Text>
-                            </Pressable>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            ) : (
-              <View
-                style={[
-                  styles.emptyStateCard,
-                  {
-                    backgroundColor: colors.cardMuted,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[styles.emptyEyebrow, { color: colors.textSecondary }]}
-                >
-                  Repuestos
-                </Text>
-                <Text
-                  style={[styles.emptyText, { color: colors.textSecondary }]}
-                >
-                  Esta orden todavía no tiene repuestos cargados. Ábrelos desde
-                  el bloque superior para agregarlos primero.
-                </Text>
-              </View>
-            )
           ) : null}
 
           {isMechanicUser && progressForm.type === "note" ? (
@@ -2029,6 +1945,23 @@ export default function WorkOrdersScreen({
         onCancel={() => setPendingAction(null)}
         onConfirm={() => runQuickAction(pendingAction)}
         visible={Boolean(pendingAction)}
+      />
+
+      <ReasonModal
+        confirmIcon="pause"
+        confirmLabel="Pausar orden"
+        onCancel={() => setPauseModalVisible(false)}
+        onSubmit={(reason) => runQuickAction("pause", reason)}
+        reasons={[
+          "Falta repuesto",
+          "Esperando aprobación del cliente",
+          "Falta herramienta o equipo",
+          "Se requiere más tiempo",
+        ]}
+        submitting={progressSubmitting}
+        title="¿Por qué pausas la orden?"
+        tone="warning"
+        visible={pauseModalVisible}
       />
 
       <RequestPartModal

@@ -1,9 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,20 +9,30 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import BigButton from "../components/common/BigButton";
+import BigChip from "../components/common/BigChip";
+import ConfirmModal from "../components/common/ConfirmModal";
 import OperationCard from "../components/common/OperationCard";
-import { getSparePartTone } from "../utils/statusTone";
+import ReasonModal from "../components/common/ReasonModal";
+import WorkshopScreenHeader from "../components/common/WorkshopScreenHeader";
+import {
+  isMechanicRole,
+  isWorkOrderAssignedToUser,
+  USER_ROLES,
+} from "../constants/accessControl";
 import { useTheme } from "../context/ThemeContext";
 import { listDiagnostics } from "../services/diagnostics/diagnosticService";
 import { createProgressEntry } from "../services/progressEntries/progressEntryService";
 import {
+  advanceSparePart,
   canDeleteSparePartStatus,
   deleteSparePart,
+  getSparePartActions,
   listSpareParts,
   sparePartStatusOptions,
 } from "../services/spareParts/sparePartService";
 import { listWorkOrders } from "../services/workOrders/workOrderService";
-import { borderRadius, rf, spacing } from "../utils/responsive";
+import { getSparePartTone } from "../utils/statusTone";
 
 function getEntityId(entity) {
   return entity?.refId || entity?.id || "";
@@ -37,19 +45,30 @@ function buildLookup(items, field = "id") {
   }, {});
 }
 
+function statusLabel(status) {
+  return (
+    sparePartStatusOptions.find((item) => item.key === status)?.label || status
+  );
+}
+
 export default function SparePartsScreen({
   onBack,
   onOpenSparePartForm,
+  currentRole,
   userProfile,
   viewState,
 }) {
   const { colors } = useTheme();
+  const isMechanicUser = isMechanicRole(currentRole);
+  const canWorkParts = currentRole !== USER_ROLES.RECEPTION;
   const [loading, setLoading] = useState(false);
   const [spareParts, setSpareParts] = useState([]);
   const [workOrders, setWorkOrders] = useState([]);
   const [diagnostics, setDiagnostics] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [pending, setPending] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const workOrderLookup = useMemo(() => buildLookup(workOrders), [workOrders]);
   const diagnosticLookup = useMemo(
@@ -75,10 +94,7 @@ export default function SparePartsScreen({
       setWorkOrders(nextWorkOrders);
       setDiagnostics(nextDiagnostics);
     } catch (error) {
-      Alert.alert(
-        "Repuestos",
-        "No se pudo cargar el tablero operativo de repuestos.",
-      );
+      Alert.alert("Repuestos", "No se pudieron cargar los repuestos.");
     } finally {
       setLoading(false);
     }
@@ -88,14 +104,48 @@ export default function SparePartsScreen({
     refreshData();
   }, []);
 
+  // Alcance: una orden concreta, o (para el mecánico) solo sus órdenes.
+  const scopedParts = useMemo(
+    () =>
+      spareParts.filter((part) => {
+        if (selectedWorkOrderId) {
+          return part.workOrderId === selectedWorkOrderId;
+        }
+
+        if (isMechanicUser) {
+          return isWorkOrderAssignedToUser(
+            workOrderLookup[part.workOrderId],
+            userProfile?.uid,
+          );
+        }
+
+        return true;
+      }),
+    [
+      isMechanicUser,
+      selectedWorkOrderId,
+      spareParts,
+      userProfile?.uid,
+      workOrderLookup,
+    ],
+  );
+
+  const counts = useMemo(
+    () =>
+      scopedParts.reduce(
+        (accumulator, part) => {
+          accumulator[part.status] = (accumulator[part.status] || 0) + 1;
+          return accumulator;
+        },
+        { all: scopedParts.length },
+      ),
+    [scopedParts],
+  );
+
   const filteredParts = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return spareParts.filter((part) => {
-      if (selectedWorkOrderId && part.workOrderId !== selectedWorkOrderId) {
-        return false;
-      }
-
+    return scopedParts.filter((part) => {
       if (activeFilter !== "all" && part.status !== activeFilter) {
         return false;
       }
@@ -104,20 +154,13 @@ export default function SparePartsScreen({
         return true;
       }
 
-      const searchableText = [
-        part.id,
-        part.name,
-        part.supplier,
-        part.workOrderId,
-        part.diagnosticId,
-      ]
+      return [part.id, part.name, part.supplier, part.workOrderId]
         .filter(Boolean)
         .join(" ")
-        .toLowerCase();
-
-      return searchableText.includes(normalizedQuery);
+        .toLowerCase()
+        .includes(normalizedQuery);
     });
-  }, [activeFilter, searchQuery, selectedWorkOrderId, spareParts]);
+  }, [activeFilter, scopedParts, searchQuery]);
 
   const handleCreateForCurrentContext = () => {
     onOpenSparePartForm?.(null, {
@@ -130,18 +173,58 @@ export default function SparePartsScreen({
     });
   };
 
-  const handleDelete = (part) => {
-    if (!canDeleteSparePartStatus(part.status)) {
-      Alert.alert(
-        "Repuestos",
-        "Solo se pueden eliminar repuestos en estado Solicitado, Recibido o Devuelto.",
-      );
+  const runAction = async (reason = "") => {
+    if (!pending) {
       return;
     }
 
+    const { part, action } = pending;
+    setSubmitting(true);
+
+    try {
+      await advanceSparePart(getEntityId(part), action.key, {
+        reason,
+        authorUid: userProfile?.uid,
+      });
+
+      const relatedWorkOrder = workOrderLookup[part.workOrderId];
+
+      if (relatedWorkOrder?.id) {
+        await createProgressEntry({
+          workOrderId: relatedWorkOrder.id,
+          diagnosticId:
+            part.diagnosticId || relatedWorkOrder.diagnosticId || "",
+          vehicleId: relatedWorkOrder.vehicleId || "",
+          authorUid: userProfile?.uid,
+          type: "parts",
+          message: reason ? `Motivo: ${reason}` : "",
+          statusSnapshot: relatedWorkOrder.status || "",
+          sparePartUpdates: [
+            {
+              sparePartId: part.id,
+              sparePartName: part.name,
+              status: action.key,
+            },
+          ],
+        });
+      }
+
+      setPending(null);
+      await refreshData();
+    } catch (error) {
+      Alert.alert(
+        "Repuestos",
+        error?.message || "No se pudo actualizar el repuesto.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = (part) => {
     Alert.alert(
       "Eliminar repuesto",
-      `Se eliminará ${part.name || part.id || "este repuesto"} del tablero operativo.`,
+      `Se eliminará ${part.name || part.id || "este repuesto"}.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -179,125 +262,68 @@ export default function SparePartsScreen({
     );
   };
 
+  const filters = [{ key: "all", label: "Todos" }, ...sparePartStatusOptions];
+  const needsReason = Boolean(pending?.action?.needsReason);
+
   return (
     <SafeAreaView
       edges={["left", "right"]}
       style={[styles.safeArea, { backgroundColor: colors.background }]}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, styles.scrollWithFab]}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <WorkshopScreenHeader
           onBack={onBack}
-          section="Costos"
-          subtitle={
-            selectedWorkOrder
-              ? "Consulta los repuestos solicitados para esta orden y agrega nuevas piezas sin salir del flujo operativo."
-              : "Registra piezas en una ficha dedicada y vuelve a la lista para revisar estado, costo y relación con la orden."
-          }
-          title={selectedWorkOrder ? "Repuestos solicitados" : "Repuestos"}
+          section={selectedWorkOrder ? selectedWorkOrder.id : "Costos"}
+          subtitle="Solicitado, recibido, instalado y devuelto: cada pieza avanza en ese orden."
+          title="Repuestos"
         />
 
-        {selectedWorkOrder ? (
-          <View
-            style={[
-              styles.orderScopeCard,
-              {
-                backgroundColor: colors.cardBackground,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text style={[styles.scopeEyebrow, { color: colors.accent }]}>
-              Orden activa
-            </Text>
-            <Text style={[styles.scopeTitle, { color: colors.text }]}>
-              {selectedWorkOrder.id}
-            </Text>
-            <Text style={[styles.scopeMeta, { color: colors.textSecondary }]}>
-              Diagnostico: {selectedWorkOrder.diagnosticId || "Sin diagnóstico"}
-            </Text>
-          </View>
+        {!isMechanicUser || selectedWorkOrder ? (
+          <BigButton
+            icon="add-circle-outline"
+            label={
+              selectedWorkOrder
+                ? "Agregar repuesto a esta orden"
+                : "Agregar repuesto"
+            }
+            onPress={handleCreateForCurrentContext}
+          />
         ) : null}
 
-        <Pressable
-          onPress={handleCreateForCurrentContext}
+        <TextInput
+          autoCapitalize="none"
+          onChangeText={setSearchQuery}
+          placeholder="Buscar por repuesto, proveedor u orden"
+          placeholderTextColor={colors.textTertiary}
           style={[
-            styles.primaryInlineAction,
+            styles.input,
             {
-              backgroundColor: colors.primary,
-              borderColor: colors.primary,
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.borderStrong,
+              color: colors.text,
             },
           ]}
-        >
-          <Ionicons color={colors.white} name="add" size={rf(18)} />
-          <Text
-            style={[styles.primaryInlineActionText, { color: colors.white }]}
-          >
-            {selectedWorkOrder
-              ? "Agregar repuesto a esta orden"
-              : "Agregar repuesto"}
-          </Text>
-        </Pressable>
+          value={searchQuery}
+        />
 
-        <View
-          style={[
-            styles.controlsPanel,
-            {
-              backgroundColor: colors.cardBackground,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          <TextInput
-            autoCapitalize="none"
-            onChangeText={setSearchQuery}
-            placeholder="Buscar por repuesto, proveedor, orden o diagnóstico"
-            placeholderTextColor={colors.textTertiary}
-            style={[
-              styles.input,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.border,
-                color: colors.text,
-              },
-            ]}
-            value={searchQuery}
-          />
-
-          <View style={styles.filterRow}>
-            {[{ key: "all", label: "Todos" }, ...sparePartStatusOptions].map(
-              (filter) => {
-                const selected = activeFilter === filter.key;
-
-                return (
-                  <Pressable
-                    key={filter.key}
-                    onPress={() => setActiveFilter(filter.key)}
-                    style={[
-                      styles.filterChip,
-                      {
-                        backgroundColor: selected
-                          ? colors.primary
-                          : colors.cardMuted,
-                        borderColor: selected ? colors.primary : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterChipText,
-                        { color: selected ? colors.white : colors.text },
-                      ]}
-                    >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                );
-              },
-            )}
-          </View>
+        <View style={styles.filterRow}>
+          {filters.map((filter) => (
+            <BigChip
+              color={
+                filter.key === "all"
+                  ? colors.primary
+                  : getSparePartTone(filter.key, colors)
+              }
+              key={filter.key}
+              label={`${filter.label} ${counts[filter.key] || 0}`}
+              onPress={() => setActiveFilter(filter.key)}
+              selected={activeFilter === filter.key}
+            />
+          ))}
         </View>
 
         {loading ? (
@@ -305,196 +331,148 @@ export default function SparePartsScreen({
         ) : filteredParts.length ? (
           <View style={styles.listBody}>
             {filteredParts.map((part) => {
-              const isSelected =
-                viewState?.selectedSparePartId === getEntityId(part);
               const relatedWorkOrder = workOrderLookup[part.workOrderId];
               const relatedDiagnostic = diagnosticLookup[part.diagnosticId];
-              const canDelete = canDeleteSparePartStatus(part.status);
+              const canDelete =
+                !isMechanicUser && canDeleteSparePartStatus(part.status);
+              const actions = getSparePartActions(part.status).filter(
+                (action) => !action.managerOnly || canWorkParts,
+              );
+              const lines = [
+                {
+                  label: "Cantidad",
+                  value: `${part.quantity || 0}${
+                    part.unitCost ? ` · Costo ${part.unitCost}` : ""
+                  }`,
+                },
+                {
+                  label: "Orden",
+                  value: `${
+                    relatedWorkOrder?.id || part.workOrderId || "Sin orden"
+                  }${
+                    relatedDiagnostic?.id ? ` · ${relatedDiagnostic.id}` : ""
+                  }`,
+                },
+              ];
+
+              if (part.supplier) {
+                lines.push({ label: "Proveedor", value: part.supplier });
+              }
+
+              if (part.status === "returned" && part.statusReason) {
+                lines.push({ label: "Devuelto por", value: part.statusReason });
+              }
 
               return (
                 <OperationCard
-                  actions={[
-                    {
-                      key: "edit",
-                      icon: "create-outline",
-                      color: colors.primary,
-                      borderColor: colors.primary,
-                      label: "Editar repuesto",
-                      onPress: () => onOpenSparePartForm?.(part),
-                    },
-                    {
-                      key: "delete",
-                      icon: "trash-outline",
-                      color: canDelete ? colors.danger : colors.textTertiary,
-                      borderColor: canDelete ? colors.danger : colors.border,
-                      disabled: !canDelete,
-                      label: "Eliminar repuesto",
-                      onPress: () => handleDelete(part),
-                    },
-                  ]}
+                  actions={
+                    isMechanicUser
+                      ? []
+                      : [
+                          {
+                            key: "edit",
+                            icon: "create-outline",
+                            color: colors.primary,
+                            label: "Editar repuesto",
+                            onPress: () => onOpenSparePartForm?.(part),
+                          },
+                          {
+                            key: "delete",
+                            icon: "trash-outline",
+                            color: canDelete
+                              ? colors.danger
+                              : colors.textTertiary,
+                            disabled: !canDelete,
+                            label: "Eliminar repuesto",
+                            onPress: () => handleDelete(part),
+                          },
+                        ]
+                  }
                   code={part.id}
                   key={getEntityId(part)}
-                  lines={[
-                    {
-                      label: "Cantidad",
-                      value: `${part.quantity || 0} · Costo ${part.unitCost || 0}`,
-                    },
-                    {
-                      label: "Orden",
-                      value: `${
-                        relatedWorkOrder?.id || part.workOrderId || "Sin orden"
-                      } · ${
-                        relatedDiagnostic?.id ||
-                        part.diagnosticId ||
-                        "Sin diagnóstico"
-                      }`,
-                    },
-                    {
-                      label: "Proveedor",
-                      value: part.supplier || "Sin proveedor",
-                    },
-                  ]}
+                  lines={lines}
                   plain
                   plate={part.name}
-                  selected={isSelected}
-                  statusLabel={
-                    sparePartStatusOptions.find(
-                      (item) => item.key === part.status,
-                    )?.label || part.status
+                  selected={
+                    viewState?.selectedSparePartId === getEntityId(part)
                   }
+                  statusLabel={statusLabel(part.status)}
                   tone={getSparePartTone(part.status, colors)}
-                />
+                >
+                  {actions.map((action) => (
+                    <BigButton
+                      icon={action.icon}
+                      key={action.key + action.label}
+                      label={action.label}
+                      onPress={() => setPending({ part, action })}
+                      variant={action.tone}
+                    />
+                  ))}
+                </OperationCard>
               );
             })}
           </View>
         ) : (
           <View
             style={[
-              styles.emptyStateCard,
+              styles.empty,
               {
                 backgroundColor: colors.cardBackground,
                 borderColor: colors.border,
               },
             ]}
           >
-            <Text style={[styles.emptyEyebrow, { color: colors.primary }]}>
-              Costos
-            </Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
               {selectedWorkOrder
-                ? "Esta orden todavía no tiene repuestos registrados. Agrega la primera pieza para seguir la solicitud y la instalación."
-                : "No hay repuestos para el filtro actual. Cambia el estado o carga la primera pieza para seguir el costo del servicio."}
+                ? "Esta orden todavía no tiene repuestos. Usa «Agregar repuesto a esta orden» para registrar el primero."
+                : "No hay repuestos para este filtro. Cambia el estado o registra una pieza nueva."}
             </Text>
           </View>
         )}
       </ScrollView>
+
+      <ConfirmModal
+        confirmLabel={pending?.action?.label}
+        loading={submitting}
+        message={pending?.action?.confirm}
+        onCancel={() => setPending(null)}
+        onConfirm={() => runAction("")}
+        title={pending ? `${pending.action.label}: ${pending.part.name}?` : ""}
+        tone={
+          pending?.action?.tone === "secondary"
+            ? "primary"
+            : pending?.action?.tone
+        }
+        visible={Boolean(pending) && !needsReason}
+      />
+
+      <ReasonModal
+        confirmIcon={pending?.action?.icon}
+        confirmLabel={pending?.action?.label}
+        onCancel={() => setPending(null)}
+        onSubmit={runAction}
+        reasons={pending?.action?.reasons}
+        submitting={submitting}
+        title={pending ? `${pending.action.label}: ${pending.part.name}` : ""}
+        tone="warning"
+        visible={Boolean(pending) && needsReason}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, position: "relative" },
-  scrollContent: { padding: spacing.lg, gap: spacing.xl },
-  scrollWithFab: { paddingBottom: spacing.xxl },
-  orderScopeCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  scopeEyebrow: {
-    fontSize: rf(10),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  scopeTitle: { fontSize: rf(18), fontWeight: "800" },
-  scopeMeta: { fontSize: rf(13), lineHeight: rf(19) },
-  primaryInlineAction: {
-    borderWidth: 1,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-  },
-  primaryInlineActionText: { fontSize: rf(14), fontWeight: "800" },
-  controlsPanel: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
+  safeArea: { flex: 1 },
+  scrollContent: { padding: 20, paddingBottom: 32, gap: 12 },
   input: {
+    minHeight: 56,
     borderWidth: 1,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: rf(15),
-    minHeight: 48,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontSize: 17,
   },
-  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
-  filterChip: {
-    borderWidth: 1,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    minHeight: 48,
-    justifyContent: "center",
-  },
-  filterChipText: { fontSize: rf(14), fontWeight: "700" },
-  listBody: { gap: spacing.sm },
-  row: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.sm,
-  },
-  rowCopy: { flex: 1, gap: spacing.xs },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.md,
-    paddingBottom: spacing.xs,
-    borderBottomWidth: 1,
-  },
-  cardHeaderCopy: { flex: 1, gap: 2 },
-  cardEyebrow: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  cardTag: { fontSize: rf(12), fontWeight: "800", textAlign: "right" },
-  cardBody: { gap: spacing.xs },
-  rowTitle: { fontSize: rf(17), fontWeight: "800" },
-  rowMeta: { fontSize: rf(14), lineHeight: rf(19) },
-  iconActionRow: { gap: spacing.xs, justifyContent: "center" },
-  iconAction: {
-    borderWidth: 1,
-    borderRadius: borderRadius.md,
-    width: 48,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyStateCard: {
-    borderWidth: 1,
-    borderRadius: borderRadius.xl,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  emptyEyebrow: {
-    fontSize: rf(12),
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  emptyText: { fontSize: rf(15), lineHeight: rf(21) },
+  filterRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  listBody: { gap: 12 },
+  empty: { borderWidth: 1, borderRadius: 18, padding: 16 },
+  emptyText: { fontSize: 16, lineHeight: 23 },
 });

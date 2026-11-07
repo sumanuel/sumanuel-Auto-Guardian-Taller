@@ -31,6 +31,109 @@ export const sparePartStatusOptions = [
   { key: "returned", label: "Devuelto" },
 ];
 
+// Ruta única de un repuesto: Solicitado -> Recibido -> Instalado -> Devuelto.
+// Un repuesto recibido que no se usó también puede devolverse; devolver
+// siempre exige motivo.
+export const sparePartTransitions = {
+  requested: ["received"],
+  received: ["installed", "returned"],
+  installed: ["returned"],
+  returned: [],
+};
+
+export function canTransitionSparePart(from, to) {
+  return (sparePartTransitions[from] || []).includes(to);
+}
+
+// Acciones que se ofrecen en cada tarjeta según el estado actual.
+//   managerOnly: no la ve recepción (instalar y devolver son del taller)
+export function getSparePartActions(status) {
+  if (status === "requested") {
+    return [
+      {
+        key: "received",
+        label: "Marcar recibido",
+        icon: "checkmark-circle-outline",
+        tone: "primary",
+        managerOnly: false,
+        confirm: "Confirma que la pieza ya llegó al taller.",
+      },
+    ];
+  }
+
+  if (status === "received") {
+    return [
+      {
+        key: "installed",
+        label: "Instalar",
+        icon: "construct-outline",
+        tone: "success",
+        managerOnly: true,
+        confirm: "La pieza queda instalada en el vehículo.",
+      },
+      {
+        key: "returned",
+        label: "Devolver sin instalar",
+        icon: "return-up-back-outline",
+        tone: "secondary",
+        managerOnly: true,
+        needsReason: true,
+        reasons: ["Pieza equivocada", "Llegó dañada", "Ya no se necesita"],
+      },
+    ];
+  }
+
+  if (status === "installed") {
+    return [
+      {
+        key: "returned",
+        label: "Desinstalar y devolver",
+        icon: "return-down-back-outline",
+        tone: "warning",
+        managerOnly: true,
+        needsReason: true,
+        reasons: [
+          "Presenta falla",
+          "No era la pieza correcta",
+          "No ajusta o no es compatible",
+        ],
+      },
+    ];
+  }
+
+  return [];
+}
+
+// Cambia solo el estado (y el motivo) respetando la ruta permitida.
+export async function advanceSparePart(
+  sparePartId,
+  nextStatus,
+  { reason = "", authorUid = "" } = {},
+) {
+  const workshopId = requireActiveWorkshopId();
+  const currentSparePart = await getEntityRecord("spareParts", sparePartId);
+
+  if (!currentSparePart || currentSparePart.workshopId !== workshopId) {
+    throw new Error("El repuesto no pertenece al taller activo.");
+  }
+
+  if (!canTransitionSparePart(currentSparePart.status, nextStatus)) {
+    throw new Error(
+      "Ese cambio de estado no está permitido para este repuesto.",
+    );
+  }
+
+  if (nextStatus === "returned" && !normalizeOptional(reason)) {
+    throw new Error("Indica el motivo de la devolución.");
+  }
+
+  await patchEntityRecord("spareParts", sparePartId, {
+    status: nextStatus,
+    statusReason: normalizeOptional(reason),
+    statusUpdatedByUid: authorUid || "",
+  });
+}
+
 export const deletableSparePartStatuses = ["requested", "received", "returned"];
 
 export function canDeleteSparePartStatus(status) {

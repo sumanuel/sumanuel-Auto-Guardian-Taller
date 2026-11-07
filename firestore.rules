@@ -330,6 +330,30 @@ service cloud.firestore {
         ]);
     }
 
+    function validSparePartTransition(fromStatus, toStatus) {
+      return (fromStatus == 'requested' && toStatus == 'received')
+        || (fromStatus == 'received' && (toStatus == 'installed' || toStatus == 'returned'))
+        || (fromStatus == 'installed' && toStatus == 'returned');
+    }
+
+    // El mecánico asignado a la orden solo avanza el estado del repuesto
+    // (recibir, instalar, devolver); no edita nombre, costo ni proveedor.
+    function mechanicCanAdvanceSparePart() {
+      return isMechanic()
+        && resource.data.workOrderId is string
+        && exists(workOrderPath(resource.data.workOrderId))
+        && resource.data.workshopId == get(workOrderPath(resource.data.workOrderId)).data.workshopId
+        && isAssignedMechanicInList(get(workOrderPath(resource.data.workOrderId)).data.assignedMechanicUids)
+        && request.resource.data.workshopId == resource.data.workshopId
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status',
+          'statusReason',
+          'statusUpdatedByUid',
+          'updatedAt'
+        ])
+        && validSparePartTransition(resource.data.status, request.resource.data.status);
+    }
+
     function isPublicSignupCreate(uid) {
       return signedIn()
         && isSelf(uid)
@@ -531,7 +555,9 @@ service cloud.firestore {
           && exists(workOrderPath(request.resource.data.workOrderId))
           && request.resource.data.workshopId == get(workOrderPath(request.resource.data.workOrderId)).data.workshopId
           && isAssignedMechanicInList(get(workOrderPath(request.resource.data.workOrderId)).data.assignedMechanicUids));
-      allow update, delete: if canManageWorkshopEntity(resource.data.workshopId);
+      allow update: if canManageWorkshopEntity(resource.data.workshopId)
+        || mechanicCanAdvanceSparePart();
+      allow delete: if canManageWorkshopEntity(resource.data.workshopId);
     }
 
     match /stockItems/{stockItemId} {

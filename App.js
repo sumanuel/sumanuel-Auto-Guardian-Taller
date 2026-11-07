@@ -1019,6 +1019,7 @@ function AppContent() {
             });
             setActiveScreen(APP_SCREENS.SPARE_PART_FORM);
           }}
+          currentRole={currentRole}
           userProfile={userProfile}
           viewState={sparePartsViewState}
         />
