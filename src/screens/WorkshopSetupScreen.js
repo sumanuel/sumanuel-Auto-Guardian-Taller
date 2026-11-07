@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(14),
+    fontSize: rf(16),
     fontWeight: "800",
   },
   input: {
@@ -300,12 +300,12 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: rf(15),
+    fontSize: rf(16),
     fontWeight: "600",
-    minHeight: 48,
+    minHeight: 52,
   },
   textArea: {
-    minHeight: 110,
+    minHeight: 120,
     textAlignVertical: "top",
   },
   infoCard: {
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   primaryAction: {
     flex: 2,
     borderRadius: borderRadius.lg,
-    minHeight: rf(50),
+    minHeight: 56,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.lg,
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   primaryActionText: {
     color: "#ffffff",
-    fontSize: rf(14),
+    fontSize: rf(17),
     fontWeight: "900",
   },
 });

@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   cardTitle: { fontSize: rf(17), fontWeight: "800" },
-  cardMeta: { fontSize: rf(12), fontWeight: "700" },
+  cardMeta: { fontSize: rf(13), fontWeight: "700" },
   clientBadge: {
     borderWidth: 1,
     borderRadius: borderRadius.lg,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   clientLabel: {
-    fontSize: rf(10),
+    fontSize: rf(13),
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   formGroup: { width: "47%", gap: spacing.sm },
   fullWidth: { width: "100%" },
   fieldLabel: {
-    fontSize: rf(14),
+    fontSize: rf(16),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -442,24 +442,26 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    fontSize: rf(15),
-    minHeight: 48,
+    fontSize: rf(16),
+    minHeight: 52,
   },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    fontSize: rf(15),
-    minHeight: 110,
+    fontSize: rf(16),
+    minHeight: 120,
   },
   primaryAction: {
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     alignItems: "center",
+    minHeight: 56,
+    justifyContent: "center",
   },
   primaryActionText: {
-    fontSize: rf(15),
+    fontSize: rf(17),
     fontWeight: "800",
   },
 });

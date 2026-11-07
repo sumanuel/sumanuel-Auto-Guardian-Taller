@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   summaryText: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     lineHeight: rf(18),
   },
   formCard: {
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   fieldLabel: {
-    fontSize: rf(14),
+    fontSize: rf(16),
     fontWeight: "700",
   },
   optionWrap: {
@@ -375,9 +375,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingVertical: spacing.xs + 2,
     paddingHorizontal: spacing.md,
+    minHeight: 48,
+    justifyContent: "center",
   },
   optionText: {
-    fontSize: rf(12),
+    fontSize: rf(15),
     fontWeight: "700",
   },
   gridRow: {
@@ -392,20 +394,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.md,
-    fontSize: rf(15),
+    fontSize: rf(16),
   },
   notesInput: {
     minHeight: rf(120),
     paddingTop: spacing.md,
   },
   primaryAction: {
-    minHeight: rf(54),
+    minHeight: 56,
     borderRadius: borderRadius.lg,
     alignItems: "center",
     justifyContent: "center",
   },
   primaryActionText: {
-    fontSize: rf(14),
+    fontSize: rf(17),
     fontWeight: "800",
   },
 });

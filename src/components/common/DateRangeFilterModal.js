@@ -488,7 +488,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   subtitle: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     lineHeight: rf(19),
   },
   quickRow: {
@@ -497,13 +497,15 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   quickChip: {
+    minHeight: 44,
+    justifyContent: "center",
     borderWidth: 1,
     borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
   },
   quickChipText: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
   },
   dateFieldRow: {
@@ -518,7 +520,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   label: {
-    fontSize: rf(12),
+    fontSize: rf(14),
     fontWeight: "700",
   },
   dateFieldValueRow: {
@@ -527,7 +529,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   dateFieldValue: {
-    fontSize: rf(13),
+    fontSize: rf(16),
     fontWeight: "800",
     lineHeight: rf(18),
   },
@@ -545,8 +547,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   calendarNav: {
-    width: rf(34),
-    height: rf(34),
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.pill,
     alignItems: "center",
     justifyContent: "center",
@@ -564,7 +566,7 @@ const styles = StyleSheet.create({
   weekdayLabel: {
     flex: 1,
     textAlign: "center",
-    fontSize: rf(11),
+    fontSize: rf(13),
     fontWeight: "800",
   },
   calendarScroll: {
@@ -573,10 +575,9 @@ const styles = StyleSheet.create({
   daysGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.xs,
   },
   dayCell: {
-    width: "13.5%",
+    width: `${100 / 7}%`,
     aspectRatio: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -584,9 +585,10 @@ const styles = StyleSheet.create({
   dayButton: {
     borderWidth: 1,
     borderRadius: borderRadius.pill,
+    transform: [{ scale: 0.9 }],
   },
   dayText: {
-    fontSize: rf(12),
+    fontSize: rf(15),
     fontWeight: "800",
   },
   actionsRow: {
@@ -598,25 +600,25 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderRadius: borderRadius.lg,
-    minHeight: rf(44),
+    minHeight: 56,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.md,
   },
   secondaryButtonText: {
-    fontSize: rf(13),
+    fontSize: rf(16),
     fontWeight: "800",
   },
   primaryButton: {
     flex: 1,
     borderRadius: borderRadius.lg,
-    minHeight: rf(44),
+    minHeight: 56,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.md,
   },
   primaryButtonText: {
-    fontSize: rf(13),
+    fontSize: rf(16),
     fontWeight: "800",
   },
 });

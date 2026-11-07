@@ -263,7 +263,7 @@ export default function WorkOrderFormScreen({
             <Text
               style={[styles.vehicleSummaryLabel, { color: colors.accent }]}
             >
-              vehículo:
+              Vehículo:
             </Text>
             <View
               style={[
@@ -455,10 +455,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   cardTitle: { fontSize: rf(17), fontWeight: "800" },
-  cardMeta: { fontSize: rf(12), fontWeight: "700" },
+  cardMeta: { fontSize: rf(13), fontWeight: "700" },
   formGroup: { gap: spacing.sm },
   fieldLabel: {
-    fontSize: rf(14),
+    fontSize: rf(16),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -469,14 +469,16 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    minHeight: 48,
+    justifyContent: "center",
   },
-  optionText: { fontSize: rf(13), fontWeight: "700" },
+  optionText: { fontSize: rf(15), fontWeight: "700" },
   helperText: { fontSize: rf(14), lineHeight: rf(20) },
   summaryPanel: { gap: spacing.xs },
   summaryText: { fontSize: rf(14), lineHeight: rf(20) },
   summaryTextLabel: { fontSize: rf(14), fontWeight: "800" },
   vehicleSummaryLabel: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     fontWeight: "900",
     lineHeight: rf(19),
     textTransform: "none",
@@ -501,13 +503,15 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    minHeight: 110,
-    fontSize: rf(15),
+    minHeight: 120,
+    fontSize: rf(16),
   },
   primaryAction: {
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     alignItems: "center",
+    minHeight: 56,
+    justifyContent: "center",
   },
-  primaryActionText: { fontSize: rf(15), fontWeight: "800" },
+  primaryActionText: { fontSize: rf(17), fontWeight: "800" },
 });

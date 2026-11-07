@@ -296,7 +296,7 @@ export default function DiagnosticFormScreen({
               <Text
                 style={[styles.vehicleSummaryLabel, { color: colors.accent }]}
               >
-                vehículo:
+                Vehículo:
               </Text>
               <View
                 style={[
@@ -475,7 +475,7 @@ export default function DiagnosticFormScreen({
                       { color: colors.accent },
                     ]}
                   >
-                    vehículo:
+                    Vehículo:
                   </Text>
                   <View
                     style={[
@@ -602,8 +602,7 @@ export default function DiagnosticFormScreen({
               <Text
                 style={[styles.helperText, { color: colors.textSecondary }]}
               >
-                Como mecánico, el diagnóstico queda asignado a tu usuario y no
-                puedes reasignarlo desde esta pantalla.
+                Este diagnóstico queda asignado a ti.
               </Text>
             )}
           </View>
@@ -848,13 +847,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   cardTitle: { fontSize: rf(17), fontWeight: "800" },
-  cardMeta: { fontSize: rf(12), fontWeight: "700" },
+  cardMeta: { fontSize: rf(13), fontWeight: "700" },
   formGroup: { gap: spacing.sm },
   fieldLabel: {
-    fontSize: rf(14),
+    fontSize: rf(16),
     fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
   },
   optionWrap: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
   optionChip: {
@@ -862,15 +859,17 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    minHeight: 48,
+    justifyContent: "center",
   },
-  optionText: { fontSize: rf(13), fontWeight: "700" },
+  optionText: { fontSize: rf(15), fontWeight: "700" },
   helperText: { fontSize: rf(14), lineHeight: rf(20) },
-  fieldHint: { fontSize: rf(13), lineHeight: rf(19) },
+  fieldHint: { fontSize: rf(14), lineHeight: rf(19) },
   selectionSummary: { gap: spacing.xs },
   selectionLine: { fontSize: rf(14), lineHeight: rf(21) },
   selectionLineLabel: { fontSize: rf(14), fontWeight: "800" },
   vehicleSummaryLabel: {
-    fontSize: rf(13),
+    fontSize: rf(14),
     fontWeight: "900",
     lineHeight: rf(19),
     textTransform: "none",
@@ -887,30 +886,32 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: borderRadius.pill,
   },
-  selectionValue: { fontSize: rf(15), fontWeight: "800" },
-  selectionMeta: { fontSize: rf(13), lineHeight: rf(19) },
-  selectionMetaLabel: { fontSize: rf(13), fontWeight: "800" },
+  selectionValue: { fontSize: rf(16), fontWeight: "800" },
+  selectionMeta: { fontSize: rf(14), lineHeight: rf(19) },
+  selectionMetaLabel: { fontSize: rf(14), fontWeight: "800" },
   closedNote: { fontSize: rf(13), lineHeight: rf(19) },
   textArea: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    minHeight: 110,
-    fontSize: rf(15),
+    minHeight: 120,
+    fontSize: rf(16),
   },
   input: {
     borderWidth: 1,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: rf(15),
-    minHeight: 48,
+    fontSize: rf(16),
+    minHeight: 52,
   },
   primaryAction: {
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     alignItems: "center",
+    minHeight: 56,
+    justifyContent: "center",
   },
-  primaryActionText: { fontSize: rf(15), fontWeight: "800" },
+  primaryActionText: { fontSize: rf(17), fontWeight: "800" },
 });
