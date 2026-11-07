@@ -87,6 +87,18 @@ service cloud.firestore {
       return hasRole('mechanic');
     }
 
+    // Mecánico según su membresía en ese taller (no según el rol global del perfil).
+    function isMechanicInWorkshop(workshopId) {
+      return canReadWorkshopEntity(workshopId)
+        && activeWorkshopMembershipRole(workshopId) == 'mechanic';
+    }
+
+    function isAssignedMechanicIn(workshopId, assignedUids) {
+      return isMechanicInWorkshop(workshopId)
+        && assignedUids is list
+        && assignedUids.hasAny([currentUid()]);
+    }
+
     function canManageOperations() {
       return isOwner() || isAdmin() || isReception();
     }
@@ -339,11 +351,10 @@ service cloud.firestore {
     // El mecánico asignado a la orden solo avanza el estado del repuesto
     // (recibir, instalar, devolver); no edita nombre, costo ni proveedor.
     function mechanicCanAdvanceSparePart() {
-      return isMechanic()
-        && resource.data.workOrderId is string
+      return resource.data.workOrderId is string
         && exists(workOrderPath(resource.data.workOrderId))
         && resource.data.workshopId == get(workOrderPath(resource.data.workOrderId)).data.workshopId
-        && isAssignedMechanicInList(get(workOrderPath(resource.data.workOrderId)).data.assignedMechanicUids)
+        && isAssignedMechanicIn(resource.data.workshopId, get(workOrderPath(resource.data.workOrderId)).data.assignedMechanicUids)
         && request.resource.data.workshopId == resource.data.workshopId
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'status',
@@ -430,8 +441,8 @@ service cloud.firestore {
           || (counterId == 'workOrders' && canManageOperations())
           || (counterId == 'stockItems' && hasAnyActiveWorkshopMembership())
           || (counterId == 'stockMovements' && hasAnyActiveWorkshopMembership())
-          || (counterId == 'spareParts' && (canManageOperations() || isMechanic()))
-          || (counterId == 'progressEntries' && (canManageOperations() || isMechanic()))
+          || (counterId == 'spareParts' && (canManageOperations() || hasAnyActiveWorkshopMembership()))
+          || (counterId == 'progressEntries' && (canManageOperations() || hasAnyActiveWorkshopMembership()))
         );
     }
 
@@ -531,12 +542,11 @@ service cloud.firestore {
         && canReadWorkshopEntity(request.resource.data.workshopId)
         && (
         canManageWorkshopEntity(request.resource.data.workshopId)
-        || (isMechanic()
-          && request.resource.data.authorUid == currentUid()
+        || (request.resource.data.authorUid == currentUid()
           && request.resource.data.workOrderId is string
           && exists(workOrderPath(request.resource.data.workOrderId))
           && request.resource.data.workshopId == get(workOrderPath(request.resource.data.workOrderId)).data.workshopId
-          && isAssignedMechanicInList(get(workOrderPath(request.resource.data.workOrderId)).data.assignedMechanicUids))
+          && isAssignedMechanicIn(request.resource.data.workshopId, get(workOrderPath(request.resource.data.workOrderId)).data.assignedMechanicUids))
       );
       allow update: if canManageWorkshopEntity(resource.data.workshopId)
         || (isMechanic()
@@ -548,13 +558,11 @@ service cloud.firestore {
     match /spareParts/{sparePartId} {
       allow read: if canReadWorkshopEntity(resource.data.workshopId);
       allow create: if canManageWorkshopEntity(request.resource.data.workshopId)
-        || (isMechanic()
-          && canReadWorkshopEntity(request.resource.data.workshopId)
-          && request.resource.data.status == 'requested'
+        || (request.resource.data.status == 'requested'
           && request.resource.data.workOrderId is string
           && exists(workOrderPath(request.resource.data.workOrderId))
           && request.resource.data.workshopId == get(workOrderPath(request.resource.data.workOrderId)).data.workshopId
-          && isAssignedMechanicInList(get(workOrderPath(request.resource.data.workOrderId)).data.assignedMechanicUids));
+          && isAssignedMechanicIn(request.resource.data.workshopId, get(workOrderPath(request.resource.data.workOrderId)).data.assignedMechanicUids));
       allow update: if canManageWorkshopEntity(resource.data.workshopId)
         || mechanicCanAdvanceSparePart();
       allow delete: if canManageWorkshopEntity(resource.data.workshopId);
