@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
 import { workOrderStatusOptions } from "../../services/workOrders/workOrderService";
 import { sparePartStatusOptions } from "../../services/spareParts/sparePartService";
@@ -100,6 +100,8 @@ export default function ProgressTimeline({
   emptyText = "Todavía no hay registros.",
 }) {
   const { colors } = useTheme();
+  // Solo el último día aparece abierto; el resto se abre al tocar su fecha.
+  const [toggled, setToggled] = useState({});
 
   const groups = useMemo(() => {
     const items = [];
@@ -230,94 +232,135 @@ export default function ProgressTimeline({
           </Text>
         </View>
       ) : (
-        groups.map((group) => (
-          <View key={group.key} style={styles.group}>
-            <Text style={[styles.dayLabel, { color: colors.textSecondary }]}>
-              {group.label}
-            </Text>
+        groups.map((group, groupIndex) => {
+          const defaultOpen = groupIndex === groups.length - 1;
+          const isOpen = toggled[group.key] ?? defaultOpen;
 
-            {group.items.map((item, itemIndex) => {
-              const { entry } = item;
-              const view = describe(entry);
-              const isLast = itemIndex === group.items.length - 1;
+          return (
+            <View key={group.key} style={styles.group}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: isOpen }}
+                onPress={() =>
+                  setToggled((current) => ({
+                    ...current,
+                    [group.key]: !isOpen,
+                  }))
+                }
+                style={[
+                  styles.dayHeader,
+                  {
+                    backgroundColor: colors.cardBackground,
+                    borderColor: colors.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.dayLabel, { color: colors.text }]}>
+                  {group.label}
+                </Text>
+                <Text style={[styles.dayCount, { color: colors.textTertiary }]}>
+                  {group.items.length} evento
+                  {group.items.length === 1 ? "" : "s"}
+                </Text>
+                <Ionicons
+                  color={colors.textSecondary}
+                  name={isOpen ? "chevron-up" : "chevron-down"}
+                  size={22}
+                />
+              </Pressable>
 
-              return (
-                <View
-                  key={entry.refId || entry.id || `${group.key}-${itemIndex}`}
-                  style={styles.row}
-                >
-                  <View style={styles.rail}>
-                    <View style={[styles.dot, { backgroundColor: view.color }]}>
-                      <Ionicons color="#ffffff" name={view.icon} size={20} />
-                    </View>
-                    {!isLast ? (
+              {(isOpen ? group.items : []).map((item, itemIndex) => {
+                const { entry } = item;
+                const view = describe(entry);
+                const isLast = itemIndex === group.items.length - 1;
+
+                return (
+                  <View
+                    key={entry.refId || entry.id || `${group.key}-${itemIndex}`}
+                    style={styles.row}
+                  >
+                    <View style={styles.rail}>
                       <View
-                        style={[
-                          styles.line,
-                          { backgroundColor: colors.border },
-                        ]}
-                      />
-                    ) : null}
-                  </View>
+                        style={[styles.dot, { backgroundColor: view.color }]}
+                      >
+                        <Ionicons color="#ffffff" name={view.icon} size={20} />
+                      </View>
+                      {!isLast ? (
+                        <View
+                          style={[
+                            styles.line,
+                            { backgroundColor: colors.border },
+                          ]}
+                        />
+                      ) : null}
+                    </View>
 
-                  <View style={styles.body}>
-                    <Text style={[styles.headline, { color: colors.text }]}>
-                      {view.title}
-                      {item.count > 1 ? (
-                        <Text style={{ color: colors.textTertiary }}>
-                          {"  "}×{item.count}
+                    <View style={styles.body}>
+                      <Text style={[styles.headline, { color: colors.text }]}>
+                        {view.title}
+                        {item.count > 1 ? (
+                          <Text style={{ color: colors.textTertiary }}>
+                            {"  "}×{item.count}
+                          </Text>
+                        ) : null}
+                      </Text>
+
+                      {view.lines.map((line) => (
+                        <Text
+                          key={line}
+                          style={[styles.detail, { color: colors.text }]}
+                        >
+                          {line}
+                        </Text>
+                      ))}
+
+                      {entry.type === "parts" && entry.message ? (
+                        <Text
+                          style={[
+                            styles.detail,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {entry.message}
                         </Text>
                       ) : null}
-                    </Text>
 
-                    {view.lines.map((line) => (
-                      <Text
-                        key={line}
-                        style={[styles.detail, { color: colors.text }]}
-                      >
-                        {line}
-                      </Text>
-                    ))}
-
-                    {entry.type === "parts" && entry.message ? (
-                      <Text
-                        style={[styles.detail, { color: colors.textSecondary }]}
-                      >
-                        {entry.message}
-                      </Text>
-                    ) : null}
-
-                    {item.changedTo ? (
-                      <View
-                        style={[styles.chip, { borderColor: colors.warning }]}
-                      >
-                        <Text
-                          style={[styles.chipText, { color: colors.warning }]}
+                      {item.changedTo ? (
+                        <View
+                          style={[styles.chip, { borderColor: colors.warning }]}
                         >
-                          Pasó a {statusLabel(item.changedTo)}
+                          <Text
+                            style={[styles.chipText, { color: colors.warning }]}
+                          >
+                            Pasó a {statusLabel(item.changedTo)}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {entry.photos?.length ? (
+                        <PhotoStrip photos={entry.photos} />
+                      ) : null}
+
+                      {entry.deliveryClosedOrder ? (
+                        <Text
+                          style={[styles.detail, { color: colors.success }]}
+                        >
+                          Orden cerrada y entregada.
                         </Text>
-                      </View>
-                    ) : null}
+                      ) : null}
 
-                    {entry.photos?.length ? (
-                      <PhotoStrip photos={entry.photos} />
-                    ) : null}
-
-                    {entry.deliveryClosedOrder ? (
-                      <Text style={[styles.detail, { color: colors.success }]}>
-                        Orden cerrada y entregada.
+                      <Text
+                        style={[styles.meta, { color: colors.textTertiary }]}
+                      >
+                        {authorName(entry)} · {timeLabel(item.date)}
                       </Text>
-                    ) : null}
-
-                    <Text style={[styles.meta, { color: colors.textTertiary }]}>
-                      {authorName(entry)} · {timeLabel(item.date)}
-                    </Text>
+                    </View>
                   </View>
-                </View>
-              );
-            })}
-          </View>
-        ))
+                );
+              })}
+            </View>
+          );
+        })
       )}
     </View>
   );
@@ -333,13 +376,18 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "900" },
   count: { fontSize: 14, fontWeight: "700" },
   group: { gap: 4 },
-  dayLabel: {
-    fontSize: 13,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: 6,
+  dayHeader: {
+    minHeight: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    marginBottom: 10,
   },
+  dayLabel: { flex: 1, fontSize: 17, fontWeight: "900" },
+  dayCount: { fontSize: 14, fontWeight: "700" },
   row: { flexDirection: "row", gap: 12 },
   rail: { width: 40, alignItems: "center" },
   dot: {
