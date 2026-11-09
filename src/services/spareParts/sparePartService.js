@@ -149,7 +149,7 @@ async function resolveSparePartContext(
   let relatedDiagnostic = null;
   let relatedWorkOrder = null;
 
-  if (normalizedDiagnosticId) {
+  if (normalizedDiagnosticId && !normalizedWorkOrderId) {
     relatedDiagnostic = await getEntityRecord(
       "diagnostics",
       normalizedDiagnosticId,
