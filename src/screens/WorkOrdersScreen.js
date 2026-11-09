@@ -41,7 +41,6 @@ import { listDiagnostics } from "../services/diagnostics/diagnosticService";
 import {
   createProgressEntry,
   listProgressEntriesByWorkOrderId,
-  progressEntryTypeOptions,
 } from "../services/progressEntries/progressEntryService";
 import {
   captureWorkPhoto,
@@ -563,7 +562,10 @@ export default function WorkOrdersScreen({
       activeForm.type === "note" &&
       activeForm.operationalStatus === "in-progress";
 
-    if (isProgressLocked && !canReopenWithNote) {
+    const canDeliverNow =
+      activeForm.type === "delivery" && selectedWorkOrder.status === "ready";
+
+    if (isProgressLocked && !canReopenWithNote && !canDeliverNow) {
       Alert.alert(
         "Órdenes",
         "Esta orden está lista o entregada. Para registrar más avances debes agregar una nota y cambiar su estado a En proceso.",
@@ -973,23 +975,6 @@ export default function WorkOrdersScreen({
     setTimeout(scrollToProgressForm, 50);
   };
 
-  const quickPhrases = [
-    "Falta repuesto",
-    "Esperando aprobación del cliente",
-    "Pieza instalada",
-    "Prueba de ruta OK",
-    "Fuga detectada",
-    "Se requiere más tiempo",
-  ];
-
-  const appendQuickPhrase = (phrase) =>
-    setProgressForm((current) => ({
-      ...current,
-      message: current.message
-        ? `${current.message.trim()}. ${phrase}`
-        : phrase,
-    }));
-
   const statusBarActions = (() => {
     if (!selectedWorkOrder) {
       return [];
@@ -1065,10 +1050,25 @@ export default function WorkOrdersScreen({
           label: "Reabrir",
           icon: "refresh",
           tone: "warning",
-          active: true,
+          active: status === "delivered" || isMechanicUser,
           disabled: busy,
           onPress: () => requestQuickAction("reopen"),
         },
+        // Entregar el vehículo al cliente es de recepción, administrador y
+        // dueño; el mecánico solo deja la orden en Lista.
+        ...(status === "ready" && !isMechanicUser
+          ? [
+              {
+                key: "deliver",
+                label: "Entregar",
+                icon: "checkmark-done",
+                tone: "success",
+                active: true,
+                disabled: busy,
+                onPress: () => openProgressForm("delivery"),
+              },
+            ]
+          : []),
         noteAction,
       ];
     }
@@ -1433,59 +1433,16 @@ export default function WorkOrdersScreen({
                 Taller
               </Text>
               <Text style={[styles.rowTitle, { color: colors.text }]}>
-                Registrar avance
+                {progressForm.type === "delivery"
+                  ? "Entrega del vehículo"
+                  : progressForm.type === "status"
+                    ? "Registrar avance"
+                    : "Nueva nota"}
               </Text>
             </View>
           </View>
 
-          <View style={styles.filterRow}>
-            {progressEntryTypeOptions
-              .filter((typeOption) => typeOption.key !== "parts")
-              .map((typeOption) => {
-                const selected = progressForm.type === typeOption.key;
-                const palette = getProgressTypePalette(typeOption.key, colors);
-                const isTypeLocked =
-                  isProgressLocked && typeOption.key !== "note";
-
-                return (
-                  <Pressable
-                    key={typeOption.key}
-                    disabled={isTypeLocked}
-                    onPress={() =>
-                      setProgressForm(
-                        createEmptyProgressForm(
-                          typeOption.key,
-                          Number(selectedWorkOrder?.progressPercent) || 0,
-                        ),
-                      )
-                    }
-                    style={[
-                      styles.filterChip,
-                      styles.filterChipLarge,
-                      {
-                        backgroundColor: selected
-                          ? palette.accent
-                          : colors.cardMuted,
-                        borderColor: selected ? palette.accent : colors.border,
-                        opacity: isTypeLocked ? 0.45 : 1,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterChipText,
-                        styles.filterChipTextLarge,
-                        { color: selected ? colors.white : palette.text },
-                      ]}
-                    >
-                      {typeOption.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-          </View>
-
-          {isProgressLocked ? (
+          {isProgressLocked && progressForm.type !== "delivery" ? (
             <View
               style={[
                 styles.progressPanel,
@@ -1709,19 +1666,6 @@ export default function WorkOrdersScreen({
                   </View>
                 </>
               )}
-            </View>
-          ) : null}
-
-          {isMechanicUser && progressForm.type === "note" ? (
-            <View style={styles.quickPhraseGrid}>
-              {quickPhrases.map((phrase) => (
-                <BigChip
-                  key={phrase}
-                  label={phrase}
-                  onPress={() => appendQuickPhrase(phrase)}
-                  style={styles.quickPhraseChip}
-                />
-              ))}
             </View>
           ) : null}
 
@@ -2269,8 +2213,6 @@ const styles = StyleSheet.create({
   },
   emptyInlineChipText: { fontSize: rf(11), fontWeight: "700" },
   emptyText: { fontSize: rf(15), lineHeight: rf(21) },
-  quickPhraseGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  quickPhraseChip: { flexBasis: "48%", flexGrow: 1, paddingHorizontal: 8 },
   filterChipLarge: {
     minHeight: 56,
     paddingHorizontal: spacing.lg,
